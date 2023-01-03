@@ -2,6 +2,10 @@
 
 A client library for [OpenCloudTiles](https://github.com/OpenCloudTiles/opencloudtiles-tools)
 
+## Install
+
+`npm i -s cloudtiles`
+
 ## Usage Example
 
 ``` js
