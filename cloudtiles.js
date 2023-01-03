@@ -31,7 +31,6 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	self.format = [ "png", "jpeg", "webp", null, null, null, null, null, null, null, null, null, null, null, null, null, "pbf" ];
 	self.compression = [ null, "gzip", "brotli", null, null, null, null, null, null, null, null, null, null, null, null, null, null ];
 	
-	
 	return self;
 };
 
@@ -43,7 +42,12 @@ cloudtiles.prototype.read = function(position, length, fn){
 // read from http(s)
 cloudtiles.prototype.read_http = function(position, length, fn){
 	const self = this;
-	fetch(self.src, { headers: { ...self.requestheaders, "Range": format("bytes=%s-%s", position.toString(), (position+length).toString()) }}).then(function(resp){
+	fetch(self.src, { 
+		headers: { 
+			...self.requestheaders, 
+			"Range": format("bytes=%s-%s", position.toString(), (position+length).toString()), // explicit .toString() because printf appends 'n' to bigint
+		}
+	}).then(function(resp){
 		if (resp.status-200 >= 100) return fn(new Error("Server replied with HTTP Status Code "+resp.status));
 		resp.arrayBuffer().then(function(buf){
 			fn(null, Buffer.from(buf));
@@ -61,10 +65,10 @@ cloudtiles.prototype.read_file = function(position, length, fn){
 	const self = this;
 	self.open_file(function(){
 		fs.read(self.fd, { 
-			buffer: Buffer.alloc(Number(length)),
+			buffer: Buffer.alloc(Number(length)), // buffer wants integers, but length shouldn't exceed 2^53 anyway
 			position: position,
 			offset: 0,
-			length: Number(length), // api does not like bigint, convert to Number and hope for the best
+			length: Number(length), // fs api does not like bigint here, convert to Number and hope for the best
 		}, function(err, r, buf){
 			return fn(err, buf);
 		});
@@ -91,6 +95,7 @@ cloudtiles.prototype.getHeader = function(fn){
 	// deliver if known
 	if (self.header !== null) return fn(null, self.header), self;
 
+	// FIXME: get magic bytes first, then read whole header based on version
 	self.read(0, 62, function(err, data){
 		if (err) return fn(err);
 		
@@ -131,17 +136,18 @@ cloudtiles.prototype.getTile = function(z, x, y, fn){
 		const bx = ((x-tx)/256);
 		const by = ((y-ty)/256);
 
-		// check if block is within bounds
+		// check if block containing tile is within bounds
 		if (!self.index.hasOwnProperty(z)) return fn(new Error("Invalid Z"));
 		if (!self.index[z].hasOwnProperty(bx)) return fn(new Error("Invalid X"));
 		if (!self.index[z][bx].hasOwnProperty(by)) return fn(new Error("Invalid Y"));
 
 		const block = self.index[z][bx][by];
 		
+		// check if block contains tile
 		if (tx < block.col_min || tx > block.col_max) return fn(new Error("Invalid X within Block"));
 		if (ty < block.row_min || ty > block.row_max) return fn(new Error("Invalid Y within Block"));
 		
-		
+		// calculate sequential tile number
 		const j = (ty - block.row_min) * (block.col_max - block.col_min + 1) + (tx - block.col_min);
 
 		// get tile index
