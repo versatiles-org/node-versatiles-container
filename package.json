@@ -1,0 +1,11 @@
+{
+  "name": "cloudtiles",
+  "version": "0.0.1",
+  "description": "Client library for OpenCloudTiles",
+  "main": "cloudtiles.js",
+  "author": "yetzt <node@yetzt.me>",
+  "license": "UNLICENSE",
+  "dependencies": {
+    "undici": "^5.14.0"
+  }
+}
