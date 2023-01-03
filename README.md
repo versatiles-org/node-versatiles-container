@@ -17,19 +17,21 @@ const c = cloudtiles("https://example.org/planet.cloudtiles").getTile(z,x,y, fun
 
 ```
 
-## `cloudtiles(src)`
+## API
+
+### `cloudtiles(src)`
 
 * `src` can be a file path or url pointing to a cloudtiles container.
 
-## `.getTile(z, x, y, function(err, tile))`
+### `.getTile(z, x, y, function(err, tile))`
 
 Get a tile as buffer from a cloudtiles container
 
-## `.getHeader(function(err, header))`
+### `.getHeader(function(err, header))`
 
 Get the header of a cloudtiles container
 
-## `.getMeta(function(err, metadata))`
+### `.getMeta(function(err, metadata))`
 
 Get the metadata of a cloudtiles container
 
