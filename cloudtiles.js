@@ -7,8 +7,6 @@ const fetch = require("undici").fetch;
 const format = require("util").format;
 const pkg = require("./package");
 
-// http://127.0.0.1/cloudtiles/data/hitzekarte.cloudtiles
-
 const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	if (!(this instanceof cloudtiles)) return new cloudtiles(src, opt);
 	const self = this;
