@@ -185,37 +185,6 @@ cloudtiles.prototype.getTileIndex = function(block, fn){
 	return self;
 };
 
-// get metadata
-cloudtiles.prototype.getMeta = function(fn){
-	const self = this;
-
-	// deliver if known
-	if (self.meta !== null) return fn(null, self.meta), self;
-
-	self.getHeader(function(err){
-		if (err) return fn(err);
-
-		self.read(self.header.meta_offset, self.header.meta_length, function(err, data){ // read meta buffer
-			if (err) return fn(err);
-			zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
-				if (err) return fn(err);
-				
-				try {
-					self.meta = JSON.parse(data);
-				} catch (err) {
-					self.meta = {}; // empty
-				}
-				
-				return fn(null, { ...self.meta });
-				
-			});
-		});
-
-	});
-
-	return self;
-};
-
 // get block index
 cloudtiles.prototype.getBlockIndex = function(fn){
 	const self = this;
@@ -269,6 +238,37 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 				
 			});
 		});
+	});
+
+	return self;
+};
+
+// get metadata
+cloudtiles.prototype.getMeta = function(fn){
+	const self = this;
+
+	// deliver if known
+	if (self.meta !== null) return fn(null, self.meta), self;
+
+	self.getHeader(function(err){
+		if (err) return fn(err);
+
+		self.read(self.header.meta_offset, self.header.meta_length, function(err, data){ // read meta buffer
+			if (err) return fn(err);
+			zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
+				if (err) return fn(err);
+				
+				try {
+					self.meta = JSON.parse(data);
+				} catch (err) {
+					self.meta = {}; // empty
+				}
+				
+				return fn(null, { ...self.meta });
+				
+			});
+		});
+
 	});
 
 	return self;
