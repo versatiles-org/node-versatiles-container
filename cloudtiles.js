@@ -206,7 +206,7 @@ cloudtiles.prototype.getMeta = function(fn){
 					self.meta = {}; // empty
 				}
 				
-				return fn(null, self.meta);
+				return fn(null, { ...self.meta });
 				
 			});
 		});
