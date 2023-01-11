@@ -23,9 +23,10 @@ const c = cloudtiles("https://example.org/planet.cloudtiles").getTile(z,x,y, fun
 
 ## API
 
-### `cloudtiles(src)`
+### `cloudtiles(src, { invertY: true })`
 
-* `src` can be a file path or url pointing to a cloudtiles container.
+* `src`: can be a file path or url pointing to a cloudtiles container.
+* `invertY`: set `true` if cloudtiles container uses inverted Y index
 
 ### `.getTile(z, x, y, function(err, tile))`
 

@@ -20,7 +20,10 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	self.meta = null;
 	self.index = null;
 
-	self.opt = opt || {};
+	self.opt = {
+		invertY: false,
+		...(opt||{}),
+	};
 
 	// default http request headers
 	self.requestheaders = {
@@ -123,6 +126,9 @@ cloudtiles.prototype.getHeader = function(fn){
 // get tile by zxy
 cloudtiles.prototype.getTile = function(z, x, y, fn){
 	const self = this;
+
+	// when y index is inverted
+	if (self.opt.invertY) y = Math.pow(2,z)-y;
 
 	// ensure block index is loaded
 	self.getBlockIndex(function(err){
