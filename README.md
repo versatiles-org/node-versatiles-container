@@ -1,6 +1,6 @@
 # Cloudtiles
 
-A client library for [OpenCloudTiles](https://github.com/OpenCloudTiles/opencloudtiles-tools)
+A client library for [OpenCloudTiles](https://github.com/OpenCloudTiles/opencloudtiles-specification)
 
 ## Install
 
