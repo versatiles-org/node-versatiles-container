@@ -118,7 +118,7 @@ cloudtiles.prototype.getHeader = function(fn){
 			return fn(err);
 		}
 
-		fn(null, self.header);
+		fn(null, { ...self.header });
 
 	});
 
