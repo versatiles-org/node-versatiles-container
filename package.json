@@ -1,6 +1,6 @@
 {
   "name": "cloudtiles",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A client library for OpenCloudTiles",
   "main": "cloudtiles.js",
   "author": "yetzt <node@yetzt.me>",
