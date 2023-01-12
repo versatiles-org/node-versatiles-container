@@ -7,5 +7,6 @@
   "license": "UNLICENSE",
   "dependencies": {
     "undici": "^5.15.0"
-  }
+  },
+  "keywords": ["map","tiles","maptiles","cloudtiles","opencloudtiles","geo","gis","maps","tileserver"]
 }
