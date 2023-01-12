@@ -408,7 +408,17 @@ cloudtiles.prototype.server = function(){
 	
 		switch (path) {
 			case "/":
-				return res.end(req.url, "is this thing on?");
+				self.getHeader(function(err, header){ 
+					const html = [];
+					// yes, i know. it's just a demo for now.
+					html.push('<!DOCTYPE html><html><head><meta charset="utf-8"/><title>cloudtiles map</title><meta name="viewport" content="width=device-width"><script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script><link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />');
+					if (self.header.tile_format === "pbf") html.push('<script src="https://github.com/acalcutt/maplibre-gl-inspect/releases/download/v1.4.3/maplibre-gl-inspect.min.js"></script><link href="https://github.com/acalcutt/maplibre-gl-inspect/releases/download/v1.4.3/maplibre-gl-inspect.css" rel="stylesheet" />');
+					html.push('<style type="text/css"> body { margin: 0; } #map { width: 100vw; height: 100vh; } </style></head><body><div id="map"></div><script> var map = new maplibregl.Map({ container: "map", style: "//'+req.headers.host+'/style.json", hash: true });');
+					if (self.header.tile_format === "pbf") html.push('map.addControl(new maplibregl.NavigationControl()); map.addControl(new MaplibreInspect({ showInspectMap: true, showMapPopup: false, showInspectMapPopup: false, showInspectButton: false }));');
+					html.push('</script></body></html>');
+					res.setHeader("Content-type", "text/html; charset=utf-8");
+					return res.end(html.join(""));
+				});
 			break;
 			case "/style.json":
 				// construct style.json
