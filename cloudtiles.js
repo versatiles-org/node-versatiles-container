@@ -23,7 +23,7 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	self.bbox = null;
 
 	self.opt = {
-		invertY: false,
+		tms: false,
 		...(opt||{}),
 	};
 
@@ -130,7 +130,7 @@ cloudtiles.prototype.getTile = function(z, x, y, fn){
 	const self = this;
 
 	// when y index is inverted
-	if (self.opt.invertY) y = Math.pow(2,z)-y-1;
+	if (self.opt.tms) y = Math.pow(2,z)-y-1;
 
 	// ensure block index is loaded
 	self.getBlockIndex(function(err){
@@ -338,7 +338,7 @@ cloudtiles.prototype.getBoundingBox = function(fn){
 		let txmax = ((parseInt(xmin,10)*256)+self.index[z][xmin][ymin].col_max);
 
 		let tymin, tymax; // different when invert y
-		if (self.opt.invertY) { // north → south
+		if (self.opt.tms) { // north → south
 
 			tymin = Math.pow(2,z)-((parseInt(ymin,10)*256)+self.index[z][xmin][ymin].row_min)-1;
 			tymax = Math.pow(2,z)-((parseInt(ymax,10)*256)+self.index[z][xmax][ymax].row_max)-1;
