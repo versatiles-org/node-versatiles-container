@@ -75,6 +75,7 @@ cloudtiles("./some.cloudtiles").server(8080, "localhost", function(){
 
 * `/{z}/{x}/{y}` get tile
 * `/tile.json` get [TileJSON](https://github.com/mapbox/tilejson-spec)
+* `/style.json` get [Style](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
 
 ## License
 

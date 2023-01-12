@@ -410,6 +410,57 @@ cloudtiles.prototype.server = function(){
 			case "/":
 				return res.end(req.url, "is this thing on?");
 			break;
+			case "/style.json":
+				// construct style.json
+				self.getBoundingBox(function(err, bbox){
+					const center = [
+						((bbox[0]+bbox[2])/2),
+						((bbox[1]+bbox[3])/2)
+					];
+					self.getZoomLevels(function(err, zoom){
+						const zooms = [
+							parseInt(zoom[0],10),
+							parseInt(zoom[zoom.length-1],10),
+						];
+						const midzoom = Math.round((zooms[0]+zooms[1])/2);
+
+						const style = {
+							version: 8,
+							id: "cloudtiles",
+							name: "cloudtiles",
+							zoom: midzoom,
+							center: center,
+							sources: {},
+							layers: [],
+						};
+						
+						if (self.header.tile_format === "pbf") { // vector tiles
+							style.sources.cloudtiles = {
+								type: "vector",
+								url: "http://"+req.headers.host+"/tile.json",
+							};
+							// FIXME: extract layers from metadata
+						} else { // raster tiles
+							style.sources.cloudtiles = {
+								type: "raster",
+								tiles: ["http://"+req.headers.host+"/{z}/{x}/{y}"],
+								tileSize: 256,
+							};
+							style.layers.push({
+								id: "cloudtiles",
+								type: "raster",
+								source: "cloudtiles",
+								minzoom: zooms[0],
+								maxzoom: zooms[1],
+							});
+						}
+
+						res.setHeader("Content-type", "application/json; charset=utf-8");
+						return res.end(JSON.stringify(style,null,"\t"));
+					
+					});
+				});
+			break;
 			case "/tile.json":
 				// construct tilejson, extend with metadata
 				// https://github.com/mapbox/tilejson-spec/tree/master/3.0.0
