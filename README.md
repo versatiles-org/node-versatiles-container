@@ -40,6 +40,14 @@ Get the header of a cloudtiles container
 
 Get the metadata of a cloudtiles container
 
+### `.getZoomLevels(function(err, zoom))`
+
+Get the available zoom levels of a cloudtiles container as an array of strings
+
+``` js
+[ '0', '1', '2', ... ];
+```
+
 
 ## License
 

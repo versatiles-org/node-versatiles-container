@@ -19,6 +19,7 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	self.header = null;
 	self.meta = null;
 	self.index = null;
+	self.zoom = null;
 
 	self.opt = {
 		invertY: false,
@@ -274,6 +275,27 @@ cloudtiles.prototype.getMeta = function(fn){
 				
 			});
 		});
+
+	});
+
+	return self;
+};
+
+// get zoom levels
+cloudtiles.prototype.getZoomLevels = function(fn){
+	const self = this;
+
+	// deliver if known
+	if (self.zoom !== null) return fn(null, self.zoom), self;
+
+	self.getBlockIndex(function(err){
+		if (err) return fn(err);
+
+		self.zoom = Object.keys(self.index).sort(function(a,b){
+			return a.localeCompare(b, undefined, { numeric: true });
+		});
+
+		return fn(null, [ ...self.zoom ]);
 
 	});
 
