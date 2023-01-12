@@ -14,7 +14,7 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	self.src = src;
 	self.srctype = /^https?:\/\//.test(src) ? "http" : "file";
 	self.fd = null;
-	
+
 	// data
 	self.header = null;
 	self.meta = null;
@@ -35,7 +35,7 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 
 	self.format = [ "png", "jpeg", "webp", null, null, null, null, null, null, null, null, null, null, null, null, null, "pbf" ];
 	self.compression = [ null, "gzip", "brotli", null, null, null, null, null, null, null, null, null, null, null, null, null, null ];
-	
+
 	return self;
 };
 
@@ -47,9 +47,9 @@ cloudtiles.prototype.read = function(position, length, fn){
 // read from http(s)
 cloudtiles.prototype.read_http = function(position, length, fn){
 	const self = this;
-	fetch(self.src, { 
-		headers: { 
-			...self.requestheaders, 
+	fetch(self.src, {
+		headers: {
+			...self.requestheaders,
 			"Range": format("bytes=%s-%s", position.toString(), (position+length).toString()), // explicit .toString() because printf appends 'n' to bigint
 		}
 	}).then(function(resp){
@@ -69,7 +69,7 @@ cloudtiles.prototype.read_http = function(position, length, fn){
 cloudtiles.prototype.read_file = function(position, length, fn){
 	const self = this;
 	self.open_file(function(){
-		fs.read(self.fd, { 
+		fs.read(self.fd, {
 			buffer: Buffer.alloc(Number(length)), // buffer wants integers, but length shouldn't exceed 2^53 anyway
 			position: position,
 			offset: 0,
@@ -103,7 +103,7 @@ cloudtiles.prototype.getHeader = function(fn){
 	// FIXME: get magic bytes first, then read whole header based on version
 	self.read(0, 62, function(err, data){
 		if (err) return fn(err);
-		
+
 		try {
 			self.header = {
 				magic: data.toString("utf8", 0, 28),
@@ -117,9 +117,9 @@ cloudtiles.prototype.getHeader = function(fn){
 		} catch (err) {
 			return fn(err);
 		}
-		
+
 		fn(null, self.header);
-		
+
 	});
 
 	return self;
@@ -139,7 +139,7 @@ cloudtiles.prototype.getTile = function(z, x, y, fn){
 		// tile xy (within block)
 		const tx = x%256;
 		const ty = y%256;
-	
+
 		// block xy
 		const bx = ((x-tx)/256);
 		const by = ((y-ty)/256);
@@ -150,27 +150,27 @@ cloudtiles.prototype.getTile = function(z, x, y, fn){
 		if (!self.index[z][bx].hasOwnProperty(by)) return fn(new Error("Invalid Y"));
 
 		const block = self.index[z][bx][by];
-		
+
 		// check if block contains tile
 		if (tx < block.col_min || tx > block.col_max) return fn(new Error("Invalid X within Block"));
 		if (ty < block.row_min || ty > block.row_max) return fn(new Error("Invalid Y within Block"));
-		
+
 		// calculate sequential tile number
 		const j = (ty - block.row_min) * (block.col_max - block.col_min + 1) + (tx - block.col_min);
 
 		// get tile index
 		self.getTileIndex(block, function(err){
 			if (err) return fn(err);
-			
+
 			const tile_offset = block.tile_index.readBigUInt64BE(12*j);
 			const tile_length = BigInt(block.tile_index.readUInt32BE(12*j+8)); // convert to bigint so range request can be constructed
-			
+
 			self.read(tile_offset, tile_length, function(err, tile){
 				if (err) return fn(err);
 				return fn(null, tile);
 			});
-			
-			
+
+
 		});
 
 	});
@@ -207,7 +207,7 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 			if (err) return fn(err);
 			zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
 				if (err) return fn(err);
-				
+
 				// read index from buffer
 				let index = [];
 				for (let i = 0; i < (data.length/29); i++) {
@@ -224,7 +224,7 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 						tile_index: null,
 					});
 				}
-				
+
 				// filter invalid blocks and sort by z, y, x
 				index = index.filter(function(b){
 					return (b.col_max >= b.col_min && b.row_max >= b.row_min); // these shouldn't exist
@@ -233,7 +233,7 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 					if (a.column !== b.column) return (a.column - b.column);
 					return (a.row - b.row);
 				});
-				
+
 				// build hierarchy
 				self.index = index.reduce(function(i,b){
 					if (!i.hasOwnProperty(b.level)) i[b.level] = {};
@@ -241,9 +241,9 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 					i[b.level][b.column][b.row] = b;
 					return i;
 				},{});
-				
+
 				return fn(null, self.index);
-				
+
 			});
 		});
 	});
@@ -265,15 +265,15 @@ cloudtiles.prototype.getMeta = function(fn){
 			if (err) return fn(err);
 			zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
 				if (err) return fn(err);
-				
+
 				try {
 					self.meta = JSON.parse(data);
 				} catch (err) {
 					self.meta = {}; // empty
 				}
-				
+
 				return fn(null, { ...self.meta });
-				
+
 			});
 		});
 
