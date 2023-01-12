@@ -381,3 +381,103 @@ cloudtiles.prototype._zxy_ll = function(z,x,y){
 		(180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))), // lat
 	];
 };
+
+// create webserver (please don't use this in production)
+cloudtiles.prototype.server = function(){
+	const self = this;
+
+	const mimes = {
+		png: "image/png",
+		jpeg: "image/jpeg",
+		webp: "image/webp",
+		pbf: "application/x-protobuf",
+	};
+
+	const encodings = {
+		gzip: "gzip",
+		brotli: "br",
+	};
+
+	const url = require("url");
+
+	const srvr = require("http").createServer(function(req, res){
+
+		res.setHeader("Content-type", "text/plain");
+		if (req.method !== "GET") return res.statusCode = 405, res.end("Method not allowed");
+		const path = url.parse(req.url).pathname;
+	
+		switch (path) {
+			case "/":
+				return res.end(req.url, "is this thing on?");
+			break;
+			case "/tile.json":
+				// construct tilejson, extend with metadata
+				// https://github.com/mapbox/tilejson-spec/tree/master/3.0.0
+				self.getMeta(function(err, meta){
+					if (err) return res.statusCode = 500, res.end(err.toString());
+					res.setHeader("Content-type", "application/json; charset=utf-8");
+
+					// construct tilejson
+					meta.tilejson = "3.0.0";
+					meta.tiles = [ "http://"+req.headers.host+"/{z}/{x}/{y}" ];
+					meta.scheme = "zxy";
+
+					if (!meta.vector_layers) meta.vector_layers = []; // for good luck!
+
+					self.getBoundingBox(function(err, bbox){
+						if (!err) meta.bounds = bbox;
+						self.getZoomLevels(function(err, zoom){
+							if (!err) {
+								meta.minzoom = parseInt(zoom[0],10);
+								meta.maxzoom = parseInt(zoom[zoom.length-1],10);
+							}
+							return res.end(JSON.stringify(meta,null,"\t"));
+						
+						});
+					});
+				});
+			break;
+			default: // get tile
+				const xyz = path.split("/").filter(function(c){ // this is good enough
+					return !!c;
+				}).map(function(c){ // getTiles() eats integers
+					return parseInt(c,10);
+				});
+				if (xyz.length < 3) return res.statusCode = 404, res.end("sorry");
+				self.getTile(xyz[0], xyz[1], xyz[2], function(err, tile){
+					if (err) return res.statusCode = 500, res.end(err.toString());
+					res.setHeader("Content-type", mimes[self.header.tile_format]);
+
+					// not compressed anyway
+					if (self.header.tile_precompression === null) return res.end(tile);
+
+					// can the client eat the precompression?
+					const accepted_encodings = (req.headers["accept-encoding"]||"").split(/, */g).map(function(e){ return e.split(";").shift(); });
+					if (accepted_encodings.includes(encodings[self.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[self.header.tile_precompression]), res.end(tile);
+				
+					// no, decompression required
+					switch (self.header.tile_precompression) {
+						case "brotli":
+							zlib.brotliDecompress(tile, function(err, tile){ //
+								if (err) return res.statusCode = 500, res.end(err);
+								res.end(tile);
+							});
+						break;
+						case "gzip":
+							zlib.gunzip(tile, function(err, tile){ //
+								if (err) return res.statusCode = 500, res.end(err);
+								res.end(tile);
+							});
+						break;
+					}
+				});
+			break;
+		}
+		
+	});
+
+	srvr.listen.apply(srvr, arguments);
+
+	return srvr;
+
+};

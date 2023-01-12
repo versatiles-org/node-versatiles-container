@@ -61,6 +61,20 @@ Get the approximate bounding box of the highest available zoom level array of fl
 ]
 ```
 
+### `.server(...)`
+
+Start a rudimentary webserver delivering tiles and metadata. Arguments are passed on to `http.server.listen()`
+
+``` js
+cloudtiles("./some.cloudtiles").server(8080, "localhost", function(){
+	console.log("Listening on http://localhost:8080/");
+});
+```
+
+#### Routes
+
+* `/{z}/{x}/{y}` get tile
+* `/tile.json` get [TileJSON](https://github.com/mapbox/tilejson-spec)
 
 ## License
 
