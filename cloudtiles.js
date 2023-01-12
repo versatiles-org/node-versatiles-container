@@ -184,7 +184,7 @@ cloudtiles.prototype.getTileIndex = function(block, fn){
 	if (block.tile_index !== null) return fn(null, block.tile_index), self;
 	self.read(block.tile_index_offset, block.tile_index_length, function(err, data){ // read tile_index buffer
 		if (err) return fn(err);
-		zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
+		zlib.brotliDecompress(data, function(err, data){ // decompress
 			if (err) return fn(err);
 			block.tile_index = data; // keep as buffer in order to keep heap lean
 			return fn(null, block.tile_index);
@@ -205,7 +205,7 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 
 		self.read(self.header.block_index_offset, self.header.block_index_length, function(err, data){ // read block_index buffer
 			if (err) return fn(err);
-			zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
+			zlib.brotliDecompress(data, function(err, data){ // decompress
 				if (err) return fn(err);
 
 				// read index from buffer
@@ -263,7 +263,7 @@ cloudtiles.prototype.getMeta = function(fn){
 
 		self.read(self.header.meta_offset, self.header.meta_length, function(err, data){ // read meta buffer
 			if (err) return fn(err);
-			zlib.brotliDecompress(data, "brotli", function(err, data){ // decompress
+			zlib.brotliDecompress(data, function(err, data){ // decompress
 				if (err) return fn(err);
 
 				try {
