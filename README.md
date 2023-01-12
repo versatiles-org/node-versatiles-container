@@ -48,6 +48,19 @@ Get the available zoom levels of a cloudtiles container as an array of strings
 [ '0', '1', '2', ... ];
 ```
 
+### `.getBoundingBox(function(err, bbox))`
+
+Get the approximate bounding box of the highest available zoom level array of floats in the order `WestLon`, `SouthLat`, `EastLon`, `NorthLat`.
+
+``` js
+[
+  13.07373046875,
+  52.32191088594773,
+  13.77685546875,
+  52.68304276227742
+]
+```
+
 
 ## License
 

@@ -20,6 +20,7 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	self.meta = null;
 	self.index = null;
 	self.zoom = null;
+	self.bbox = null;
 
 	self.opt = {
 		invertY: false,
@@ -302,3 +303,81 @@ cloudtiles.prototype.getZoomLevels = function(fn){
 	return self;
 };
 
+// get approximate bbox for highest zoom level (lonlat; w, s, e, n)
+cloudtiles.prototype.getBoundingBox = function(fn){
+	const self = this;
+
+	// deliver if known
+	if (self.bbox !== null) return fn(null, self.bbox), self;
+
+	self.getZoomLevels(function(err, zoom){
+		if (err) return fn(err);
+
+		// get max zoom level
+		// assumption: highest zoom tileset delivers the most detailed bounding box
+		const z = "10";// zoom.pop();
+
+		// get min and max x
+		const xr = Object.keys(self.index[z]).sort(function(a,b){
+			return a.localeCompare(b, undefined, { numeric: true });
+		});
+		const xmin = xr[0];
+		const xmax = xr[xr.length-1];
+
+		// get min and max y
+		// assumption: extent is the same on every block (tileset is "rectangular")
+		const yr = Object.keys(self.index[z][xmin]).sort(function(a,b){
+			return a.localeCompare(b, undefined, { numeric: true });
+		});
+
+		const ymin = yr[0];
+		const ymax = yr[yr.length-1];
+
+		// convert to tile ids;
+		let txmin = ((parseInt(xmin,10)*256)+self.index[z][xmin][ymin].col_min);
+		let txmax = ((parseInt(xmin,10)*256)+self.index[z][xmin][ymin].col_max);
+
+		let tymin, tymax; // different when invert y
+		if (self.opt.invertY) { // north → south
+
+			tymin = Math.pow(2,z)-((parseInt(ymin,10)*256)+self.index[z][xmin][ymin].row_min);
+			tymax = Math.pow(2,z)-((parseInt(ymax,10)*256)+self.index[z][xmax][ymax].row_max);
+
+		} else { // south → north
+
+			tymin = ((parseInt(ymax,10)*256)+self.index[z][xmax][ymax].row_max);
+			tymax = ((parseInt(ymin,10)*256)+self.index[z][xmin][ymin].row_min);
+
+		};
+
+		// in case someone wants to check...
+		/*
+			console.log("south west tile: https://tile.openstreetmap.org/%d/%d/%d.png", z, txmin, tymin);
+			console.log("north east tile: https://tile.openstreetmap.org/%d/%d/%d.png", z, txmax, tymax);
+		*/
+
+		// use "next" tile to include all tiles
+		txmax += 1;
+		tymin += 1;
+
+		// convert to coordinates:
+		self.bbox = [
+			...self._zxy_ll(parseInt(z,10), txmin, tymin),
+			...self._zxy_ll(parseInt(z,10), txmax, tymax),
+		];
+
+		return fn(null, self.bbox);
+
+	});
+
+	return self;
+};
+
+// helper zxy → lonlat
+cloudtiles.prototype._zxy_ll = function(z,x,y){
+	const n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
+	return [
+		(x / Math.pow(2, z) * 360 - 180), // lon
+		(180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))), // lat
+	];
+};
