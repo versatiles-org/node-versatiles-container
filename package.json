@@ -3,6 +3,9 @@
   "version": "0.0.5",
   "description": "A client library for OpenCloudTiles",
   "main": "cloudtiles.js",
+  "bin": {
+    "cloudtiles": "./cloudtiles.js"
+  },
   "author": "yetzt <node@yetzt.me>",
   "license": "UNLICENSE",
   "dependencies": {
