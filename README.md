@@ -78,6 +78,14 @@ cloudtiles("./some.cloudtiles").server(8080, "localhost", function(){
 * `/style.json` get [Style](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
 * `/` Display map in Browser with [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [maplibre-gl-inspect](https://github.com/acalcutt/maplibre-gl-inspect)
 
+## Standalone Server
+
+When called directly, cloudtiles can act as a standalone server:
+
+* Global Install: `cloudtiles <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+* Local Install: `node node_modules/cloudtiles/cloudtiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+
+
 ## License
 
 [UNLICENSE](https://unlicense.org/)

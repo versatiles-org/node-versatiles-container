@@ -542,3 +542,16 @@ cloudtiles.prototype.server = function(){
 	return srvr;
 
 };
+
+// executable magic
+if (require.main === module) {
+	if (process.argv.length <3 || process.argv.includes("-h") || process.argv.includes("--help")) return console.error("Usage: cloudtiles <url|file>.cloudtiles [--tms] [--port <port>] [--host <hostname|ip>]"), process.exit(1);
+	const src = /^https?:\/\//.test(process.argv[2]) ? process.argv[2] : path.resolve(process.cwd(), process.argv[2]);
+	const port = process.argv.includes("--port") ? parseInt(process.argv[process.argv.lastIndexOf("--port")+1],10) : 8080;
+	const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host")+1] : "localhost";
+	const tms = process.argv.includes("--tms");
+	cloudtiles(src, { tms: tms }).server(port, host, function(err){
+		if (err) return console.error(err.toString()), process.exit(1);
+		console.log("Listening on http://%s:%d/", host, port);
+	});
+};
