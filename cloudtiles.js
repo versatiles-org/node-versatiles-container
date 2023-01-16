@@ -417,7 +417,7 @@ cloudtiles.prototype.server = function(){
 					if (self.header.tile_format === "pbf") html.push('map.addControl(new maplibregl.NavigationControl()); map.addControl(new MaplibreInspect({ showInspectMap: true, showMapPopup: false, showInspectMapPopup: false, showInspectButton: false }));');
 					html.push('</script></body></html>');
 					res.setHeader("Content-type", "text/html; charset=utf-8");
-					return res.end(html.join(""));
+					res.end(html.join(""));
 				});
 			break;
 			case "/style.json":
