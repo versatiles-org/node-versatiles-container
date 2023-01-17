@@ -33,8 +33,8 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 		...(self.opt.requestheaders||{})
 	};
 
-	self.format = [ "png", "jpeg", "webp", null, null, null, null, null, null, null, null, null, null, null, null, null, "pbf" ];
 	self.compression = [ null, "gzip", "brotli", null, null, null, null, null, null, null, null, null, null, null, null, null, null ];
+	self.format = [ "png", "jpeg", "webp", "svg", "avif", null, null, null, null, null, null, null, "geojson", "topojson", "json", "bin", "pbf" ];
 
 	return self;
 };
@@ -390,6 +390,12 @@ cloudtiles.prototype.server = function(){
 		png: "image/png",
 		jpeg: "image/jpeg",
 		webp: "image/webp",
+		svg: "image/svg+xml",
+		avif: "image/avif",
+		geojson: "application/geo+json",
+		topojson: "application/topo+json",
+		json: "application/json",
+		bin: "application/octet-stream",
 		pbf: "application/x-protobuf",
 	};
 
