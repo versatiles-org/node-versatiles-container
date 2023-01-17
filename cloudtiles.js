@@ -33,8 +33,8 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 		...(self.opt.requestheaders||{})
 	};
 
-	self.compression = [ null, "gzip", "brotli", null, null, null, null, null, null, null, null, null, null, null, null, null, null ];
 	self.format = [ "png", "jpeg", "webp", "svg", "avif", null, null, null, null, null, null, null, "geojson", "topojson", "json", "bin", "pbf" ];
+	self.compression = [ null, "gzip", "brotli" ];
 
 	return self;
 };
@@ -107,8 +107,8 @@ cloudtiles.prototype.getHeader = function(fn){
 		try {
 			self.header = {
 				magic: data.toString("utf8", 0, 28),
-				tile_format: self.format[data.readUInt8(28)],
-				tile_precompression: self.compression[data.readUInt8(29)],
+				tile_format: self.format[data.readUInt8(28)]||"bin",
+				tile_precompression: self.compression[data.readUInt8(29)]||null,
 				meta_offset: data.readBigUInt64BE(30),
 				meta_length: data.readBigUInt64BE(38),
 				block_index_offset: data.readBigUInt64BE(46),
