@@ -423,9 +423,9 @@ cloudtiles.prototype.server = function(){
 
 		res.setHeader("Content-type", "text/plain");
 		if (req.method !== "GET") return res.statusCode = 405, res.end("Method not allowed");
-		const path = url.parse(req.url).pathname;
+		const p = url.parse(req.url).pathname;
 	
-		switch (path) {
+		switch (p) {
 			case "/":
 				self.getHeader(function(err, header){ 
 					const html = [];
@@ -518,7 +518,7 @@ cloudtiles.prototype.server = function(){
 				});
 			break;
 			default: // get tile
-				const xyz = path.split("/").filter(function(c){ // this is good enough
+				const xyz = p.split("/").filter(function(c){ // this is good enough
 					return !!c;
 				}).map(function(c){ // getTiles() eats integers
 					return parseInt(c,10);
