@@ -34,7 +34,7 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 	};
 
 	self.format = [ "png", "jpeg", "webp", "svg", "avif", null, null, null, null, null, null, null, "geojson", "topojson", "json", "bin", "pbf" ];
-	self.compression = [ null, "gzip", "brotli" ];
+	self.compression = [ null, "gzip", "br" ];
 
 	return self;
 };
@@ -90,6 +90,16 @@ cloudtiles.prototype.open_file = function(fn){
 		return fn(null);
 	});
 	return self;
+};
+
+// decompression helper
+cloudtiles.prototype.decompress = function(type, data, fn){
+	switch (type) {
+		case "br": zlib.brotliDecompress(data, fn); break;
+		case "gzip": zlib.gunzip(data, fn); break;
+		default: fn(null, data); break;
+	}
+	return this;
 };
 
 // get header
@@ -183,7 +193,7 @@ cloudtiles.prototype.getTileIndex = function(block, fn){
 	if (block.tile_index !== null) return fn(null, block.tile_index), self;
 	self.read(block.tile_index_offset, block.tile_index_length, function(err, data){ // read tile_index buffer
 		if (err) return fn(err);
-		zlib.brotliDecompress(data, function(err, data){ // decompress
+		self.decompress("br", data, function(err, data){ // decompress
 			if (err) return fn(err);
 			block.tile_index = data; // keep as buffer in order to keep heap lean
 			return fn(null, block.tile_index);
@@ -204,7 +214,7 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 
 		self.read(self.header.block_index_offset, self.header.block_index_length, function(err, data){ // read block_index buffer
 			if (err) return fn(err);
-			zlib.brotliDecompress(data, function(err, data){ // decompress
+			self.decompress("br", data, function(err, data){ // decompress
 				if (err) return fn(err);
 
 				// read index from buffer
@@ -262,7 +272,8 @@ cloudtiles.prototype.getMeta = function(fn){
 
 		self.read(self.header.meta_offset, self.header.meta_length, function(err, data){ // read meta buffer
 			if (err) return fn(err);
-			zlib.brotliDecompress(data, function(err, data){ // decompress
+
+			self.decompress(self.header.tile_precompression, data, function(err, data){ // decompress
 				if (err) return fn(err);
 
 				try {
@@ -522,20 +533,11 @@ cloudtiles.prototype.server = function(){
 					if (accepted_encodings.includes(encodings[self.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[self.header.tile_precompression]), res.end(tile);
 				
 					// no, decompression required
-					switch (self.header.tile_precompression) {
-						case "brotli":
-							zlib.brotliDecompress(tile, function(err, tile){ //
-								if (err) return res.statusCode = 500, res.end(err);
-								res.end(tile);
-							});
-						break;
-						case "gzip":
-							zlib.gunzip(tile, function(err, tile){ //
-								if (err) return res.statusCode = 500, res.end(err);
-								res.end(tile);
-							});
-						break;
-					}
+					self.decompress(self.header.tile_precompression, tile, function(err, tile){
+						if (err) return res.statusCode = 500, res.end(err);
+						res.end(tile);
+					});
+
 				});
 			break;
 		}
