@@ -315,7 +315,7 @@ cloudtiles.prototype.getBoundingBox = function(fn){
 
 		// get max zoom level
 		// assumption: highest zoom tileset delivers the most detailed bounding box
-		const z = "10";// zoom.pop();
+		const z = zoom.pop();
 
 		// get min and max x
 		const xr = Object.keys(self.index[z]).sort(function(a,b){
