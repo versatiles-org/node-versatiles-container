@@ -50,10 +50,9 @@ cloudtiles.prototype.read_http = function(position, length, fn){
 	fetch(self.src, {
 		headers: {
 			...self.requestheaders,
-			"Range": format("bytes=%s-%s", position.toString(), (position+length).toString()), // explicit .toString() because printf appends 'n' to bigint
+			"Range": format("bytes=%s-%s", position.toString(), (BigInt(position)+BigInt(length)-1n).toString()), // explicit .toString() because printf appends 'n' to bigint
 		}
 	}).then(function(resp){
-		if (resp.status-200 >= 100) return fn(new Error("Server replied with HTTP Status Code "+resp.status));
 		resp.arrayBuffer().then(function(buf){
 			fn(null, Buffer.from(buf));
 		}).catch(function(err){
