@@ -67,7 +67,8 @@ cloudtiles.prototype.read_http = function(position, length, fn){
 // read a chunk from a file
 cloudtiles.prototype.read_file = function(position, length, fn){
 	const self = this;
-	self.open_file(function(){
+	self.open_file(function(err){
+		if (err) return fn(err);
 		fs.read(self.fd, {
 			buffer: Buffer.alloc(Number(length)), // buffer wants integers, but length shouldn't exceed 2^53 anyway
 			position: position,
