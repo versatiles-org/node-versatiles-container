@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>cloudtiles</title>
+		<meta name="viewport" content="width=device-width">
+		<script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+		<script src="https://cdn.jsdelivr.net/gh/acalcutt/maplibre-gl-inspect@v1.4.3/dist/maplibre-gl-inspect.min.js"></script>
+		<link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+		<link href="https://cdn.jsdelivr.net/gh/acalcutt/maplibre-gl-inspect@v1.4.3/dist/maplibre-gl-inspect.css" rel="stylesheet" />
+		<style type="text/css">
+			body { margin: 0; }
+			#map { width: 100vw; height: 100vh; }
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		<script type="text/javascript">
+
+			var map = new maplibregl.Map({
+				container: "map",
+				style: "//{{host}}/style.json",
+				hash: true,
+			});
+			
+			map.dragRotate.disable();
+			map.touchZoomRotate.disableRotation();
+
+			map.addControl(new maplibregl.NavigationControl()); 
+			map.addControl(new MaplibreInspect({ showInspectMap: true, showMapPopup: false, showInspectMapPopup: false, showInspectButton: false }));
+
+		</script>
+	</body>
+</html>
