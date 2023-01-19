@@ -217,6 +217,9 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 			self.decompress("br", data, function(err, data){ // decompress
 				if (err) return fn(err);
 
+				// this happened
+				if (data.length/29%1 !== 0) return fn(new Error("invalid block index"));
+
 				// read index from buffer
 				let index = [];
 				for (let i = 0; i < (data.length/29); i++) {
