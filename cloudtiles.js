@@ -348,7 +348,7 @@ cloudtiles.prototype.getBoundingBox = function(fn){
 
 		// convert to tile ids;
 		let txmin = ((parseInt(xmin,10)*256)+self.index[z][xmin][ymin].col_min);
-		let txmax = ((parseInt(xmin,10)*256)+self.index[z][xmin][ymin].col_max);
+		let txmax = ((parseInt(xmax,10)*256)+self.index[z][xmin][ymin].col_max);
 
 		let tymin, tymax; // different when invert y
 		if (self.opt.tms) { // north → south
