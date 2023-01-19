@@ -498,12 +498,12 @@ cloudtiles.prototype.server = function(){
 					// construct tilejson
 					meta.tilejson = "3.0.0";
 					meta.tiles = [ "http://"+req.headers.host+"/{z}/{x}/{y}" ];
-					meta.scheme = "zxy";
+					meta.scheme = meta.scheme || "zxy";
 
 					if (!meta.vector_layers) meta.vector_layers = []; // for good luck!
 
 					self.getBoundingBox(function(err, bbox){
-						if (!err) meta.bounds = bbox;
+						if (!err) meta.bounds = meta.bounds || bbox;
 						self.getZoomLevels(function(err, zoom){
 							if (!err) {
 								meta.minzoom = parseInt(zoom[0],10);
