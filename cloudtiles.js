@@ -535,7 +535,7 @@ cloudtiles.prototype.server = function(){
 				
 					// no, decompression required
 					self.decompress(self.header.tile_precompression, tile, function(err, tile){
-						if (err) return res.statusCode = 500, res.end(err);
+						if (err) return res.statusCode = 500, res.end(err.toString());
 						res.end(tile);
 					});
 
