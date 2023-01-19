@@ -506,8 +506,8 @@ cloudtiles.prototype.server = function(){
 						if (!err) meta.bounds = meta.bounds || bbox;
 						self.getZoomLevels(function(err, zoom){
 							if (!err) {
-								meta.minzoom = parseInt(zoom[0],10);
-								meta.maxzoom = parseInt(zoom[zoom.length-1],10);
+								meta.minzoom = meta.minzoom || parseInt(zoom[0],10);
+								meta.maxzoom = meta.maxzoom || parseInt(zoom[zoom.length-1],10);
 							}
 							return res.end(JSON.stringify(meta,null,"\t"));
 						
