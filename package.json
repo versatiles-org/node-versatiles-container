@@ -1,6 +1,6 @@
 {
   "name": "cloudtiles",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A client library for OpenCloudTiles",
   "main": "cloudtiles.js",
   "bin": {
@@ -9,7 +9,17 @@
   "author": "yetzt <node@yetzt.me>",
   "license": "UNLICENSE",
   "dependencies": {
-    "undici": "^5.15.0"
+    "undici": "^5.15.1"
   },
-  "keywords": ["map","tiles","maptiles","cloudtiles","opencloudtiles","geo","gis","maps","tileserver"]
+  "keywords": [
+    "map",
+    "tiles",
+    "maptiles",
+    "cloudtiles",
+    "opencloudtiles",
+    "geo",
+    "gis",
+    "maps",
+    "tileserver"
+  ]
 }
