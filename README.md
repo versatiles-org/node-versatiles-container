@@ -75,17 +75,28 @@ versatiles("./some.versatiles").server(8080, "localhost", function(){
 
 * `/{z}/{x}/{y}` get tile
 * `/tile.json` get [TileJSON](https://github.com/mapbox/tilejson-spec)
-* `/style.json` get [StyleJSON](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
+* `/style.json` get minimal [StyleJSON](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
 * `/` Display map in Browser with [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [maplibre-gl-inspect](https://github.com/acalcutt/maplibre-gl-inspect)
 
 ## Standalone Server
 
-When called directly, versatiles can act as a standalone server:
-
-* Global Install: `npm i -g versatiles; versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
-* Local Install: `npm i versatiles; node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+When called directly, versatiles can act as a standalone server.
 
 *This is for testing purposes, please feel discouraged from using this in a production environment.*
+
+### Global Install
+
+``` sh
+npm i -g versatiles
+versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>]
+```
+
+### Local Install 
+
+``` sh
+npm i versatiles
+node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]
+```
 
 ## License
 
