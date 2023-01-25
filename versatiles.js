@@ -206,6 +206,9 @@ versatiles.prototype.getTile = function(z, x, y, fn){
 
 			const tile_offset = block.tile_index.readBigUInt64BE(12*j);
 			const tile_length = BigInt(block.tile_index.readUInt32BE(12*j+8)); // convert to bigint so range request can be constructed
+			
+			// shortcut: return empty buffer
+			if (tile_length === 0n) return fn(null, Buffer.allocUnsafe(0));
 
 			self.read(tile_offset, tile_length, function(err, tile){
 				if (err) return fn(err);
@@ -548,6 +551,7 @@ versatiles.prototype.server = function(){
 				if (xyz.length < 3) return res.statusCode = 404, res.end("sorry");
 				self.getTile(xyz[0], xyz[1], xyz[2], function(err, tile){
 					if (err) return res.statusCode = 500, res.end(err.toString());
+					if (tile.length === 0) return res.statusCode = 204, res.end(); // empty tile → "204 no content"
 					res.setHeader("Content-type", mimes[self.header.tile_format]);
 
 					// not compressed anyway
