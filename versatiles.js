@@ -7,8 +7,8 @@ const fetch = require("undici").fetch;
 const format = require("util").format;
 const pkg = require("./package");
 
-const cloudtiles = module.exports = function cloudtiles(src, opt) {
-	if (!(this instanceof cloudtiles)) return new cloudtiles(src, opt);
+const versatiles = module.exports = function versatiles(src, opt) {
+	if (!(this instanceof versatiles)) return new versatiles(src, opt);
 	const self = this;
 
 	self.src = src;
@@ -40,12 +40,12 @@ const cloudtiles = module.exports = function cloudtiles(src, opt) {
 };
 
 // thin wrapper for type specific read function
-cloudtiles.prototype.read = function(position, length, fn){
+versatiles.prototype.read = function(position, length, fn){
 	return this["read_"+this.srctype](position, length, fn), this;
 };
 
 // read from http(s)
-cloudtiles.prototype.read_http = function(position, length, fn){
+versatiles.prototype.read_http = function(position, length, fn){
 	const self = this;
 	fetch(self.src, {
 		headers: {
@@ -65,7 +65,7 @@ cloudtiles.prototype.read_http = function(position, length, fn){
 };
 
 // read a chunk from a file
-cloudtiles.prototype.read_file = function(position, length, fn){
+versatiles.prototype.read_file = function(position, length, fn){
 	const self = this;
 	self.open_file(function(err){
 		if (err) return fn(err);
@@ -82,7 +82,7 @@ cloudtiles.prototype.read_file = function(position, length, fn){
 };
 
 // open file once wrapper
-cloudtiles.prototype.open_file = function(fn){
+versatiles.prototype.open_file = function(fn){
 	const self = this;
 	if (self.fd !== null) return fn(null), self;
 	fs.open(self.src, 'r', function(err, fd){
@@ -94,7 +94,7 @@ cloudtiles.prototype.open_file = function(fn){
 };
 
 // decompression helper
-cloudtiles.prototype.decompress = function(type, data, fn){
+versatiles.prototype.decompress = function(type, data, fn){
 	switch (type) {
 		case "br": zlib.brotliDecompress(data, fn); break;
 		case "gzip": zlib.gunzip(data, fn); break;
@@ -104,7 +104,7 @@ cloudtiles.prototype.decompress = function(type, data, fn){
 };
 
 // get header
-cloudtiles.prototype.getHeader = function(fn){
+versatiles.prototype.getHeader = function(fn){
 	const self = this;
 
 	// deliver if known
@@ -136,7 +136,7 @@ cloudtiles.prototype.getHeader = function(fn){
 };
 
 // get tile by zxy
-cloudtiles.prototype.getTile = function(z, x, y, fn){
+versatiles.prototype.getTile = function(z, x, y, fn){
 	const self = this;
 
 	// when y index is inverted
@@ -189,7 +189,7 @@ cloudtiles.prototype.getTile = function(z, x, y, fn){
 };
 
 // get tile index for block
-cloudtiles.prototype.getTileIndex = function(block, fn){
+versatiles.prototype.getTileIndex = function(block, fn){
 	const self = this;
 	if (block.tile_index !== null) return fn(null, block.tile_index), self;
 	self.read(block.tile_index_offset, block.tile_index_length, function(err, data){ // read tile_index buffer
@@ -204,7 +204,7 @@ cloudtiles.prototype.getTileIndex = function(block, fn){
 };
 
 // get block index
-cloudtiles.prototype.getBlockIndex = function(fn){
+versatiles.prototype.getBlockIndex = function(fn){
 	const self = this;
 
 	// deliver if known
@@ -265,7 +265,7 @@ cloudtiles.prototype.getBlockIndex = function(fn){
 };
 
 // get metadata
-cloudtiles.prototype.getMeta = function(fn){
+versatiles.prototype.getMeta = function(fn){
 	const self = this;
 
 	// deliver if known
@@ -297,7 +297,7 @@ cloudtiles.prototype.getMeta = function(fn){
 };
 
 // get zoom levels
-cloudtiles.prototype.getZoomLevels = function(fn){
+versatiles.prototype.getZoomLevels = function(fn){
 	const self = this;
 
 	// deliver if known
@@ -318,7 +318,7 @@ cloudtiles.prototype.getZoomLevels = function(fn){
 };
 
 // get approximate bbox for highest zoom level (lonlat; w, s, e, n)
-cloudtiles.prototype.getBoundingBox = function(fn){
+versatiles.prototype.getBoundingBox = function(fn){
 	const self = this;
 
 	// deliver if known
@@ -388,7 +388,7 @@ cloudtiles.prototype.getBoundingBox = function(fn){
 };
 
 // helper zxy → lonlat
-cloudtiles.prototype._zxy_ll = function(z,x,y){
+versatiles.prototype._zxy_ll = function(z,x,y){
 	const n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
 	return [
 		(x / Math.pow(2, z) * 360 - 180), // lon
@@ -397,7 +397,7 @@ cloudtiles.prototype._zxy_ll = function(z,x,y){
 };
 
 // create webserver (please don't use this in production)
-cloudtiles.prototype.server = function(){
+versatiles.prototype.server = function(){
 	const self = this;
 
 	const mimes = {
@@ -453,8 +453,8 @@ cloudtiles.prototype.server = function(){
 
 						const style = {
 							version: 8,
-							id: "cloudtiles",
-							name: "cloudtiles",
+							id: "versatiles",
+							name: "versatiles",
 							zoom: midzoom,
 							center: center,
 							sources: {},
@@ -462,21 +462,21 @@ cloudtiles.prototype.server = function(){
 						};
 						
 						if (self.header.tile_format === "pbf") { // vector tiles
-							style.sources.cloudtiles = {
+							style.sources.versatiles = {
 								type: "vector",
 								url: "http://"+req.headers.host+"/tile.json",
 							};
 							// FIXME: extract layers from metadata
 						} else { // raster tiles
-							style.sources.cloudtiles = {
+							style.sources.versatiles = {
 								type: "raster",
 								tiles: ["http://"+req.headers.host+"/{z}/{x}/{y}"],
 								tileSize: 256,
 							};
 							style.layers.push({
-								id: "cloudtiles",
+								id: "versatiles",
 								type: "raster",
-								source: "cloudtiles",
+								source: "versatiles",
 								minzoom: zooms[0],
 								maxzoom: zooms[1],
 							});
@@ -553,12 +553,12 @@ cloudtiles.prototype.server = function(){
 
 // executable magic
 if (require.main === module) {
-	if (process.argv.length <3 || process.argv.includes("-h") || process.argv.includes("--help")) return console.error("Usage: cloudtiles <url|file>.cloudtiles [--tms] [--port <port>] [--host <hostname|ip>]"), process.exit(1);
+	if (process.argv.length <3 || process.argv.includes("-h") || process.argv.includes("--help")) return console.error("Usage: versatiles <url|file>.versatiles [--tms] [--port <port>] [--host <hostname|ip>]"), process.exit(1);
 	const src = /^https?:\/\//.test(process.argv[2]) ? process.argv[2] : path.resolve(process.cwd(), process.argv[2]);
 	const port = process.argv.includes("--port") ? parseInt(process.argv[process.argv.lastIndexOf("--port")+1],10) : 8080;
 	const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host")+1] : "localhost";
 	const tms = process.argv.includes("--tms");
-	cloudtiles(src, { tms: tms }).server(port, host, function(err){
+	versatiles(src, { tms: tms }).server(port, host, function(err){
 		if (err) return console.error(err.toString()), process.exit(1);
 		console.log("Listening on http://%s:%d/", host, port);
 	});
