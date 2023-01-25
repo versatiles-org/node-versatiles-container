@@ -306,8 +306,10 @@ versatiles.prototype.getZoomLevels = function(fn){
 	self.getBlockIndex(function(err){
 		if (err) return fn(err);
 
-		self.zoom = Object.keys(self.index).sort(function(a,b){
-			return a.localeCompare(b, undefined, { numeric: true });
+		self.zoom = Object.keys(self.index).map(function(z){
+			return parseInt(z,10);
+		}).sort(function(a,b){
+			return a-b;
 		});
 
 		return fn(null, [ ...self.zoom ]);
@@ -366,8 +368,8 @@ versatiles.prototype.getBoundingBox = function(fn){
 
 		// convert to coordinates:
 		self.bbox = [
-			...self._zxy_ll(parseInt(z,10), txmin, tymin),
-			...self._zxy_ll(parseInt(z,10), txmax, tymax),
+			...self._zxy_ll(z, txmin, tymin),
+			...self._zxy_ll(z, txmax, tymax),
 		];
 
 		return fn(null, [ ...self.bbox ]);
