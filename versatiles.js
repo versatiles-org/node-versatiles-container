@@ -364,12 +364,6 @@ versatiles.prototype.getBoundingBox = function(fn){
 
 		};
 
-		// in case someone wants to check...
-		/*
-			console.log("south west tile: https://tile.openstreetmap.org/%d/%d/%d.png", z, txmin, tymin);
-			console.log("north east tile: https://tile.openstreetmap.org/%d/%d/%d.png", z, txmax, tymax);
-		*/
-
 		// use "next" tile to include all tiles
 		txmax += 1;
 		tymin += 1;
@@ -480,7 +474,7 @@ versatiles.prototype.server = function(){
 								minzoom: zooms[0],
 								maxzoom: zooms[1],
 							});
-						}
+						};
 
 						res.setHeader("Content-type", "application/json; charset=utf-8");
 						return res.end(JSON.stringify(style,null,"\t"));
@@ -531,9 +525,11 @@ versatiles.prototype.server = function(){
 
 					// can the client eat the precompression?
 					const accepted_encodings = (req.headers["accept-encoding"]||"").split(/, */g).map(function(e){ return e.split(";").shift(); });
+
+					// no, decompression required
 					if (accepted_encodings.includes(encodings[self.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[self.header.tile_precompression]), res.end(tile);
 				
-					// no, decompression required
+					// decompress and deliver
 					self.decompress(self.header.tile_precompression, tile, function(err, tile){
 						if (err) return res.statusCode = 500, res.end(err.toString());
 						res.end(tile);
