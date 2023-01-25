@@ -82,9 +82,10 @@ versatiles("./some.versatiles").server(8080, "localhost", function(){
 
 When called directly, versatiles can act as a standalone server:
 
-* Global Install: `versatiles <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
-* Local Install: `node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+* Global Install: `npm i -g versatiles; versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+* Local Install: `npm i versatiles; node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
 
+*This is for testing purposes, please feel discouraged from using this in a production environment.*
 
 ## License
 

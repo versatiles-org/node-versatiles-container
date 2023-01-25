@@ -4,7 +4,7 @@
   "description": "A client library for VersaTiles",
   "main": "versatiles.js",
   "bin": {
-    "versatiles": "./versatiles.js"
+    "versatiles-server": "./versatiles.js"
   },
   "author": "yetzt <node@yetzt.me>",
   "license": "UNLICENSE",
