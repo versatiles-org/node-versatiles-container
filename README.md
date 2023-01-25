@@ -1,19 +1,19 @@
 # Cloudtiles
 
-A client library for [OpenCloudTiles](https://github.com/OpenCloudTiles/opencloudtiles-specification)
+A client library for [VersaTiles](https://github.com/versatiles-org/versatiles-spec)
 
 ## Install
 
-`npm i -s cloudtiles`
+`npm i -s versatiles`
 
 ## Usage Example
 
 ``` js
 
-const cloudtiles = require("cloudtiles");
+const versatiles = require("versatiles");
 const fs = require("fs");
 
-const c = cloudtiles("https://example.org/planet.cloudtiles").getTile(z,x,y, function(err, buffer){
+const c = versatiles("https://example.org/planet.versatiles").getTile(z,x,y, function(err, buffer){
 	
 	fs.writeFile("tile."+c.header.tile_format, buffer, function(){});
 	
@@ -23,26 +23,26 @@ const c = cloudtiles("https://example.org/planet.cloudtiles").getTile(z,x,y, fun
 
 ## API
 
-### `cloudtiles(src, { tms: true })`
+### `versatiles(src, { tms: true })`
 
-* `src`: can be a file path or url pointing to a cloudtiles container.
-* `tms`: set `true` if cloudtiles container uses [tms scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
+* `src`: can be a file path or url pointing to a versatiles container.
+* `tms`: set `true` if versatiles container uses [tms scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
 
 ### `.getTile(z, x, y, function(err, tile))`
 
-Get a tile as buffer from a cloudtiles container
+Get a tile as buffer from a versatiles container
 
 ### `.getHeader(function(err, header))`
 
-Get the header of a cloudtiles container
+Get the header of a versatiles container
 
 ### `.getMeta(function(err, metadata))`
 
-Get the metadata of a cloudtiles container
+Get the metadata of a versatiles container
 
 ### `.getZoomLevels(function(err, zoom))`
 
-Get the available zoom levels of a cloudtiles container as an array of strings
+Get the available zoom levels of a versatiles container as an array of strings
 
 ``` js
 [ '0', '1', '2', ... ];
@@ -66,7 +66,7 @@ Get the approximate bounding box of the highest available zoom level array of fl
 Start a rudimentary webserver delivering tiles and metadata. Arguments are passed on to `http.server.listen()`
 
 ``` js
-cloudtiles("./some.cloudtiles").server(8080, "localhost", function(){
+versatiles("./some.versatiles").server(8080, "localhost", function(){
 	console.log("Listening on http://localhost:8080/");
 });
 ```
@@ -80,10 +80,10 @@ cloudtiles("./some.cloudtiles").server(8080, "localhost", function(){
 
 ## Standalone Server
 
-When called directly, cloudtiles can act as a standalone server:
+When called directly, versatiles can act as a standalone server:
 
-* Global Install: `cloudtiles <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
-* Local Install: `node node_modules/cloudtiles/cloudtiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+* Global Install: `versatiles <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
+* Local Install: `node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]`
 
 
 ## License

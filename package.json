@@ -1,10 +1,10 @@
 {
-  "name": "cloudtiles",
   "version": "0.0.8",
-  "description": "A client library for OpenCloudTiles",
-  "main": "cloudtiles.js",
+  "name": "versatiles",
+  "description": "A client library for VersaTiles",
+  "main": "versatiles.js",
   "bin": {
-    "cloudtiles": "./cloudtiles.js"
+    "versatiles": "./versatiles.js"
   },
   "author": "yetzt <node@yetzt.me>",
   "license": "UNLICENSE",
