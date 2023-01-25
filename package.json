@@ -14,12 +14,15 @@
   "keywords": [
     "map",
     "tiles",
+    "tile",
     "maptiles",
+    "versatiles",
     "cloudtiles",
     "opencloudtiles",
     "geo",
     "gis",
     "maps",
+    "mapserver",
     "tileserver"
   ]
 }
