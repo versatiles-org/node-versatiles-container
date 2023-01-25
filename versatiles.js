@@ -110,22 +110,54 @@ versatiles.prototype.getHeader = function(fn){
 	// deliver if known
 	if (self.header !== null) return fn(null, { ...self.header }), self;
 
-	// FIXME: get magic bytes first, then read whole header based on version
-	self.read(0, 62, function(err, data){
+	self.read(0, 66, function(err, data){
 		if (err) return fn(err);
 
-		try {
-			self.header = {
-				magic: data.toString("utf8", 0, 28),
-				tile_format: self.format[data.readUInt8(28)]||"bin",
-				tile_precompression: self.compression[data.readUInt8(29)]||null,
-				meta_offset: data.readBigUInt64BE(30),
-				meta_length: data.readBigUInt64BE(38),
-				block_index_offset: data.readBigUInt64BE(46),
-				block_index_length: data.readBigUInt64BE(54),
-			};
-		} catch (err) {
-			return fn(err);
+		// check magic bytes
+		if (data.toString("utf8", 0, 14) === "versatiles_v01") {
+			
+			try {
+				self.header = {
+					magic: data.toString("utf8", 0, 14),
+					tile_format: self.format[data.readUInt8(14)]||"bin",
+					tile_precompression: self.compression[data.readUInt8(15)]||null,
+					zoom_min: data.readUInt8(16),
+					zoom_max: data.readUInt8(17),
+					bbox_min_x: data.readFloatBE(18),
+					bbox_min_y: data.readFloatBE(22),
+					bbox_max_x: data.readFloatBE(26),
+					bbox_max_y: data.readFloatBE(30),
+					meta_offset: data.readBigUInt64BE(34),
+					meta_length: data.readBigUInt64BE(42),
+					block_index_offset: data.readBigUInt64BE(50),
+					block_index_length: data.readBigUInt64BE(58),
+				};
+			} catch (err) {
+				return fn(err);
+			}
+			
+			// set zoom and bbox
+			self.zoom = Array(self.header.bbox_max-self.header.bbox_min+1).fill().map(function(v,i){ return i+self.header.bbox_min });
+			self.bbox = [ self.header.bbox_min_x, self.header.bbox_min_y, self.header.bbox_max_x, self.header.bbox_max_y ];
+			
+		} else if (data.toString("utf8", 0, 28) === "OpenCloudTiles-Container-v1:") { // backwards compatibility
+
+			try {
+				self.header = {
+					magic: data.toString("utf8", 0, 28),
+					tile_format: self.format[data.readUInt8(28)]||"bin",
+					tile_precompression: self.compression[data.readUInt8(29)]||null,
+					meta_offset: data.readBigUInt64BE(30),
+					meta_length: data.readBigUInt64BE(38),
+					block_index_offset: data.readBigUInt64BE(46),
+					block_index_length: data.readBigUInt64BE(54),
+				};
+			} catch (err) {
+				return fn(err);
+			}
+			
+		} else {
+			return fn(null, new Error("Invalid Container"));
 		}
 
 		fn(null, { ...self.header });
