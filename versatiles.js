@@ -364,10 +364,6 @@ versatiles.prototype.getBoundingBox = function(fn){
 
 		};
 
-		// use "next" tile to include all tiles
-		txmax += 1;
-		tymin += 1;
-
 		// convert to coordinates:
 		self.bbox = [
 			...self._zxy_ll(parseInt(z,10), txmin, tymin),
