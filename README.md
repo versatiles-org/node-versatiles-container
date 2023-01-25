@@ -1,4 +1,4 @@
-# Cloudtiles
+# VersaTiles
 
 A client library for [VersaTiles](https://github.com/versatiles-org/versatiles-spec)
 
