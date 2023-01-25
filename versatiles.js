@@ -108,7 +108,7 @@ versatiles.prototype.getHeader = function(fn){
 	const self = this;
 
 	// deliver if known
-	if (self.header !== null) return fn(null, self.header), self;
+	if (self.header !== null) return fn(null, { ...self.header }), self;
 
 	// FIXME: get magic bytes first, then read whole header based on version
 	self.read(0, 62, function(err, data){
@@ -269,7 +269,7 @@ versatiles.prototype.getMeta = function(fn){
 	const self = this;
 
 	// deliver if known
-	if (self.meta !== null) return fn(null, self.meta), self;
+	if (self.meta !== null) return fn(null, { ...self.meta }), self;
 
 	self.getHeader(function(err){
 		if (err) return fn(err);
@@ -301,7 +301,7 @@ versatiles.prototype.getZoomLevels = function(fn){
 	const self = this;
 
 	// deliver if known
-	if (self.zoom !== null) return fn(null, self.zoom), self;
+	if (self.zoom !== null) return fn(null, [ ...self.zoom ]), self;
 
 	self.getBlockIndex(function(err){
 		if (err) return fn(err);
@@ -322,7 +322,7 @@ versatiles.prototype.getBoundingBox = function(fn){
 	const self = this;
 
 	// deliver if known
-	if (self.bbox !== null) return fn(null, self.bbox), self;
+	if (self.bbox !== null) return fn(null, [ ...self.bbox ]), self;
 
 	self.getZoomLevels(function(err, zoom){
 		if (err) return fn(err);
@@ -380,7 +380,7 @@ versatiles.prototype.getBoundingBox = function(fn){
 			...self._zxy_ll(parseInt(z,10), txmax, tymax),
 		];
 
-		return fn(null, self.bbox);
+		return fn(null, [ ...self.bbox ]);
 
 	});
 
