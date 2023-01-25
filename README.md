@@ -42,22 +42,22 @@ Get the metadata of a versatiles container
 
 ### `.getZoomLevels(function(err, zoom))`
 
-Get the available zoom levels of a versatiles container as an array of strings
+Get the available zoom levels of a versatiles container as an array of integers
 
 ``` js
-[ '0', '1', '2', ... ];
+[ 0, 1, 2, ... ];
 ```
 
 ### `.getBoundingBox(function(err, bbox))`
 
-Get the approximate bounding box of the highest available zoom level array of floats in the order `WestLon`, `SouthLat`, `EastLon`, `NorthLat`.
+Get the bounding box as an array of floats in the order `WestLon`, `SouthLat`, `EastLon`, `NorthLat`.
 
 ``` js
 [
-  13.07373046875,
-  52.32191088594773,
-  13.77685546875,
-  52.68304276227742
+	13.07373046875,
+	52.32191088594773,
+	13.77685546875,
+	52.68304276227742
 ]
 ```
 
@@ -75,7 +75,7 @@ versatiles("./some.versatiles").server(8080, "localhost", function(){
 
 * `/{z}/{x}/{y}` get tile
 * `/tile.json` get [TileJSON](https://github.com/mapbox/tilejson-spec)
-* `/style.json` get [Style](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
+* `/style.json` get [StyleJSON](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
 * `/` Display map in Browser with [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [maplibre-gl-inspect](https://github.com/acalcutt/maplibre-gl-inspect)
 
 ## Standalone Server
