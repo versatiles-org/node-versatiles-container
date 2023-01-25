@@ -349,17 +349,17 @@ versatiles.prototype.getBoundingBox = function(fn){
 
 		// convert to tile ids;
 		let txmin = ((parseInt(xmin,10)*256)+self.index[z][xmin][ymin].col_min);
-		let txmax = ((parseInt(xmax,10)*256)+self.index[z][xmin][ymin].col_max);
+		let txmax = ((parseInt(xmax,10)*256)+self.index[z][xmin][ymin].col_max+1); // use "next" tile to include all tiles
 
 		let tymin, tymax; // different when invert y
 		if (self.opt.tms) { // north → south
 
-			tymin = Math.pow(2,z)-((parseInt(ymin,10)*256)+self.index[z][xmin][ymin].row_min)-1;
+			tymin = Math.pow(2,z)-((parseInt(ymin,10)*256)+self.index[z][xmin][ymin].row_min); // use "next" tile, not subtracting 1
 			tymax = Math.pow(2,z)-((parseInt(ymax,10)*256)+self.index[z][xmax][ymax].row_max)-1;
 
 		} else { // south → north
 
-			tymin = ((parseInt(ymax,10)*256)+self.index[z][xmax][ymax].row_max);
+			tymin = ((parseInt(ymax,10)*256)+self.index[z][xmax][ymax].row_max)+1; // use "next" tile
 			tymax = ((parseInt(ymin,10)*256)+self.index[z][xmin][ymin].row_min);
 
 		};
