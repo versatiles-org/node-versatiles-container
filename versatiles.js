@@ -151,11 +151,11 @@ versatiles.prototype.getHeader = function(fn){
 			} catch (err) {
 				return fn(err);
 			}
-			
-			// set zoom and bbox
-			self.zoom = Array(self.header.bbox_max-self.header.bbox_min+1).fill().map(function(v,i){ return i+self.header.bbox_min });
-			self.bbox = [ self.header.bbox_min_x, self.header.bbox_min_y, self.header.bbox_max_x, self.header.bbox_max_y ];
-			
+
+			// set zoom and bbox if defined
+			if (self.header.zoom_mon+self.header.zoom_max > 0) self.zoom = Array(self.header.zoom_max-self.header.zoom_min+1).fill().map(function(v,i){ return i+self.header.zoom_min });
+			if (self.header.bbox_min_x+self.header.bbox_max_x+self.header.bbox_min_y+self.header.bbox_may_y > 0) self.bbox = [ self.header.bbox_min_x, self.header.bbox_min_y, self.header.bbox_max_x, self.header.bbox_max_y ];
+
 		} else if (data.toString("utf8", 0, 28) === "OpenCloudTiles-Container-v1:") { // backwards compatibility
 
 			try {
