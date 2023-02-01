@@ -11,6 +11,12 @@ const versatiles = module.exports = function versatiles(src, opt) {
 	if (!(this instanceof versatiles)) return new versatiles(src, opt);
 	const self = this;
 
+	self.opt = {
+		tms: false,
+		headers: {},
+		...(opt||{}),
+	};
+
 	self.src = src;
 	self.srctype = /^https?:\/\//.test(src) ? "http" : "file";
 	self.fd = null;
@@ -21,11 +27,6 @@ const versatiles = module.exports = function versatiles(src, opt) {
 	self.index = null;
 	self.zoom = null;
 	self.bbox = null;
-
-	self.opt = {
-		tms: false,
-		...(opt||{}),
-	};
 
 	// default http request headers
 	self.requestheaders = {
