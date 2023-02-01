@@ -21,6 +21,9 @@ const versatiles = module.exports = function versatiles(src, opt) {
 	self.srctype = /^https?:\/\//.test(src) ? "http" : "file";
 	self.fd = null;
 
+	// read queue
+	self.readqueue = {};
+
 	// data
 	self.header = null;
 	self.meta = null;
@@ -43,7 +46,18 @@ const versatiles = module.exports = function versatiles(src, opt) {
 
 // thin wrapper for type specific read function
 versatiles.prototype.read = function(position, length, fn){
-	return this["read_"+this.srctype](position, length, fn), this;
+	const self = this;
+
+	const id = position.toString()+'-'+length.toString;
+	if (self.readqueue.hasOwnProperty(id)) return self.readqueue[id].push(fn), self;
+	self.readqueue[id] = [ fn ];
+
+	self["read_"+self.srctype](position, length, function(){
+		while (self.readqueue[id].length > 0) self.readqueue[id].shift().apply(self, arguments);
+		delete self.readqueue[id];
+	});
+
+	return self;
 };
 
 // read from http(s)
