@@ -23,10 +23,11 @@ const c = versatiles("https://example.org/planet.versatiles").getTile(z,x,y, fun
 
 ## API
 
-### `versatiles(src, { tms: true })`
+### `versatiles(src, { tms: true, headers: {} })`
 
 * `src`: can be a file path or url pointing to a versatiles container.
 * `tms`: set `true` if versatiles container uses [tms scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
+* `headers`: additional request headers sent to the server when src is `https`
 
 ### `.getTile(z, x, y, function(err, tile))`
 
