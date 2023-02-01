@@ -19,7 +19,21 @@ const versatiles = module.exports = function versatiles(src, opt) {
 
 	self.src = src;
 	self.srctype = /^https?:\/\//.test(src) ? "http" : "file";
-	self.fd = null;
+
+	switch (self.srctype) {
+		case "file":
+			// global file descriptor
+			self.fd = null;
+		break;
+		case "http":
+			// default http(s) request headers
+			self.requestheaders = {
+				"User-Agent": format("Mozilla/5.0 (compatible; %s/%s; +https://www.npmjs.com/package/%s)", pkg.name, pkg.version, pkg.name),
+				...(self.opt.headers||{}),
+			};
+
+		break;
+	};
 
 	// read queue
 	self.readqueue = {};
@@ -30,12 +44,6 @@ const versatiles = module.exports = function versatiles(src, opt) {
 	self.index = null;
 	self.zoom = null;
 	self.bbox = null;
-
-	// default http request headers
-	self.requestheaders = {
-		"User-Agent": format("Mozilla/5.0 (compatible; %s/%s; +https://www.npmjs.com/package/%s)", pkg.name, pkg.version, pkg.name),
-		...(self.opt.requestheaders||{})
-	};
 
 	// 0x00-0x03 is defined in spec, 0x0a-0x0f is unofficial, 0x10 is for cloudtiles backwards compatibility
 	self.format = [ "png", "jpeg", "webp", "pbf", null, null, null, null, null, null, "svg", "avif", "geojson", "topojson", "json", "bin", "pbf" ];
