@@ -115,7 +115,7 @@ versatiles.prototype.getHeader = function(fn){
 
 		// check magic bytes
 		if (data.toString("utf8", 0, 14) === "versatiles_v01") {
-			
+
 			try {
 				self.header = {
 					magic: data.toString("utf8", 0, 14),
@@ -155,7 +155,7 @@ versatiles.prototype.getHeader = function(fn){
 			} catch (err) {
 				return fn(err);
 			}
-			
+
 		} else {
 			return fn(null, new Error("Invalid Container"));
 		}
@@ -206,7 +206,7 @@ versatiles.prototype.getTile = function(z, x, y, fn){
 
 			const tile_offset = block.tile_index.readBigUInt64BE(12*j);
 			const tile_length = BigInt(block.tile_index.readUInt32BE(12*j+8)); // convert to bigint so range request can be constructed
-			
+
 			// shortcut: return empty buffer
 			if (tile_length === 0n) return fn(null, Buffer.allocUnsafe(0));
 
@@ -452,7 +452,7 @@ versatiles.prototype.server = function(){
 		res.setHeader("Content-type", "text/plain");
 		if (req.method !== "GET") return res.statusCode = 405, res.end("Method not allowed");
 		const p = url.parse(req.url).pathname;
-	
+
 		switch (p) {
 			case "/":
 			case "/index.html":
@@ -487,7 +487,7 @@ versatiles.prototype.server = function(){
 							sources: {},
 							layers: [],
 						};
-						
+
 						if (self.header.tile_format === "pbf") { // vector tiles
 							style.sources.versatiles = {
 								type: "vector",
@@ -511,7 +511,7 @@ versatiles.prototype.server = function(){
 
 						res.setHeader("Content-type", "application/json; charset=utf-8");
 						return res.end(JSON.stringify(style,null,"\t"));
-					
+
 					});
 				});
 			break;
@@ -537,7 +537,7 @@ versatiles.prototype.server = function(){
 								meta.maxzoom = meta.maxzoom || parseInt(zoom[zoom.length-1],10);
 							}
 							return res.end(JSON.stringify(meta,null,"\t"));
-						
+
 						});
 					});
 				});
@@ -562,7 +562,7 @@ versatiles.prototype.server = function(){
 
 					// no, decompression required
 					if (accepted_encodings.includes(encodings[self.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[self.header.tile_precompression]), res.end(tile);
-				
+
 					// decompress and deliver
 					self.decompress(self.header.tile_precompression, tile, function(err, tile){
 						if (err) return res.statusCode = 500, res.end(err.toString());
@@ -572,7 +572,7 @@ versatiles.prototype.server = function(){
 				});
 			break;
 		}
-		
+
 	});
 
 	srvr.listen.apply(srvr, arguments);

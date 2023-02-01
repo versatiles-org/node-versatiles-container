@@ -14,9 +14,9 @@ const versatiles = require("versatiles");
 const fs = require("fs");
 
 const c = versatiles("https://example.org/planet.versatiles").getTile(z,x,y, function(err, buffer){
-	
+
 	fs.writeFile("tile."+c.header.tile_format, buffer, function(){});
-	
+
 });
 
 ```
@@ -91,7 +91,7 @@ npm i -g versatiles
 versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>]
 ```
 
-### Local Install 
+### Local Install
 
 ``` sh
 npm i versatiles
