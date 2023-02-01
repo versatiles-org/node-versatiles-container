@@ -26,6 +26,9 @@ const versatiles = module.exports = function versatiles(src, opt) {
 			self.fd = null;
 		break;
 		case "http":
+			// http(s) agent with keepalive enabled
+			self.agent = new require(src.substr(0,src.indexOf(":"))).Agent({ keepAlive: true });
+
 			// default http(s) request headers
 			self.requestheaders = {
 				"User-Agent": format("Mozilla/5.0 (compatible; %s/%s; +https://www.npmjs.com/package/%s)", pkg.name, pkg.version, pkg.name),
@@ -81,6 +84,7 @@ versatiles.prototype.read_http = function(position, length, fn){
 		followRedirects: true,
 		compression: true,
 		timeout: 10000,
+		core: { agent: self.agent },
 	}).then(function(resp){
 
 		// check status code
