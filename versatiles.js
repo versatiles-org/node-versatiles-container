@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
-const fetch = require("undici").fetch;
+const phin = require("phin");
 const format = require("util").format;
 const pkg = require("./package");
 
@@ -71,20 +71,26 @@ versatiles.prototype.read = function(position, length, fn){
 // read from http(s)
 versatiles.prototype.read_http = function(position, length, fn){
 	const self = this;
-	fetch(self.src, {
+
+	phin({
+		url: self.src,
 		headers: {
 			...self.requestheaders,
 			"Range": format("bytes=%s-%s", position.toString(), (BigInt(position)+BigInt(length)-1n).toString()), // explicit .toString() because printf appends 'n' to bigint
-		}
+		},
+		followRedirects: true,
+		compression: true,
+		timeout: 10000,
 	}).then(function(resp){
-		resp.arrayBuffer().then(function(buf){
-			fn(null, Buffer.from(buf));
-		}).catch(function(err){
-			fn(err);
-		});
+
+		// check status code
+		if (resp.statusCode !== 206) return fn(new Error("Server responded with "+resp.statusCode));
+
+		fn(null, resp.body);
 	}).catch(function(err){
 		fn(err);
 	});
+
 	return self;
 };
 

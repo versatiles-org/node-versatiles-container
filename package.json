@@ -9,7 +9,7 @@
   "author": "yetzt <node@yetzt.me>",
   "license": "UNLICENSE",
   "dependencies": {
-    "undici": "^5"
+    "phin": "^3"
   },
   "keywords": [
     "map",
