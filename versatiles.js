@@ -33,7 +33,8 @@ const versatiles = module.exports = function versatiles(src, opt) {
 		...(self.opt.requestheaders||{})
 	};
 
-	self.format = [ "png", "jpeg", "webp", "svg", "avif", null, null, null, null, null, null, null, "geojson", "topojson", "json", "bin", "pbf" ];
+	// 0x00-0x03 is defined in spec, 0x0a-0x0f is unofficial, 0x10 is for cloudtiles backwards compatibility
+	self.format = [ "png", "jpeg", "webp", "pbf", null, null, null, null, null, null, "svg", "avif", "geojson", "topojson", "json", "bin", "pbf" ];
 	self.compression = [ null, "gzip", "br" ];
 
 	return self;
