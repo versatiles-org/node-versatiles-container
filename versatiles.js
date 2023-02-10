@@ -350,6 +350,9 @@ versatiles.prototype.getBlockIndex = function(fn){
 versatiles.prototype.getMeta = function(fn){
 	const self = this;
 
+	// shortcut: no metadata defined
+	if (self.header.meta_length == 0) return fn(null, self.meta = {});
+
 	// deliver if known
 	if (self.meta !== null) return fn(null, { ...self.meta }), self;
 
