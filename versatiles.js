@@ -191,7 +191,7 @@ versatiles.prototype.getHeader = function(fn){
 			}
 
 		} else {
-			return fn(null, new Error("Invalid Container"));
+			return fn(new Error("Invalid Container"));
 		}
 
 		fn(null, { ...self.header });
