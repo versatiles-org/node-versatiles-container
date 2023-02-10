@@ -50,6 +50,19 @@ const versatiles = module.exports = function versatiles(src, opt) {
 
 	// 0x00-0x03 is defined in spec, 0x0a-0x0f is unofficial, 0x10 is for cloudtiles backwards compatibility
 	self.format = [ "png", "jpeg", "webp", "pbf", null, null, null, null, null, null, "svg", "avif", "geojson", "topojson", "json", "bin", "pbf" ];
+	self.mimetypes = {
+		bin: "application/octet-stream",
+		png: "image/png",
+		jpeg: "image/jpeg",
+		webp: "image/webp",
+		avif: "image/avif",
+		svg: "image/svg+xml",
+		pbf: "application/x-protobuf",
+		geojson: "application/geo+json",
+		topojson: "application/topo+json",
+		json: "application/json",
+	};
+
 	self.compression = [ null, "gzip", "br" ];
 
 	return self;
@@ -461,19 +474,6 @@ versatiles.prototype._zxy_ll = function(z,x,y){
 versatiles.prototype.server = function(){
 	const self = this;
 
-	const mimes = {
-		png: "image/png",
-		jpeg: "image/jpeg",
-		webp: "image/webp",
-		svg: "image/svg+xml",
-		avif: "image/avif",
-		geojson: "application/geo+json",
-		topojson: "application/topo+json",
-		json: "application/json",
-		bin: "application/octet-stream",
-		pbf: "application/x-protobuf",
-	};
-
 	const encodings = {
 		gzip: "gzip",
 		brotli: "br",
@@ -586,7 +586,7 @@ versatiles.prototype.server = function(){
 				self.getTile(xyz[0], xyz[1], xyz[2], function(err, tile){
 					if (err) return res.statusCode = 500, res.end(err.toString());
 					if (tile.length === 0) return res.statusCode = 204, res.end(); // empty tile → "204 no content"
-					res.setHeader("Content-type", mimes[self.header.tile_format]);
+					res.setHeader("Content-type", self.mimetypes[self.header.tile_format]);
 
 					// not compressed anyway
 					if (self.header.tile_precompression === null) return res.end(tile);
