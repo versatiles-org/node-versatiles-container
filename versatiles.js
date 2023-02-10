@@ -48,8 +48,12 @@ const versatiles = module.exports = function versatiles(src, opt) {
 	self.zoom = null;
 	self.bbox = null;
 
-	// 0x00-0x03 is defined in spec, 0x0a-0x0f is unofficial, 0x10 is for cloudtiles backwards compatibility
-	self.format = [ "png", "jpeg", "webp", "pbf", null, null, null, null, null, null, "svg", "avif", "geojson", "topojson", "json", "bin", "pbf" ];
+	self.formats = {
+		"c01": [ "png", "jpeg", "webp", ...Array(13), "pbf" ], // legacy opencloudtiles
+		"v01": [ "png", "jpeg", "webp", "pbf" ],
+		"v02": [ "bin", ...Array(15), "png", "jpeg", "webp", "avif", "svg", ...Array(11), "pbf", "geojson", "topojson", "json" ],
+	};
+
 	self.mimetypes = {
 		bin: "application/octet-stream",
 		png: "image/png",
@@ -161,26 +165,62 @@ versatiles.prototype.getHeader = function(fn){
 		if (err) return fn(err);
 
 		// check magic bytes
-		if (data.toString("utf8", 0, 14) === "versatiles_v01") {
+		if (/^versatiles_v0[12]$/.test(data.toString("utf8", 0, 14))) {
 
-			try {
-				self.header = {
-					magic: data.toString("utf8", 0, 14),
-					tile_format: self.format[data.readUInt8(14)]||"bin",
-					tile_precompression: self.compression[data.readUInt8(15)]||null,
-					zoom_min: data.readUInt8(16),
-					zoom_max: data.readUInt8(17),
-					bbox_min_x: data.readFloatBE(18),
-					bbox_min_y: data.readFloatBE(22),
-					bbox_max_x: data.readFloatBE(26),
-					bbox_max_y: data.readFloatBE(30),
-					meta_offset: data.readBigUInt64BE(34),
-					meta_length: data.readBigUInt64BE(42),
-					block_index_offset: data.readBigUInt64BE(50),
-					block_index_length: data.readBigUInt64BE(58),
-				};
-			} catch (err) {
-				return fn(err);
+			const version = data.toString("utf8", 11, 14);
+
+			switch (version) {
+				case "v01":
+
+					try {
+						self.header = {
+							magic: data.toString("utf8", 0, 14),
+							version: version,
+							tile_format: self.formats[version][data.readUInt8(14)]||"bin",
+							tile_precompression: self.compression[data.readUInt8(15)]||null,
+							zoom_min: data.readUInt8(16),
+							zoom_max: data.readUInt8(17),
+							bbox_min_x: data.readFloatBE(18),
+							bbox_min_y: data.readFloatBE(22),
+							bbox_max_x: data.readFloatBE(26),
+							bbox_max_y: data.readFloatBE(30),
+							meta_offset: data.readBigUInt64BE(34),
+							meta_length: data.readBigUInt64BE(42),
+							block_index_offset: data.readBigUInt64BE(50),
+							block_index_length: data.readBigUInt64BE(58),
+						};
+					} catch (err) {
+						return fn(err);
+					}
+
+				break;
+				case "v02":
+
+					try {
+						self.header = {
+							magic: data.toString("utf8", 0, 14),
+							version: version,
+							tile_format: self.formats[version][data.readUInt8(14)]||"bin",
+							tile_precompression: self.compression[data.readUInt8(15)]||null,
+							zoom_min: data.readUInt8(16),
+							zoom_max: data.readUInt8(17),
+							bbox_min_x: data.readInt32BE(18) / 10e7,
+							bbox_min_y: data.readInt32BE(22) / 10e7,
+							bbox_max_x: data.readInt32BE(26) / 10e7,
+							bbox_max_y: data.readInt32BE(30) / 10e7,
+							meta_offset: data.readBigUInt64BE(34),
+							meta_length: data.readBigUInt64BE(42),
+							block_index_offset: data.readBigUInt64BE(50),
+							block_index_length: data.readBigUInt64BE(58),
+						};
+					} catch (err) {
+						return fn(err);
+					}
+
+				break;
+				default:
+					return fn(new Error("Invalid Container"));
+				break;
 			}
 
 			// set zoom and bbox if defined
@@ -192,7 +232,8 @@ versatiles.prototype.getHeader = function(fn){
 			try {
 				self.header = {
 					magic: data.toString("utf8", 0, 28),
-					tile_format: self.format[data.readUInt8(28)]||"bin",
+					version: "c01",
+					tile_format: self.formats["c01"][data.readUInt8(28)]||"bin",
 					tile_precompression: self.compression[data.readUInt8(29)]||null,
 					meta_offset: data.readBigUInt64BE(30),
 					meta_length: data.readBigUInt64BE(38),
@@ -251,7 +292,7 @@ versatiles.prototype.getTile = function(z, x, y, fn){
 		self.getTileIndex(block, function(err){
 			if (err) return fn(err);
 
-			const tile_offset = block.tile_index.readBigUInt64BE(12*j);
+			const tile_offset = block.tile_index.readBigUInt64BE(12*j) + block.block_offset;
 			const tile_length = BigInt(block.tile_index.readUInt32BE(12*j+8)); // convert to bigint so range request can be constructed
 
 			// shortcut: return empty buffer
@@ -305,20 +346,46 @@ versatiles.prototype.getBlockIndex = function(fn){
 
 				// read index from buffer
 				let index = [];
-				for (let i = 0; i < (data.length/29); i++) {
-					index.push({
-						level: data.readUInt8(0+i*29),
-						column: data.readUInt32BE(1+i*29),
-						row: data.readUInt32BE(5+i*29),
-						col_min: data.readUInt8(9+i*29),
-						row_min: data.readUInt8(10+i*29),
-						col_max: data.readUInt8(11+i*29),
-						row_max: data.readUInt8(12+i*29),
-						tile_index_offset: data.readBigUInt64BE(13+i*29),
-						tile_index_length: data.readBigUInt64BE(21+i*29),
-						tile_index: null,
-					});
-				}
+
+				switch (self.header.version) {
+					case "c01":
+					case "v01":
+						for (let i = 0; i < (data.length/29); i++) {
+							index.push({
+								level: data.readUInt8(0+i*29),
+								column: data.readUInt32BE(1+i*29),
+								row: data.readUInt32BE(5+i*29),
+								col_min: data.readUInt8(9+i*29),
+								row_min: data.readUInt8(10+i*29),
+								col_max: data.readUInt8(11+i*29),
+								row_max: data.readUInt8(12+i*29),
+								block_offset: 0, // all positions are relative to the whole file
+								tile_blobs_length: null, // indeterminable
+								tile_index_offset: data.readBigUInt64BE(13+i*29),
+								tile_index_length: data.readBigUInt64BE(21+i*29),
+								tile_index: null,
+							});
+						};
+					break;
+					case "v02":
+						for (let i = 0; i < (data.length/33); i++) {
+							index.push({
+								level: data.readUInt8(0+i*33),
+								column: data.readUInt32BE(1+i*33),
+								row: data.readUInt32BE(5+i*33),
+								col_min: data.readUInt8(9+i*33),
+								row_min: data.readUInt8(10+i*33),
+								col_max: data.readUInt8(11+i*33),
+								row_max: data.readUInt8(12+i*33),
+								block_offset: data.readBigUInt64BE(13+i*33),
+								tile_blobs_length: data.readBigUInt64BE(21+i*33),
+								tile_index_offset: data.readBigUInt64BE(13+i*33) + data.readBigUInt64BE(21+i*33), // block_offset + tile_blobs_length
+								tile_index_length: data.readUInt32BE(29+i*33),
+								tile_index: null,
+							});
+						};
+					break;
+				};
 
 				// filter invalid blocks and sort by z, y, x
 				index = index.filter(function(b){
