@@ -293,7 +293,7 @@ versatiles.prototype.getTile = function(z, x, y, fn){
 		self.getTileIndex(block, function(err){
 			if (err) return fn(err);
 
-			const tile_offset = block.tile_index.readBigUInt64BE(12*j) + block.block_offset;
+			const tile_offset = block.tile_index.readBigUInt64BE(12*j) + BigInt(block.block_offset);
 			const tile_length = BigInt(block.tile_index.readUInt32BE(12*j+8)); // convert to bigint so range request can be constructed
 
 			// shortcut: return empty buffer
