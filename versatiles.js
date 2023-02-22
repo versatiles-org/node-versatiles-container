@@ -710,6 +710,6 @@ if (require.main === module) {
 		base: base,
 	}).server(port, host, function(err){
 		if (err) return console.error(err.toString()), process.exit(1);
-		console.log("Listening on http://%s:%d/", host, port);
+		console.error("Listening on http://%s:%d/", host, port);
 	});
 };
