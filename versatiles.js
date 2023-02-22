@@ -169,6 +169,7 @@ versatiles.prototype.getHeader = function(fn){
 
 			const version = data.toString("utf8", 11, 14);
 
+
 			switch (version) {
 				case "v01":
 
