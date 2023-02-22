@@ -578,11 +578,15 @@ versatiles.prototype.server = function(){
 			case "/style.json":
 				// construct style.json
 				self.getBoundingBox(function(err, bbox){
+					if (err) return res.statusCode = 500, res.end(err.toString());
+
 					const center = [
 						((bbox[0]+bbox[2])/2),
 						((bbox[1]+bbox[3])/2)
 					];
 					self.getZoomLevels(function(err, zoom){
+						if (err) return res.statusCode = 500, res.end(err.toString());
+
 						const zooms = [
 							parseInt(zoom[0],10),
 							parseInt(zoom[zoom.length-1],10),
