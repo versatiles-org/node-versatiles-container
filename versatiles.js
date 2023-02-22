@@ -562,6 +562,9 @@ versatiles.prototype.server = function(){
 		if (req.method !== "GET") return res.statusCode = 405, res.end("Method not allowed");
 		const p = url.parse(req.url).pathname;
 
+		// construct base url from request headers
+		const baseurl = self.opts.base || format("%s://%s", (req.headers["x-forwarded-proto"] || "http"), (req.headers["x-forwarded-host"] || req.headers.host));
+
 		switch (p) {
 			case "/":
 			case "/index.html":
@@ -604,13 +607,13 @@ versatiles.prototype.server = function(){
 						if (self.header.tile_format === "pbf") { // vector tiles
 							style.sources.versatiles = {
 								type: "vector",
-								url: "http://"+req.headers.host+"/tile.json",
+								url: baseurl+"/tile.json",
 							};
 							// FIXME: extract layers from metadata
 						} else { // raster tiles
 							style.sources.versatiles = {
 								type: "raster",
-								tiles: ["http://"+req.headers.host+"/{z}/{x}/{y}"],
+								tiles: [ baseurl+"/{z}/{x}/{y}" ],
 								tileSize: 256,
 							};
 							style.layers.push({
@@ -637,7 +640,7 @@ versatiles.prototype.server = function(){
 
 					// construct tilejson
 					meta.tilejson = "3.0.0";
-					meta.tiles = [ "http://"+req.headers.host+"/{z}/{x}/{y}" ];
+					meta.tiles = [ baseurl+"/{z}/{x}/{y}" ];
 					meta.scheme = meta.scheme || "zxy";
 
 					if (!meta.vector_layers) meta.vector_layers = []; // for good luck!
@@ -701,7 +704,11 @@ if (require.main === module) {
 	const port = process.argv.includes("--port") ? parseInt(process.argv[process.argv.lastIndexOf("--port")+1],10) : 8080;
 	const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host")+1] : "localhost";
 	const tms = process.argv.includes("--tms");
-	versatiles(src, { tms: tms }).server(port, host, function(err){
+	const base = process.argv.includes("--base") ? process.argv[process.argv.lastIndexOf("--base")+1] : null;
+	versatiles(src, {
+		tms: tms,
+		base: base,
+	}).server(port, host, function(err){
 		if (err) return console.error(err.toString()), process.exit(1);
 		console.log("Listening on http://%s:%d/", host, port);
 	});
