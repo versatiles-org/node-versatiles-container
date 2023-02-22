@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
-const phin = require("phin");
 const format = require("util").format;
+const get = require("./get");
 const pkg = require("./package");
 
 const versatiles = module.exports = function versatiles(src, opt) {
@@ -24,15 +24,11 @@ const versatiles = module.exports = function versatiles(src, opt) {
 			self.fd = null;
 		break;
 		case "http":
-			// http(s) agent with keepalive enabled
-			self.agent = new require(src.substr(0,src.indexOf(":"))).Agent({ keepAlive: true });
-
 			// default http(s) request headers
 			self.requestheaders = {
 				"User-Agent": format("Mozilla/5.0 (compatible; %s/%s; +https://www.npmjs.com/package/%s)", pkg.name, pkg.version, pkg.name),
 				...(self.opt.headers||{}),
 			};
-
 		break;
 	};
 
@@ -90,16 +86,14 @@ versatiles.prototype.read = function(position, length, fn){
 versatiles.prototype.read_http = function(position, length, fn){
 	const self = this;
 
-	phin({
+	get({
 		url: self.src,
 		headers: {
 			...self.requestheaders,
 			"Range": format("bytes=%s-%s", position.toString(), (BigInt(position)+BigInt(length)-1n).toString()), // explicit .toString() because printf appends 'n' to bigint
 		},
-		followRedirects: true,
-		compression: true,
+		follow: true,
 		timeout: 10000,
-		core: { agent: self.agent },
 	}).then(function(resp){
 
 		// check status code

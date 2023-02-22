@@ -8,9 +8,7 @@
   },
   "author": "yetzt <node@yetzt.me>",
   "license": "UNLICENSE",
-  "dependencies": {
-    "phin": "^3"
-  },
+  "dependencies": {},
   "keywords": [
     "map",
     "tiles",
