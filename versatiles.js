@@ -18,7 +18,7 @@ const versatiles = module.exports = function versatiles(src, opt) {
 	};
 
 	self.src = src;
-	self.srctype = /^https?:\/\//.test(src) ? "http" : "file";
+	self.srctype = ["http","https"].includes(src.slice(0,src.indexOf(":"))) ? "http" : "file";
 
 	switch (self.srctype) {
 		case "file":
