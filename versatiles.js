@@ -342,8 +342,6 @@ versatiles.prototype.getBlockIndex = function(fn){
 			self.decompress("br", data, function(err, data){ // decompress
 				if (err) return fn(err);
 
-				// this happened
-				if (data.length/29%1 !== 0) return fn(new Error("invalid block index"));
 
 				// read index from buffer
 				let index = [];
@@ -351,6 +349,10 @@ versatiles.prototype.getBlockIndex = function(fn){
 				switch (self.header.version) {
 					case "c01":
 					case "v01":
+
+						// check blog index length
+						if (data.length/29%1 !== 0) return fn(new Error("invalid block index"));
+
 						for (let i = 0; i < (data.length/29); i++) {
 							index.push({
 								level: data.readUInt8(0+i*29),
@@ -369,6 +371,10 @@ versatiles.prototype.getBlockIndex = function(fn){
 						};
 					break;
 					case "v02":
+
+						// check blog index length
+						if (data.length/33%1 !== 0) return fn(new Error("invalid block index"));
+
 						for (let i = 0; i < (data.length/33); i++) {
 							index.push({
 								level: data.readUInt8(0+i*33),
