@@ -699,7 +699,7 @@ versatiles.prototype.server = function(){
 
 // executable magic
 if (require.main === module) {
-	if (process.argv.length <3 || process.argv.includes("-h") || process.argv.includes("--help")) return console.error("Usage: versatiles <url|file>.versatiles [--tms] [--port <port>] [--host <hostname|ip>]"), process.exit(1);
+	if (process.argv.length <3 || process.argv.includes("-h") || process.argv.includes("--help")) return console.error("Usage: versatiles <url|file>.versatiles [--tms] [--port <port>] [--host <hostname|ip>] [--base <http://baseurl/>] [--header-<header-key> <header-value>]"), process.exit(1);
 	const src = /^https?:\/\//.test(process.argv[2]) ? process.argv[2] : path.resolve(process.cwd(), process.argv[2]);
 	const port = process.argv.includes("--port") ? parseInt(process.argv[process.argv.lastIndexOf("--port")+1],10) : 8080;
 	const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host")+1] : "localhost";

@@ -27,7 +27,8 @@ const c = versatiles("https://example.org/planet.versatiles").getTile(z,x,y, fun
 
 * `src`: can be a file path or url pointing to a versatiles container.
 * `tms`: set `true` if versatiles container uses [tms scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
-* `headers`: additional request headers sent to the server when src is `https`
+* `headers`: additional request headers sent to the server when src is `http`
+* `base`: base url for relative urls in style.json / tile.json when the builtin webserver is started
 
 ### `.getTile(z, x, y, function(err, tile))`
 
@@ -89,14 +90,14 @@ When called directly, versatiles can act as a standalone server.
 
 ``` sh
 npm i -g versatiles
-versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>]
+versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>] [--base https://example.org] [--header-<header-key> <header-value>]
 ```
 
 ### Local Install
 
 ``` sh
 npm i versatiles
-node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>]
+node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>] [--base https://example.org] [--header-<header-key> <header-value>]
 ```
 
 ## License
