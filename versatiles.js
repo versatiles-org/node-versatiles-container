@@ -569,8 +569,8 @@ versatiles.prototype.server = function(){
 			case "/index.html":
 				if (self.html) return res.setHeader("Content-type", "text/html; charset=utf-8"), res.end(self.html);
 				fs.readFile(path.resolve(__dirname,"static/index.html"), function(err, html){
-					if (err) return res.statusCode = 500, res.end(err.toString());
 					self.html = html.toString().replace("{{host}}",req.headers.host);
+					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 					res.setHeader("Content-type", "text/html; charset=utf-8");
 					res.end(self.html);
 				});
@@ -578,14 +578,14 @@ versatiles.prototype.server = function(){
 			case "/style.json":
 				// construct style.json
 				self.getBoundingBox(function(err, bbox){
-					if (err) return res.statusCode = 500, res.end(err.toString());
+					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 					const center = [
 						((bbox[0]+bbox[2])/2),
 						((bbox[1]+bbox[3])/2)
 					];
 					self.getZoomLevels(function(err, zoom){
-						if (err) return res.statusCode = 500, res.end(err.toString());
+						if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 						const zooms = [
 							parseInt(zoom[0],10),
@@ -634,8 +634,8 @@ versatiles.prototype.server = function(){
 				// construct tilejson, extend with metadata
 				// https://github.com/mapbox/tilejson-spec/tree/master/3.0.0
 				self.getMeta(function(err, meta){
-					if (err) return res.statusCode = 500, res.end(err.toString());
 					res.setHeader("Content-type", "application/json; charset=utf-8");
+					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 					// construct tilejson
 					meta.tilejson = "3.0.0";
@@ -665,7 +665,7 @@ versatiles.prototype.server = function(){
 				});
 				if (xyz.length < 3) return res.statusCode = 404, res.end("sorry");
 				self.getTile(xyz[0], xyz[1], xyz[2], function(err, tile){
-					if (err) return res.statusCode = 500, res.end(err.toString());
+					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 					if (tile.length === 0) return res.statusCode = 204, res.end(); // empty tile → "204 no content"
 					res.setHeader("Content-type", self.mimetypes[self.header.tile_format]);
 
@@ -680,7 +680,7 @@ versatiles.prototype.server = function(){
 
 					// decompress and deliver
 					self.decompress(self.header.tile_precompression, tile, function(err, tile){
-						if (err) return res.statusCode = 500, res.end(err.toString());
+						if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 						res.end(tile);
 					});
 
