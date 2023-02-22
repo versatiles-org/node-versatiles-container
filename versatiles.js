@@ -705,8 +705,13 @@ if (require.main === module) {
 	const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host")+1] : "localhost";
 	const tms = process.argv.includes("--tms");
 	const base = process.argv.includes("--base") ? process.argv[process.argv.lastIndexOf("--base")+1] : null;
+	const headers = process.argv.reduce(function(headers, arg, i){
+		if (arg.slice(0,9)==="--header-") headers[arg.slice(9)] = process.argv[i+1];
+		return headers;
+	},{});
 	versatiles(src, {
 		tms: tms,
+		headers: headers,
 		base: base,
 	}).server(port, host, function(err){
 		if (err) return console.error(err.toString()), process.exit(1);
