@@ -559,18 +559,28 @@ versatiles.prototype.server = function(){
 		// construct base url from request headers
 		const baseurl = self.opts.base || format("%s://%s", (req.headers["x-forwarded-proto"] || "http"), (req.headers["x-forwarded-host"] || req.headers.host));
 
+		// output cache
+		const cache = {};
+
 		switch (p) {
 			case "/":
 			case "/index.html":
-				if (self.html) return res.setHeader("Content-type", "text/html; charset=utf-8"), res.end(self.html);
+
+				// try from cache
+				if (cache.html) return res.setHeader("Content-type", "text/html; charset=utf-8"), res.end(cache.html);
+
 				fs.readFile(path.resolve(__dirname,"static/index.html"), function(err, html){
-					self.html = html.toString().replace("{{host}}",req.headers.host);
 					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
+					cache.html = html.toString();
 					res.setHeader("Content-type", "text/html; charset=utf-8");
-					res.end(self.html);
+					res.end(cache.html);
 				});
 			break;
 			case "/style.json":
+
+				// try from cache
+				if (cache.style) return res.setHeader("Content-type", "application/json; charset=utf-8"), res.end(cache.style);
+
 				// construct style.json
 				self.getBoundingBox(function(err, bbox){
 					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
@@ -619,17 +629,21 @@ versatiles.prototype.server = function(){
 							});
 						};
 
+						cache.style = JSON.stringify(style,null,"\t");
 						res.setHeader("Content-type", "application/json; charset=utf-8");
-						return res.end(JSON.stringify(style,null,"\t"));
+						return res.end(cache.style);
 
 					});
 				});
 			break;
 			case "/tile.json":
+
+				// try from cache
+				if (cache.tilejson) return res.setHeader("Content-type", "application/json; charset=utf-8"), res.end(cache.tilejson);
+
 				// construct tilejson, extend with metadata
 				// https://github.com/mapbox/tilejson-spec/tree/master/3.0.0
 				self.getMeta(function(err, meta){
-					res.setHeader("Content-type", "application/json; charset=utf-8");
 					if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 					// construct tilejson
@@ -646,13 +660,17 @@ versatiles.prototype.server = function(){
 								meta.minzoom = meta.minzoom || parseInt(zoom[0],10);
 								meta.maxzoom = meta.maxzoom || parseInt(zoom[zoom.length-1],10);
 							}
-							return res.end(JSON.stringify(meta,null,"\t"));
+
+							cache.tilejson = JSON.stringify(meta,null,"\t");
+							res.setHeader("Content-type", "application/json; charset=utf-8");
+							return res.end(cache.tilejson);
 
 						});
 					});
 				});
 			break;
-			default: // get tile
+			default: // get tile (TODO: cache tiles)
+
 				const xyz = p.split("/").filter(function(c){ // this is good enough
 					return !!c;
 				}).map(function(c){ // getTiles() eats integers
