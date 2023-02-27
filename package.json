@@ -21,6 +21,10 @@
     "gis",
     "maps",
     "mapserver",
-    "tileserver"
+    "tileserver",
+    "vectortiles",
+    "mvt",
+    "pbf",
+    "osm"
   ]
 }
