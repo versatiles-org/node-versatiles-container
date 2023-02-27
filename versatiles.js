@@ -557,7 +557,7 @@ versatiles.prototype.server = function(){
 		const p = url.parse(req.url).pathname;
 
 		// construct base url from request headers
-		const baseurl = self.opts.base || format("%s://%s", (req.headers["x-forwarded-proto"] || "http"), (req.headers["x-forwarded-host"] || req.headers.host));
+		const baseurl = self.opt.base || format("%s://%s", (req.headers["x-forwarded-proto"] || "http"), (req.headers["x-forwarded-host"] || req.headers.host));
 
 		// output cache
 		const cache = {};
