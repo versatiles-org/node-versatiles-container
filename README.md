@@ -1,6 +1,6 @@
 # VersaTiles
 
-A client library for [VersaTiles](https://github.com/versatiles-org/versatiles-spec)
+A client library for [VersaTiles](https://github.com/versatiles-org/versatiles-spec) containers.
 
 ## Install
 
@@ -33,6 +33,10 @@ const c = versatiles("https://example.org/planet.versatiles").getTile(z,x,y, fun
 ### `.getTile(z, x, y, function(err, tile))`
 
 Get a tile as buffer from a versatiles container
+
+### `.decompress(type, buffer, function(err, buffer))`
+
+Decompress a buffer, with type bein `gzip`, `br` or null, obtainable from `header.tile_precompression`
 
 ### `.getHeader(function(err, header))`
 
