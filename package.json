@@ -7,7 +7,6 @@
     "versatiles-server": "./versatiles.js"
   },
   "author": "yetzt <node@yetzt.me>",
-  "dependencies": {},
   "license": "Unlicense",
   "keywords": [
     "map",
