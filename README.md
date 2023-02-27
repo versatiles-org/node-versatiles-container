@@ -102,4 +102,4 @@ node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [-
 
 ## License
 
-[UNLICENSE](https://unlicense.org/)
+[Unlicense](./LICENSE.md)
