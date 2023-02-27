@@ -8,6 +8,9 @@
   },
   "author": "yetzt <node@yetzt.me>",
   "license": "Unlicense",
+  "engines": {
+    "node": ">= 10"
+  },
   "keywords": [
     "map",
     "tiles",
