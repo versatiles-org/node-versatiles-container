@@ -2,8 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 const format = require("util").format;
-const get = require("./get");
-const pkg = require("./package");
+const get = require("./lib/get.js");
+const pkg = require("./package.json");
 
 const versatiles = module.exports = function versatiles(src, opt) {
 	if (!(this instanceof versatiles)) return new versatiles(src, opt);
