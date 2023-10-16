@@ -1,15 +1,15 @@
 {
   "name": "versatiles",
-  "version": "0.3.1",
+  "version": "1.0.0",
   "description": "A client library for VersaTiles",
   "main": "versatiles.js",
   "bin": {
-    "versatiles-server": "./versatiles.js"
+    "versatiles-server": "./server.js"
   },
   "author": "yetzt <node@yetzt.me>",
   "license": "Unlicense",
   "engines": {
-    "node": ">= 10"
+    "node": ">= 16"
   },
   "keywords": [
     "map",
