@@ -1,56 +1,53 @@
-const fs = require("fs");
-const path = require("path");
-const zlib = require("zlib");
-const format = require("util").format;
+const fs = require("node:fs");
+const path = require("node:path");
+const zlib = require("node:zlib");
+const format = require("node:util").format;
 const get = require("./lib/get.js");
 const pkg = require("./package.json");
 
 
 class Versatiles {
+	opt = {
+		tms: false,
+		headers: {}
+	}
 	constructor(src, opt) {
-		if (!(this instanceof versatiles)) return new versatiles(src, opt);
-		const self = this;
+		Object.assign(this.opt, opt)
 
-		self.opt = {
-			tms: false,
-			headers: {},
-			...(opt || {}),
-		};
+		this.src = src;
+		this.srctype = ["http", "https"].includes(src.slice(0, src.indexOf(":"))) ? "http" : "file";
 
-		self.src = src;
-		self.srctype = ["http", "https"].includes(src.slice(0, src.indexOf(":"))) ? "http" : "file";
-
-		switch (self.srctype) {
+		switch (this.srctype) {
 			case "file":
 				// global file descriptor
-				self.fd = null;
+				this.fd = null;
 				break;
 			case "http":
 				// default http(s) request headers
-				self.requestheaders = {
+				this.requestheaders = {
 					"User-Agent": format("Mozilla/5.0 (compatible; %s/%s; +https://www.npmjs.com/package/%s)", pkg.name, pkg.version, pkg.name),
-					...(self.opt.headers || {}),
+					...(this.opt.headers || {}),
 				};
 				break;
 		};
 
 		// read queue
-		self.readqueue = {};
+		this.readqueue = {};
 
 		// data
-		self.header = null;
-		self.meta = null;
-		self.index = null;
-		self.zoom = null;
-		self.bbox = null;
+		this.header = null;
+		this.meta = null;
+		this.index = null;
+		this.zoom = null;
+		this.bbox = null;
 
-		self.formats = {
+		this.formats = {
 			"c01": ["png", "jpeg", "webp", ...Array(13), "pbf"], // legacy opencloudtiles
 			"v01": ["png", "jpeg", "webp", "pbf"],
 			"v02": ["bin", ...Array(15), "png", "jpeg", "webp", "avif", "svg", ...Array(11), "pbf", "geojson", "topojson", "json"],
 		};
 
-		self.mimetypes = {
+		this.mimetypes = {
 			bin: "application/octet-stream",
 			png: "image/png",
 			jpeg: "image/jpeg",
@@ -63,99 +60,83 @@ class Versatiles {
 			json: "application/json",
 		};
 
-		self.compression = [null, "gzip", "br"];
+		this.compression = [null, "gzip", "br"];
 
 		return self;
 	};
-
-	// thin wrapper for type specific read function
-	read(position, length, fn) {
-		const self = this;
-
-		const id = position.toString() + '-' + length.toString;
-		if (self.readqueue.hasOwnProperty(id)) return self.readqueue[id].push(fn), self;
-		self.readqueue[id] = [fn];
-
-		self["read_" + self.srctype](position, length, function () {
-			while (self.readqueue[id].length > 0) self.readqueue[id].shift().apply(self, arguments);
-			delete self.readqueue[id];
-		});
-
-		return self;
-	};
+	// thin wrapper for type-specific read function
+	async read(position, length) {
+		return await this[`read_${this.srctype}`](position, length);
+	}
 
 	// read from http(s)
-	read_http(position, length, fn) {
-		const self = this;
-
-		get({
-			url: self.src,
+	async read_http(position, length) {
+		const resp = await get({
+			url: this.src,
 			headers: {
-				...self.requestheaders,
-				"Range": format("bytes=%s-%s", position.toString(), (BigInt(position) + BigInt(length) - 1n).toString()), // explicit .toString() because printf appends 'n' to bigint
+				...this.requestheaders,
+				"Range": `bytes=${position}-${BigInt(position) + BigInt(length) - 1n}`,
 			},
 			follow: true,
 			timeout: 10000,
-		}).then(function (resp) {
-
-			// check status code
-			if (resp.statusCode !== 206) return fn(new Error("Server responded with " + resp.statusCode));
-
-			fn(null, resp.body);
-		}).catch(function (err) {
-			fn(err);
 		});
 
-		return self;
-	};
+		if (resp.statusCode !== 206) {
+			throw new Error(`Server responded with ${resp.statusCode}`);
+		}
+
+		return resp.body;
+	}
 
 	// read a chunk from a file
-	read_file(position, length, fn) {
-		const self = this;
-		self.open_file(function (err) {
-			if (err) return fn(err);
-			fs.read(self.fd, {
-				buffer: Buffer.alloc(Number(length)), // buffer wants integers, but length shouldn't exceed 2^53 anyway
+	async read_file(position, length) {
+		await this.open_file();
+		return new Promise((resolve, reject) => {
+			fs.read(this.fd, {
+				buffer: Buffer.alloc(Number(length)),
 				position: position,
 				offset: 0,
-				length: Number(length), // fs api does not like bigint here, convert to Number and hope for the best
-			}, function (err, r, buf) {
-				return fn(err, buf);
+				length: Number(length),
+			}, (err, r, buf) => {
+				if (err) reject(err);
+				else resolve(buf);
 			});
 		});
-		return self;
-	};
+	}
 
 	// open file once wrapper
-	open_file(fn) {
-		const self = this;
-		if (self.fd !== null) return fn(null), self;
-		fs.open(self.src, 'r', function (err, fd) {
-			if (err) return fn(err);
-			self.fd = fd;
-			return fn(null);
+	async open_file() {
+		if (this.fd !== null) {
+			return;
+		}
+
+		return new Promise((resolve, reject) => {
+			fs.open(this.src, 'r', (err, fd) => {
+				if (err) reject(err);
+				else {
+					this.fd = fd;
+					resolve();
+				}
+			});
 		});
-		return self;
-	};
+	}
+
 
 	// decompression helper
-	decompress(type, data, fn) {
+	async decompress(type, data) {
 		switch (type) {
-			case "br": zlib.brotliDecompress(data, fn); break;
-			case "gzip": zlib.gunzip(data, fn); break;
-			default: fn(null, data); break;
+			case 'br': zlib.brotliDecompress(data); break;
+			case 'gzip': zlib.gunzip(data); break;
+			default: return data;
 		}
-		return this;
 	};
 
 	// get header
 	getHeader(fn) {
-		const self = this;
-
 		// deliver if known
-		if (self.header !== null) return fn(null, { ...self.header }), self;
+		if (this.header !== null) return fn(null, { ...this.header }), self;
 
-		self.read(0, 66, function (err, data) {
+		this.read(0, 66, function (err, data) {
 			if (err) return fn(err);
 
 			// check magic bytes
@@ -168,11 +149,11 @@ class Versatiles {
 					case "v01":
 
 						try {
-							self.header = {
+							this.header = {
 								magic: data.toString("utf8", 0, 14),
 								version: version,
-								tile_format: self.formats[version][data.readUInt8(14)] || "bin",
-								tile_precompression: self.compression[data.readUInt8(15)] || null,
+								tile_format: this.formats[version][data.readUInt8(14)] || "bin",
+								tile_precompression: this.compression[data.readUInt8(15)] || null,
 								zoom_min: data.readUInt8(16),
 								zoom_max: data.readUInt8(17),
 								bbox_min_x: data.readFloatBE(18),
@@ -192,11 +173,11 @@ class Versatiles {
 					case "v02":
 
 						try {
-							self.header = {
+							this.header = {
 								magic: data.toString("utf8", 0, 14),
 								version: version,
-								tile_format: self.formats[version][data.readUInt8(14)] || "bin",
-								tile_precompression: self.compression[data.readUInt8(15)] || null,
+								tile_format: this.formats[version][data.readUInt8(14)] || "bin",
+								tile_precompression: this.compression[data.readUInt8(15)] || null,
 								zoom_min: data.readUInt8(16),
 								zoom_max: data.readUInt8(17),
 								bbox_min_x: data.readInt32BE(18) / 10e7,
@@ -219,17 +200,17 @@ class Versatiles {
 				}
 
 				// set zoom and bbox if defined
-				if (self.header.zoom_mon + self.header.zoom_max > 0) self.zoom = Array(self.header.zoom_max - self.header.zoom_min + 1).fill().map(function (v, i) { return i + self.header.zoom_min });
-				if (self.header.bbox_min_x + self.header.bbox_max_x + self.header.bbox_min_y + self.header.bbox_may_y > 0) self.bbox = [self.header.bbox_min_x, self.header.bbox_min_y, self.header.bbox_max_x, self.header.bbox_max_y];
+				if (this.header.zoom_mon + this.header.zoom_max > 0) this.zoom = Array(this.header.zoom_max - this.header.zoom_min + 1).fill().map(function (v, i) { return i + this.header.zoom_min });
+				if (this.header.bbox_min_x + this.header.bbox_max_x + this.header.bbox_min_y + this.header.bbox_may_y > 0) this.bbox = [this.header.bbox_min_x, this.header.bbox_min_y, this.header.bbox_max_x, this.header.bbox_max_y];
 
 			} else if (data.toString("utf8", 0, 28) === "OpenCloudTiles-Container-v1:") { // backwards compatibility
 
 				try {
-					self.header = {
+					this.header = {
 						magic: data.toString("utf8", 0, 28),
 						version: "c01",
-						tile_format: self.formats["c01"][data.readUInt8(28)] || "bin",
-						tile_precompression: self.compression[data.readUInt8(29)] || null,
+						tile_format: this.formats["c01"][data.readUInt8(28)] || "bin",
+						tile_precompression: this.compression[data.readUInt8(29)] || null,
 						meta_offset: data.readBigUInt64BE(30),
 						meta_length: data.readBigUInt64BE(38),
 						block_index_offset: data.readBigUInt64BE(46),
@@ -243,7 +224,7 @@ class Versatiles {
 				return fn(new Error("Invalid Container"));
 			}
 
-			fn(null, { ...self.header });
+			fn(null, { ...this.header });
 
 		});
 
@@ -252,13 +233,11 @@ class Versatiles {
 
 	// get tile by zxy
 	getTile(z, x, y, fn) {
-		const self = this;
-
 		// when y index is inverted
-		if (self.opt.tms) y = Math.pow(2, z) - y - 1;
+		if (this.opt.tms) y = Math.pow(2, z) - y - 1;
 
 		// ensure block index is loaded
-		self.getBlockIndex(function (err) {
+		this.getBlockIndex(function (err) {
 			if (err) return fn(err);
 
 			// tile xy (within block)
@@ -270,11 +249,11 @@ class Versatiles {
 			const by = ((y - ty) / 256);
 
 			// check if block containing tile is within bounds
-			if (!self.index.hasOwnProperty(z)) return fn(new Error("Invalid Z"));
-			if (!self.index[z].hasOwnProperty(bx)) return fn(new Error("Invalid X"));
-			if (!self.index[z][bx].hasOwnProperty(by)) return fn(new Error("Invalid Y"));
+			if (!this.index.hasOwnProperty(z)) return fn(new Error("Invalid Z"));
+			if (!this.index[z].hasOwnProperty(bx)) return fn(new Error("Invalid X"));
+			if (!this.index[z][bx].hasOwnProperty(by)) return fn(new Error("Invalid Y"));
 
-			const block = self.index[z][bx][by];
+			const block = this.index[z][bx][by];
 
 			// check if block contains tile
 			if (tx < block.col_min || tx > block.col_max) return fn(new Error("Invalid X within Block"));
@@ -284,7 +263,7 @@ class Versatiles {
 			const j = (ty - block.row_min) * (block.col_max - block.col_min + 1) + (tx - block.col_min);
 
 			// get tile index
-			self.getTileIndex(block, function (err) {
+			this.getTileIndex(block, function (err) {
 				if (err) return fn(err);
 
 				const tile_offset = block.tile_index.readBigUInt64BE(12 * j) + BigInt(block.block_offset);
@@ -293,7 +272,7 @@ class Versatiles {
 				// shortcut: return empty buffer
 				if (tile_length === 0n) return fn(null, Buffer.allocUnsafe(0));
 
-				self.read(tile_offset, tile_length, function (err, tile) {
+				this.read(tile_offset, tile_length, function (err, tile) {
 					if (err) return fn(err);
 					return fn(null, tile);
 				});
@@ -307,40 +286,31 @@ class Versatiles {
 	};
 
 	// get tile index for block
-	getTileIndex(block, fn) {
-		const self = this;
-		if (block.tile_index !== null) return fn(null, block.tile_index), self;
-		self.read(block.tile_index_offset, block.tile_index_length, function (err, data) { // read tile_index buffer
-			if (err) return fn(err);
-			self.decompress("br", data, function (err, data) { // decompress
-				if (err) return fn(err);
-				block.tile_index = data; // keep as buffer in order to keep heap lean
-				return fn(null, block.tile_index);
-			});
-		});
-		return self;
+	async getTileIndex(block) {
+		if (block.tile_index !== null) return block.tile_index;
+		let data = await this.read(block.tile_index_offset, block.tile_index_length)// read tile_index buffer
+		block.tile_index = await decompress("br", data); // keep as buffer in order to keep heap lean
+		return block.tile_index;
 	};
 
 	// get block index
 	getBlockIndex(fn) {
-		const self = this;
-
 		// deliver if known
-		if (self.index !== null) return fn(null, self.index), self;
+		if (this.index !== null) return fn(null, this.index), self;
 
-		self.getHeader(function (err) {
+		this.getHeader(function (err) {
 			if (err) return fn(err);
 
-			self.read(self.header.block_index_offset, self.header.block_index_length, function (err, data) { // read block_index buffer
+			this.read(this.header.block_index_offset, this.header.block_index_length, function (err, data) { // read block_index buffer
 				if (err) return fn(err);
-				self.decompress("br", data, function (err, data) { // decompress
+				this.decompress("br", data, function (err, data) { // decompress
 					if (err) return fn(err);
 
 
 					// read index from buffer
 					let index = [];
 
-					switch (self.header.version) {
+					switch (this.header.version) {
 						case "c01":
 						case "v01":
 
@@ -398,14 +368,14 @@ class Versatiles {
 					});
 
 					// build hierarchy
-					self.index = index.reduce(function (i, b) {
+					this.index = index.reduce(function (i, b) {
 						if (!i.hasOwnProperty(b.level)) i[b.level] = {};
 						if (!i[b.level].hasOwnProperty(b.column)) i[b.level][b.column] = {};
 						i[b.level][b.column][b.row] = b;
 						return i;
 					}, {});
 
-					return fn(null, self.index);
+					return fn(null, this.index);
 
 				});
 			});
@@ -416,30 +386,28 @@ class Versatiles {
 
 	// get metadata
 	getMeta(fn) {
-		const self = this;
-
 		// shortcut: no metadata defined
-		if (self.header.meta_length == 0) return fn(null, self.meta = {});
+		if (this.header.meta_length == 0) return fn(null, this.meta = {});
 
 		// deliver if known
-		if (self.meta !== null) return fn(null, { ...self.meta }), self;
+		if (this.meta !== null) return fn(null, { ...this.meta }), self;
 
-		self.getHeader(function (err) {
+		this.getHeader(function (err) {
 			if (err) return fn(err);
 
-			self.read(self.header.meta_offset, self.header.meta_length, function (err, data) { // read meta buffer
+			this.read(this.header.meta_offset, this.header.meta_length, function (err, data) { // read meta buffer
 				if (err) return fn(err);
 
-				self.decompress(self.header.tile_precompression, data, function (err, data) { // decompress
+				this.decompress(this.header.tile_precompression, data, function (err, data) { // decompress
 					if (err) return fn(err);
 
 					try {
-						self.meta = JSON.parse(data);
+						this.meta = JSON.parse(data);
 					} catch (err) {
-						self.meta = {}; // empty
+						this.meta = {}; // empty
 					}
 
-					return fn(null, { ...self.meta });
+					return fn(null, { ...this.meta });
 
 				});
 			});
@@ -451,21 +419,19 @@ class Versatiles {
 
 	// get zoom levels
 	getZoomLevels(fn) {
-		const self = this;
-
 		// deliver if known
-		if (self.zoom !== null) return fn(null, [...self.zoom]), self;
+		if (this.zoom !== null) return fn(null, [...this.zoom]), self;
 
-		self.getBlockIndex(function (err) {
+		this.getBlockIndex(function (err) {
 			if (err) return fn(err);
 
-			self.zoom = Object.keys(self.index).map(function (z) {
+			this.zoom = Object.keys(this.index).map(function (z) {
 				return parseInt(z, 10);
 			}).sort(function (a, b) {
 				return a - b;
 			});
 
-			return fn(null, [...self.zoom]);
+			return fn(null, [...this.zoom]);
 
 		});
 
@@ -474,12 +440,10 @@ class Versatiles {
 
 	// get approximate bbox for highest zoom level (lonlat; w, s, e, n)
 	getBoundingBox(fn) {
-		const self = this;
-
 		// deliver if known
-		if (self.bbox !== null) return fn(null, [...self.bbox]), self;
+		if (this.bbox !== null) return fn(null, [...this.bbox]), self;
 
-		self.getZoomLevels(function (err, zoom) {
+		this.getZoomLevels(function (err, zoom) {
 			if (err) return fn(err);
 
 			// get max zoom level
@@ -487,7 +451,7 @@ class Versatiles {
 			const z = zoom[zoom.length - 1];
 
 			// get min and max x
-			const xr = Object.keys(self.index[z]).sort(function (a, b) {
+			const xr = Object.keys(this.index[z]).sort(function (a, b) {
 				return a.localeCompare(b, undefined, { numeric: true });
 			});
 			const xmin = xr[0];
@@ -495,7 +459,7 @@ class Versatiles {
 
 			// get min and max y
 			// assumption: extent is the same on every block (tileset is "rectangular")
-			const yr = Object.keys(self.index[z][xmin]).sort(function (a, b) {
+			const yr = Object.keys(this.index[z][xmin]).sort(function (a, b) {
 				return a.localeCompare(b, undefined, { numeric: true });
 			});
 
@@ -503,29 +467,29 @@ class Versatiles {
 			const ymax = yr[yr.length - 1];
 
 			// convert to tile ids;
-			let txmin = ((parseInt(xmin, 10) * 256) + self.index[z][xmin][ymin].col_min);
-			let txmax = ((parseInt(xmax, 10) * 256) + self.index[z][xmin][ymin].col_max + 1); // use "next" tile to include all tiles
+			let txmin = ((parseInt(xmin, 10) * 256) + this.index[z][xmin][ymin].col_min);
+			let txmax = ((parseInt(xmax, 10) * 256) + this.index[z][xmin][ymin].col_max + 1); // use "next" tile to include all tiles
 
 			let tymin, tymax; // different when invert y
-			if (self.opt.tms) { // north → south
+			if (this.opt.tms) { // north → south
 
-				tymin = Math.pow(2, z) - ((parseInt(ymin, 10) * 256) + self.index[z][xmin][ymin].row_min); // use "next" tile, not subtracting 1
-				tymax = Math.pow(2, z) - ((parseInt(ymax, 10) * 256) + self.index[z][xmax][ymax].row_max) - 1;
+				tymin = Math.pow(2, z) - ((parseInt(ymin, 10) * 256) + this.index[z][xmin][ymin].row_min); // use "next" tile, not subtracting 1
+				tymax = Math.pow(2, z) - ((parseInt(ymax, 10) * 256) + this.index[z][xmax][ymax].row_max) - 1;
 
 			} else { // south → north
 
-				tymin = ((parseInt(ymax, 10) * 256) + self.index[z][xmax][ymax].row_max) + 1; // use "next" tile
-				tymax = ((parseInt(ymin, 10) * 256) + self.index[z][xmin][ymin].row_min);
+				tymin = ((parseInt(ymax, 10) * 256) + this.index[z][xmax][ymax].row_max) + 1; // use "next" tile
+				tymax = ((parseInt(ymin, 10) * 256) + this.index[z][xmin][ymin].row_min);
 
 			};
 
 			// convert to coordinates:
-			self.bbox = [
-				...self._zxy_ll(z, txmin, tymin),
-				...self._zxy_ll(z, txmax, tymax),
+			this.bbox = [
+				...this._zxy_ll(z, txmin, tymin),
+				...this._zxy_ll(z, txmax, tymax),
 			];
 
-			return fn(null, [...self.bbox]);
+			return fn(null, [...this.bbox]);
 
 		});
 
@@ -543,8 +507,6 @@ class Versatiles {
 
 	// create webserver (please don't use this in production)
 	server() {
-		const self = this;
-
 		const encodings = {
 			gzip: "gzip",
 			brotli: "br",
@@ -559,7 +521,7 @@ class Versatiles {
 			const p = url.parse(req.url).pathname;
 
 			// construct base url from request headers
-			const baseurl = self.opt.base || format("%s://%s", (req.headers["x-forwarded-proto"] || "http"), (req.headers["x-forwarded-host"] || req.headers.host));
+			const baseurl = this.opt.base || format("%s://%s", (req.headers["x-forwarded-proto"] || "http"), (req.headers["x-forwarded-host"] || req.headers.host));
 
 			// output cache
 			const cache = {};
@@ -584,14 +546,14 @@ class Versatiles {
 					if (cache.style) return res.setHeader("Content-type", "application/json; charset=utf-8"), res.end(cache.style);
 
 					// construct style.json
-					self.getBoundingBox(function (err, bbox) {
+					this.getBoundingBox(function (err, bbox) {
 						if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 						const center = [
 							((bbox[0] + bbox[2]) / 2),
 							((bbox[1] + bbox[3]) / 2)
 						];
-						self.getZoomLevels(function (err, zoom) {
+						this.getZoomLevels(function (err, zoom) {
 							if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 							const zooms = [
@@ -610,7 +572,7 @@ class Versatiles {
 								layers: [],
 							};
 
-							if (self.header.tile_format === "pbf") { // vector tiles
+							if (this.header.tile_format === "pbf") { // vector tiles
 								style.sources.versatiles = {
 									type: "vector",
 									url: baseurl + "/tile.json",
@@ -645,7 +607,7 @@ class Versatiles {
 
 					// construct tilejson, extend with metadata
 					// https://github.com/mapbox/tilejson-spec/tree/master/3.0.0
-					self.getMeta(function (err, meta) {
+					this.getMeta(function (err, meta) {
 						if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 
 						// construct tilejson
@@ -655,9 +617,9 @@ class Versatiles {
 
 						if (!meta.vector_layers) meta.vector_layers = []; // for good luck!
 
-						self.getBoundingBox(function (err, bbox) {
+						this.getBoundingBox(function (err, bbox) {
 							if (!err) meta.bounds = meta.bounds || bbox;
-							self.getZoomLevels(function (err, zoom) {
+							this.getZoomLevels(function (err, zoom) {
 								if (!err) {
 									meta.minzoom = meta.minzoom || parseInt(zoom[0], 10);
 									meta.maxzoom = meta.maxzoom || parseInt(zoom[zoom.length - 1], 10);
@@ -679,22 +641,22 @@ class Versatiles {
 						return parseInt(c, 10);
 					});
 					if (xyz.length < 3) return res.statusCode = 404, res.end("sorry");
-					self.getTile(xyz[0], xyz[1], xyz[2], function (err, tile) {
+					this.getTile(xyz[0], xyz[1], xyz[2], function (err, tile) {
 						if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 						if (tile.length === 0) return res.statusCode = 204, res.end(); // empty tile → "204 no content"
-						res.setHeader("Content-type", self.mimetypes[self.header.tile_format]);
+						res.setHeader("Content-type", this.mimetypes[this.header.tile_format]);
 
 						// not compressed anyway
-						if (self.header.tile_precompression === null) return res.end(tile);
+						if (this.header.tile_precompression === null) return res.end(tile);
 
 						// can the client eat the precompression?
 						const accepted_encodings = (req.headers["accept-encoding"] || "").split(/, */g).map(function (e) { return e.split(";").shift(); });
 
 						// no, decompression required
-						if (accepted_encodings.includes(encodings[self.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[self.header.tile_precompression]), res.end(tile);
+						if (accepted_encodings.includes(encodings[this.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[this.header.tile_precompression]), res.end(tile);
 
 						// decompress and deliver
-						self.decompress(self.header.tile_precompression, tile, function (err, tile) {
+						this.decompress(this.header.tile_precompression, tile, function (err, tile) {
 							if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 							res.end(tile);
 						});
