@@ -1,5 +1,9 @@
-const url = require("url");
-const { createServer } = require("http");
+#!/usr/bin/env node
+'use strict'
+
+import url from 'node:url';
+import { createServer } from 'node:http';
+import { } from 'node:fs';
 
 // create webserver (please don't use this in production)
 export function server() {
@@ -7,8 +11,6 @@ export function server() {
 		gzip: "gzip",
 		brotli: "br",
 	};
-
-
 
 	const srvr = createServer(async (req, res) => {
 
@@ -154,13 +156,13 @@ export function server() {
 					if (this.header.tile_precompression === null) return res.end(tile);
 
 					// can the client eat the precompression?
-					const accepted_encodings = (req.headers["accept-encoding"] || "").split(/, */g).map(function (e) { return e.split(";").shift(); });
+					const accepted_encodings = (req.headers["accept-encoding"] || "").split(/, */g).map(e => e.split(";").shift());
 
 					// no, decompression required
 					if (accepted_encodings.includes(encodings[this.header.tile_precompression])) return res.setHeader("Content-Encoding", encodings[this.header.tile_precompression]), res.end(tile);
 
 					// decompress and deliver
-					this.decompress(this.header.tile_precompression, tile, function (err, tile) {
+					this.decompress(this.header.tile_precompression, tile, (err, tile) => {
 						if (err) return res.statusCode = 500, res.end(err.toString()), console.error(err);
 						res.end(tile);
 					});
@@ -201,4 +203,3 @@ if (require.main === module) {
 		console.error("Listening on http://%s:%d/", host, port);
 	});
 }
-

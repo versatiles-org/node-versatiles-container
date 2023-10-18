@@ -4,12 +4,13 @@
   "description": "A client library for VersaTiles",
   "main": "versatiles.js",
   "bin": {
+    "test": "jest",
     "versatiles-server": "./server.js"
   },
-  "author": "yetzt <node@yetzt.me>",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil",
   "license": "Unlicense",
   "engines": {
-    "node": ">= 16"
+    "node": ">= 18"
   },
   "keywords": [
     "map",
@@ -28,5 +29,8 @@
     "mvt",
     "pbf",
     "osm"
-  ]
+  ],
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }
