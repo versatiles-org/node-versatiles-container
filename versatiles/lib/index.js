@@ -11,11 +11,11 @@ export class Versatiles {
 		Object.assign(this.opt, opt)
 
 		if (src.startsWith('https://')) {
-			this.reader = new HttpReader(src);
+			this.read = new HttpReader(src);
 		} else if (src.startsWith('http://')) {
-			this.reader = new HttpReader(src);
+			this.read = new HttpReader(src);
 		} else {
-			this.reader = new FileReader(src);
+			this.read = new FileReader(src);
 		}
 
 		Object.assign(this, {

@@ -15,10 +15,10 @@ program
 	.option('-p, --port <port>', 'port', )
 	.option('-i, --host <hostname|ip>', 'hostname or ip')
 	.option('--base <http://baseurl/>')
-	.argument('<sources...>', 'versatile sources, can be urls or filenames of "*.versatiles" files')
+	.argument('<source>', 'versatile source, can be an url or filename of a "*.versatiles" file')
 
 program.parse();
 
-let server = new Server(program.args, program.opts());
+let server = new Server(program.args[0], program.opts());
 
 server.start();

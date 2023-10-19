@@ -28,12 +28,6 @@ class Versatiles {
 		this.zoom = null;
 		this.bbox = null;
 
-		this.formats = {
-			"c01": ["png", "jpeg", "webp", ...Array(13), "pbf"], // legacy opencloudtiles
-			"v01": ["png", "jpeg", "webp", "pbf"],
-			"v02": ["bin", ...Array(15), "png", "jpeg", "webp", "avif", "svg", ...Array(11), "pbf", "geojson", "topojson", "json"],
-		};
-
 		this.mimetypes = {
 			bin: "application/octet-stream",
 			png: "image/png",

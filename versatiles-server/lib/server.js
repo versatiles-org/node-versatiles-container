@@ -1,10 +1,11 @@
 import url from 'node:url';
 import { createServer } from 'node:http';
 import zlib from 'node:zlib';
-import { basename, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 
 import { Versatiles } from 'versatiles';
+import { Colorful } from 'versatiles-styles';
 
 const __dirname = (new URL('../', import.meta.url)).pathname;
 
@@ -25,51 +26,35 @@ export class Server {
 	opt = {
 		recompress: false,
 	};
-	layers = {};
+	layer;
 	server;
-	constructor(sources, opt) {
-		Object.assign(this.opt, opt)
+	constructor(source, opt) {
+		Object.assign(this.opt, opt);
 
-		if (!Array.isArray(sources)) sources = [sources];
-
-		sources.map(async src => {
-			let container, name;
-
-			if (src instanceof Versatiles) {
-				container = src;
-			} else {
-				container = new Versatiles(src);
-				name = basename(src).replace(/\..*?$/, '');
-			}
-
-			this.layers[name] = { container, name };
-		})
+		this.layer = {
+			container: new Versatiles(source)
+		}
 	}
-	async #prepareLayers() {
-		await Promise.all(
-			Array.from(Object.values(this.layers))
-				.map(async layer => {
-					let header;
+	async #prepareLayer() {
+		let header;
 
-					if (!layer.mime) {
-						header ??= await layer.container.getHeader();
-						console.log(layer.container, header);
-						layer.mime = MIMETYPES[header.tile_format] || 'application/octet-stream';
-					}
+		if (!this.layer.mime) {
+			header ??= await this.layer.container.getHeader();
+			this.layer.mime = MIMETYPES[header.tile_format] || 'application/octet-stream';
+		}
 
-					if (!layer.precompression) {
-						header ??= await layer.container.getHeader();
-						layer.precompression = header.precompression;
-					}
-				})
-		)
-		return this.layers;
+		if (!this.layer.precompression) {
+			header ??= await this.layer.container.getHeader();
+			this.layer.precompression = header.precompression;
+		}
+
+		return this.layer;
 	}
 	async start() {
-		const layers = await this.#prepareLayers();
+		const layer = await this.#prepareLayer();
 		const recompress = this.opt.recompress || false;
 
-		server = createServer(async (req, res) => {
+		this.server = createServer(async (req, res) => {
 
 			if (req.method !== 'GET') return respondWithError('Method not allowed', 405);
 			const p = url.parse(req.url).pathname;
@@ -77,39 +62,39 @@ export class Server {
 			// construct base url from request headers
 			//const baseurl = this.opt.base || (req.headers["x-forwarded-proto"] || "http") + '://' + (req.headers["x-forwarded-host"] || req.headers.host);
 
-			if ((p === '/') || (p === '/index.html')) {
-				try {
-					const html = readFile(resolve(__dirname, 'static/index.html'));
+			try {
+
+				if ((p === '/') || (p === '/index.html')) {
+					const html = await readFile(resolve(__dirname, 'static/index.html'));
 					return respondWithContent(html, 'text/html; charset=utf-8');
-				} catch (err) {
-					return respondWithError(err, 500);
 				}
-			}
 
-			if (match = p.match(/^\/tiles\/(?<name>)\/(tile|meta)\.json/)) {
-				let { name } = match.groups;
-				const layer = layers[name];
-				if (!layer) return respondWithError(`layer ${name} not found`, 404);
-				try {
-					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8', 'br');
-				} catch (err) {
-					return respondWithError(err, 500);
-				}
-			}
+				let match;
 
-			if (match = p.match(/^\/tiles\/(?<name>)\/(?<z>[0-9]+)\/(?<x>[0-9]+)\/(?<y>[0-9]+).*/)) {
-				let { name, x, y, z } = match.groups;
-				const layer = layers[name];
-				if (!layer) return respondWithError(`layer ${name} not found`, 404);
-				try {
+				if (match = p.match(/^\/tiles\/(?<z>[0-9]+)\/(?<x>[0-9]+)\/(?<y>[0-9]+).*/)) {
+					let { x, y, z } = match.groups;
 					x = parseInt(x, 10);
 					y = parseInt(y, 10);
 					z = parseInt(z, 10);
 					return respondWithContent(await layer.container.getTile(z, x, y), layer.mime, layer.precompression);
-				} catch (err) {
-					return respondWithError(err, 500);
 				}
+
+				if (match = p.match(/^\/tiles\/(tile|meta)\.json/)) {
+					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8', 'br');
+
+				}
+
+				if (match = p.match(/^\/tiles\/style\.json/)) {
+					let header = await layer.container.getHeader()
+					console.log(header);
+					return respondWithContent(header, 'application/json; charset=utf-8', 'br');
+				}
+
+			} catch (err) {
+				return respondWithError(err, 500);
 			}
+
+			return respondWithError('file not found', 404);
 
 			async function respondWithContent(content, mime, compression) {
 				const accepted_encoding = req.headers['accept-encoding'] || '';
@@ -163,10 +148,10 @@ export class Server {
 		});
 
 		const port = arguments.port ?? 8080;
-		server.listen(port);
-		console.log(`listening on port ${port} `);
 
-		return server;
+		await new Promise(r => this.server.listen(port, () => r()));
+
+		console.log(`listening on port ${port} `);
 	}
 }
 

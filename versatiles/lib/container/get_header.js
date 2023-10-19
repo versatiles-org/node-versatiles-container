@@ -1,6 +1,21 @@
+
+
+
+const COMPRESSION = [null, 'gzip', 'br'];
+
+const FORMATS = {
+	'c01': ['png', 'jpeg', 'webp', ...Array(13), 'pbf'], // legacy opencloudtiles
+	'v01': ['png', 'jpeg', 'webp', 'pbf'],
+	'v02': [
+		'bin', ...Array(15),
+		'png', 'jpeg', 'webp', 'avif', 'svg', ...Array(11),
+		'pbf', 'geojson', 'topojson', 'json'
+	],
+};
+
 export default async function getHeader() {
 	// deliver if known
-	if (!this.header) return this.header;
+	if (this.header) return this.header;
 
 	let data = await this.read(0, 66);
 
@@ -16,8 +31,8 @@ export default async function getHeader() {
 			this.header = {
 				magic: data.toString('utf8', 0, 14),
 				version: version,
-				tile_format: this.formats[version][data.readUInt8(14)] || 'bin',
-				tile_precompression: this.compression[data.readUInt8(15)] || null,
+				tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
+				tile_precompression: COMPRESSION[data.readUInt8(15)] || null,
 				zoom_min: data.readUInt8(16),
 				zoom_max: data.readUInt8(17),
 				bbox_min_x: data.readFloatBE(18),
@@ -34,8 +49,8 @@ export default async function getHeader() {
 			this.header = {
 				magic: data.toString('utf8', 0, 14),
 				version: version,
-				tile_format: this.formats[version][data.readUInt8(14)] || 'bin',
-				tile_precompression: this.compression[data.readUInt8(15)] || null,
+				tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
+				tile_precompression: COMPRESSION[data.readUInt8(15)] || null,
 				zoom_min: data.readUInt8(16),
 				zoom_max: data.readUInt8(17),
 				bbox_min_x: data.readInt32BE(18) / 1e7,
