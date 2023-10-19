@@ -3,9 +3,7 @@ import { createServer } from 'node:http';
 import zlib from 'node:zlib';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-
 import { Versatiles } from 'versatiles';
-import { Colorful } from 'versatiles-styles';
 
 const __dirname = (new URL('../', import.meta.url)).pathname;
 
@@ -69,8 +67,17 @@ export class Server {
 					return respondWithContent(html, 'text/html; charset=utf-8');
 				}
 
-				let match;
+				if (p === '/tiles/tile.json') {
+					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8', 'br');
+				}
 
+				if (p === '/tiles/header.json') {
+					let header = await layer.container.getHeader();
+					header = Object.fromEntries('magic,version,tile_format,tile_precompression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
+					return respondWithContent(header, 'application/json; charset=utf-8');
+				}
+
+				let match;
 				if (match = p.match(/^\/tiles\/(?<z>[0-9]+)\/(?<x>[0-9]+)\/(?<y>[0-9]+).*/)) {
 					let { x, y, z } = match.groups;
 					x = parseInt(x, 10);
@@ -79,52 +86,44 @@ export class Server {
 					return respondWithContent(await layer.container.getTile(z, x, y), layer.mime, layer.precompression);
 				}
 
-				if (match = p.match(/^\/tiles\/(tile|meta)\.json/)) {
-					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8', 'br');
-
-				}
-
-				if (match = p.match(/^\/tiles\/style\.json/)) {
-					let header = await layer.container.getHeader()
-					console.log(header);
-					return respondWithContent(header, 'application/json; charset=utf-8', 'br');
-				}
-
 			} catch (err) {
 				return respondWithError(err, 500);
 			}
 
 			return respondWithError('file not found', 404);
 
-			async function respondWithContent(content, mime, compression) {
+			async function respondWithContent(data, mime, compression) {
 				const accepted_encoding = req.headers['accept-encoding'] || '';
 				const accept_gzip = accepted_encoding.includes('gzip');
 				const accept_br = accepted_encoding.includes('br');
+
+				if (typeof data === 'object') data = JSON.stringify(data);
+				if (typeof data === 'string') data = Buffer.from(data);
 
 				switch (compression) {
 					case 'br':
 						if (accept_br) break;
 						if (recompress && accept_gzip) {
-							content = await gzip(await unbrotli(content));
+							data = await gzip(await unbrotli(data));
 							compression = 'gzip';
 							break;
 						}
-						content = await unbrotli(content);
+						data = await unbrotli(data);
 						compression = null;
 						break;
 					case 'gzip':
 						if (accept_gzip) break;
-						content = await ungzip(content);
+						data = await ungzip(data);
 						compression = null;
 						break;
 					default:
 						if (recompress && accept_br) {
-							content = await brotli(content);
+							data = await brotli(data);
 							compression = 'br';
 							break;
 						}
 						if (recompress && accept_gzip) {
-							content = await gzip(content);
+							data = await gzip(data);
 							compression = 'gzip';
 							break;
 						}
@@ -136,7 +135,7 @@ export class Server {
 
 				res.statusCode = 200;
 				res.setHeader('content-type', mime);
-				res.end(content);
+				res.end(data);
 			}
 
 			function respondWithError(err, code = 500) {
