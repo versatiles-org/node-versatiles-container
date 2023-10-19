@@ -1,0 +1,40 @@
+{
+  "name": "versatiles-server",
+  "version": "1.0.0",
+  "description": "A server for VersaTiles",
+  "main": "index.js",
+  "bin": {
+    "versatiles-server": "node index.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "server": "node index.js"
+  },
+  "type": "module",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">= 18"
+  },
+  "keywords": [
+    "cloudtiles",
+    "geo",
+    "gis",
+    "map",
+    "maps",
+    "mapserver",
+    "maptiles",
+    "mvt",
+    "opencloudtiles",
+    "osm",
+    "pbf",
+    "tile",
+    "tiles",
+    "tileserver",
+    "vectortiles",
+    "versatiles"
+  ],
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

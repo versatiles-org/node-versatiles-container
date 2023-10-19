@@ -1,36 +1,7 @@
 {
   "name": "versatiles",
-  "version": "1.0.0",
-  "description": "A client library for VersaTiles",
-  "main": "versatiles.js",
-  "bin": {
-    "test": "jest",
-    "versatiles-server": "./server.js"
-  },
-  "author": "yetzt <node@yetzt.me>, Michael Kreil",
-  "license": "Unlicense",
-  "engines": {
-    "node": ">= 18"
-  },
-  "keywords": [
-    "map",
-    "tiles",
-    "tile",
-    "maptiles",
+  "workspaces": [
     "versatiles",
-    "cloudtiles",
-    "opencloudtiles",
-    "geo",
-    "gis",
-    "maps",
-    "mapserver",
-    "tileserver",
-    "vectortiles",
-    "mvt",
-    "pbf",
-    "osm"
-  ],
-  "devDependencies": {
-    "jest": "^29.7.0"
-  }
+    "versatiles-server"
+  ]
 }

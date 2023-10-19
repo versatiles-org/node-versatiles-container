@@ -8,8 +8,30 @@ import { basename, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { Versatiles } from './index.js';
 
-const __dirname = (new URL('../', import.meta.url)).pathname;
-console.log({ __dirname });
+const __dirname = (new URL('./', import.meta.url)).pathname;
+
+if (process.argv.length <= 2 || process.argv.includes("-h") || process.argv.includes("--help")) {
+	console.error('Usage: versatiles [--tms] [--port <port>] [--host <hostname|ip>] [--base <http://baseurl/>] [--header-<header-key> <header-value>] <url|file>.versatiles');
+	process.exit(1);
+}
+const src = /^https?:\/\//.test(process.argv[2]) ? process.argv[2] : path.resolve(process.cwd(), process.argv[2]);
+const port = process.argv.includes("--port") ? parseInt(process.argv[process.argv.lastIndexOf("--port") + 1], 10) : 8080;
+const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host") + 1] : "localhost";
+const tms = process.argv.includes("--tms");
+const base = process.argv.includes("--base") ? process.argv[process.argv.lastIndexOf("--base") + 1] : null;
+const headers = process.argv.reduce((headers, arg, i) => {
+	if (arg.slice(0, 9) === "--header-") headers[arg.slice(9)] = process.argv[i + 1];
+	return headers;
+}, {});
+
+versatiles(src, {
+	tms: tms,
+	headers: headers,
+	base: base,
+}).server(port, host, err => {
+	if (err) return console.error(err.toString()), process.exit(1);
+	console.error("Listening on http://%s:%d/", host, port);
+});
 
 const ENCODINGS = {
 	gzip: 'gzip',
@@ -175,29 +197,6 @@ export class Server {
 
 		return server;
 	}
-}
-
-// executable magic
-if (require.main === module) {
-	if (process.argv.length < 3 || process.argv.includes("-h") || process.argv.includes("--help")) return console.error("Usage: versatiles <url|file>.versatiles [--tms] [--port <port>] [--host <hostname|ip>] [--base <http://baseurl/>] [--header-<header-key> <header-value>]"), process.exit(1);
-	const src = /^https?:\/\//.test(process.argv[2]) ? process.argv[2] : path.resolve(process.cwd(), process.argv[2]);
-	const port = process.argv.includes("--port") ? parseInt(process.argv[process.argv.lastIndexOf("--port") + 1], 10) : 8080;
-	const host = process.argv.includes("--host") ? process.argv[process.argv.lastIndexOf("--host") + 1] : "localhost";
-	const tms = process.argv.includes("--tms");
-	const base = process.argv.includes("--base") ? process.argv[process.argv.lastIndexOf("--base") + 1] : null;
-	const headers = process.argv.reduce((headers, arg, i) => {
-		if (arg.slice(0, 9) === "--header-") headers[arg.slice(9)] = process.argv[i + 1];
-		return headers;
-	}, {});
-
-	versatiles(src, {
-		tms: tms,
-		headers: headers,
-		base: base,
-	}).server(port, host, err => {
-		if (err) return console.error(err.toString()), process.exit(1);
-		console.error("Listening on http://%s:%d/", host, port);
-	});
 }
 
 function gzip(dataIn) {

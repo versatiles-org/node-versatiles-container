@@ -1,5 +1,5 @@
-const https = require('https');
-const http = require('http');
+import https from 'https';
+import http from 'http';
 
 const DEFAULT_TIMEOUT = 10000;
 
@@ -87,5 +87,3 @@ async function get(params) {
 			}));
 	})
 }
-
-module.exports = get;
