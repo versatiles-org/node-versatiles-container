@@ -2,7 +2,7 @@
 import { default as HttpReader } from './nodejs/reader_http.js';
 import { default as FileReader } from './nodejs/reader_file.js';
 
-export class Versatiles {
+export default class Versatiles {
 	opt = {
 		tms: false
 	}

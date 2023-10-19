@@ -36,5 +36,9 @@
   ],
   "devDependencies": {
     "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "versatiles": "^1.0.0"
   }
 }
