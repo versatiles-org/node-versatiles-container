@@ -4,7 +4,7 @@ import zlib from 'node:zlib';
 import { basename, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 
-import Versatiles from 'versatiles';
+import { Versatiles } from 'versatiles';
 
 const __dirname = (new URL('../', import.meta.url)).pathname;
 
@@ -52,12 +52,13 @@ export class Server {
 					let header;
 
 					if (!layer.mime) {
-						header ??= await container.getHeader();
+						header ??= await layer.container.getHeader();
+						console.log(layer.container, header);
 						layer.mime = MIMETYPES[header.tile_format] || 'application/octet-stream';
 					}
 
 					if (!layer.precompression) {
-						header ??= await container.getHeader();
+						header ??= await layer.container.getHeader();
 						layer.precompression = header.precompression;
 					}
 				})

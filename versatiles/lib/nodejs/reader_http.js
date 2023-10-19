@@ -8,7 +8,7 @@ const clients = {
 	http: { client: http, agent: new http.Agent({ keepAlive: true }) },
 }
 
-export default async function FileReader(url) {
+export default function getHTTPReader(url) {
 	return async function read(position, length) {
 		const response = await get({
 			url,

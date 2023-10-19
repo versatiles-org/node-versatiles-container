@@ -1,13 +1,8 @@
 
 import fs from 'fs';
 
-export default async function FileReader(filename) {
-	let fd = await new Promise((resolve, reject) => {
-		fs.open(filename, 'r', (err, fd) => {
-			if (err) return reject(err);
-			resolve(fd);
-		});
-	});
+export default function getFileReader(filename) {
+	let fd = fs.openSync(filename, 'r');
 
 	return async function read(position, length) {
 		return await new Promise((resolve, reject) => {

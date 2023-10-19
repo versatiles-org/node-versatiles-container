@@ -1,8 +1,9 @@
 
 import { default as HttpReader } from './nodejs/reader_http.js';
 import { default as FileReader } from './nodejs/reader_file.js';
+import getHeader from './container/get_header.js';
 
-export default class Versatiles {
+export class Versatiles {
 	opt = {
 		tms: false
 	}
@@ -16,5 +17,9 @@ export default class Versatiles {
 		} else {
 			this.reader = new FileReader(src);
 		}
+
+		Object.assign(this, {
+			getHeader,
+		})
 	}
 }
