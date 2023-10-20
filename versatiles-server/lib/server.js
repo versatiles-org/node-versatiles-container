@@ -1,10 +1,11 @@
-import url from 'node:url';
+//import url from 'node:url';
 import { createServer } from 'node:http';
-import zlib from 'node:zlib';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { Versatiles } from 'versatiles';
 import { generateStyle } from './style.js';
+import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
+import { StaticContent } from './static_content.js';
 
 const __dirname = (new URL('../', import.meta.url)).pathname;
 
@@ -56,37 +57,20 @@ export class Server {
 		const layer = await this.#prepareLayer();
 		const recompress = this.options.recompress || false;
 
+		const staticContent = await this.#buildStaticContent(layer);
+
 		this.server = createServer(async (req, res) => {
 
 			if (req.method !== 'GET') return respondWithError('Method not allowed', 405);
-			const p = url.parse(req.url).pathname;
+			const p = (new URL(req.url, 'resolve://')).pathname;
 
 			// construct base url from request headers
 			//const baseurl = this.opt.base || (req.headers["x-forwarded-proto"] || "http") + '://' + (req.headers["x-forwarded-host"] || req.headers.host);
 
 			try {
-				if ((p === '/') || (p === '/index.html')) {
-					const html = await readFile(resolve(__dirname, 'static/index.html'));
-					return respondWithContent(html, 'text/html; charset=utf-8');
-				}
-
-				if (p === '/tiles/style.json') {
-					let style = await generateStyle(layer.container, this.options);
-					style = JSON.stringify(style);
-					return respondWithContent(style, 'application/json; charset=utf-8');
-				}
-
-				if (p === '/tiles/tile.json') {
-					let meta = await layer.container.getMeta();
-					meta = JSON.stringify(meta);
-					return respondWithContent(meta, 'application/json; charset=utf-8');
-				}
-
-				if (p === '/tiles/header.json') {
-					let header = await layer.container.getHeader();
-					header = Object.fromEntries('magic,version,tile_format,tile_precompression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
-					header = JSON.stringify(header);
-					return respondWithContent(header, 'application/json; charset=utf-8');
+				let response = staticContent.get(p);
+				if (response) {
+					return respondWithContent(...response);
 				}
 
 				let match;
@@ -163,36 +147,34 @@ export class Server {
 
 		console.log(`listening on port ${port} `);
 	}
-}
+	async #buildStaticContent(layer) {
+		const staticContent = new StaticContent();
 
-function gzip(dataIn) {
-	return new Promise((res, rej) =>
-		zlib.gzip(dataIn, { level: 9 }, (err, dataOut) => {
-			if (err) return rej(err); res(dataOut);
-		})
-	)
-}
+		await Promise.all([
+			async () => {
+				const html = await readFile(resolve(__dirname, 'static/index.html'));
+				staticContent.add('/', html, 'text/html; charset=utf-8');
+				staticContent.add('/index.html', html, 'text/html; charset=utf-8');
+			},
+			async () => staticContent.add(
+				'/tiles/style.json',
+				await generateStyle(layer.container, this.options),
+				'application/json; charset=utf-8'
+			),
+			async () => staticContent.add(
+				'/tiles/tile.json',
+				await layer.container.getMeta(),
+				'application/json; charset=utf-8'
+			),
+			async () => {
+				let header = await layer.container.getHeader();
+				header = Object.fromEntries('magic,version,tile_format,tile_precompression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
+				staticContent.add('/tiles/header.json', header, 'application/json; charset=utf-8');
+			}
+		].map(f => f()))
 
-function ungzip(dataIn) {
-	return new Promise((res, rej) =>
-		zlib.gunzip(dataIn, (err, dataOut) => {
-			if (err) return rej(err); res(dataOut);
-		})
-	)
-}
+		staticContent.addFolder('/assets', resolve(__dirname, 'static/assets'));
 
-function brotli(dataIn) {
-	return new Promise((res, rej) =>
-		zlib.brotliCompress(dataIn, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11, } }, (err, dataOut) => {
-			if (err) return rej(err); res(dataOut);
-		})
-	)
-}
-
-function unbrotli(dataIn) {
-	return new Promise((res, rej) =>
-		zlib.brotliDecompress(dataIn, (err, dataOut) => {
-			if (err) return rej(err); res(dataOut);
-		})
-	)
+		return staticContent;
+	}
 }
