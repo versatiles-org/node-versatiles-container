@@ -102,7 +102,7 @@ export class Server {
 				return respondWithError(err, 500);
 			}
 
-			return respondWithError('file not found', 404);
+			return respondWithError('file not found: ' + p, 404);
 
 			async function respondWithContent(data, mime, compression) {
 				const accepted_encoding = req.headers['accept-encoding'] || '';
