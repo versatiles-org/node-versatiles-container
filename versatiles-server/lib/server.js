@@ -47,7 +47,7 @@ export class Server {
 
 		if (!this.layer.precompression) {
 			header ??= await this.layer.container.getHeader();
-			this.layer.precompression = header.precompression;
+			this.layer.precompression = header.tile_precompression;
 		}
 
 		return this.layer;
