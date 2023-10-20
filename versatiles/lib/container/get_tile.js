@@ -29,8 +29,9 @@ export async function getTile(z, x, y) {
 	// get tile index
 	let tile_index = await this.getTileIndex(block);
 
-	const tile_offset = tile_index.offset[j];
-	const tile_length = tile_index.length[j];
+
+	const tile_offset = Number(tile_index.readBigUInt64BE(12 * j)) + block.block_offset;
+	const tile_length = tile_index.readUInt32BE(12 * j + 8);
 
 	// shortcut: return empty buffer
 	if (tile_length === 0) return Buffer.allocUnsafe(0);
