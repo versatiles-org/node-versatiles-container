@@ -1,2 +1,2 @@
 
-export * from './lib/index.js'
+export { Versatiles as default } from './lib/index.js'

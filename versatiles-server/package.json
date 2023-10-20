@@ -11,7 +11,7 @@
     "server": "node index.js"
   },
   "type": "module",
-  "author": "yetzt <node@yetzt.me>, Michael Kreil",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
   "license": "Unlicense",
   "engines": {
     "node": ">= 18"

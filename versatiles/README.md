@@ -1,109 +1,74 @@
 # VersaTiles
 
-A client library for [VersaTiles](https://github.com/versatiles-org/versatiles-spec) containers.
+A client library for [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec).
 
 ## Install
 
-`npm i -s versatiles`
+`npm i versatiles`
 
 ## Usage Example
 
 ``` js
+import VersaTiles from 'versatiles';
+import fs from 'fs';
 
-const versatiles = require("versatiles");
-const fs = require("fs");
-
-const c = versatiles("https://example.org/planet.versatiles").getTile(z,x,y, function(err, buffer){
-
-	fs.writeFile("tile."+c.header.tile_format, buffer, function(){});
-
-});
-
+const container = new VersaTiles('https://example.org/planet.versatiles');
+const header = await container.getHeader();
+const tile = await container.getTileUncompressed(z,x,y);
+fs.writeFileSync('tile.' + header.tile_format, tile);
 ```
 
 ## API
 
-### `versatiles(src, { tms: true, headers: {} })`
+### `new VersaTiles(src, { tms: true })`
 
-* `src`: can be a file path or url pointing to a versatiles container.
-* `tms`: set `true` if versatiles container uses [tms scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
-* `headers`: additional request headers sent to the server when src is `http`
-* `base`: base url for relative urls in style.json / tile.json when the builtin webserver is started
+* `src`: defines a readable VersaTiles container. It can be:
+  - a string with a file path, e.g. `"tiles/planet.versatiles"`,
+  - a string with an url, e.g. `"https://example.org/planet.versatiles"`,
+  - an async function of the form:  
+    `async function read(position, length) { }`  
+	 that returns `length` bytes starting at `position`. This allows you to implement your own interface to read a VersaTiles container e.g. over other network protocols.
+* `tms`: set `true` if the VersaTiles container uses [TMS scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
 
-### `.getTile(z, x, y, function(err, tile))`
+### async `.getTile(z, x, y)`
 
-Get a tile as buffer from a versatiles container
+Get a tile as `Buffer` from a VersaTiles container.
+It might be compressed with `header.tile_compression`.
 
-### `.decompress(type, buffer, function(err, buffer))`
+### async `.getTileUncompressed(z, x, y)`
 
-Decompress a buffer, with type bein `gzip`, `br` or null, obtainable from `header.tile_precompression`
+Get a tile as `Buffer` from a VersaTiles container.
 
-### `.getHeader(function(err, header))`
+### async `.decompress(buffer, type)`
 
-Get the header of a versatiles container
+Decompress the `buffer`, with type `gzip`, `br` or null, obtainable from `header.tile_compression`
 
-### `.getMeta(function(err, metadata))`
+### async `.getHeader()`
 
-Get the metadata of a versatiles container
-
-### `.getZoomLevels(function(err, zoom))`
-
-Get the available zoom levels of a versatiles container as an array of integers
-
-``` js
-[ 0, 1, 2, ... ];
+Get the header of a VersaTiles container. Typically it contains:
+```javascript
+{
+	tile_format: // 'pbf', 'png', 'jpeg', ...
+	tile_compression: // null, 'gzip' or 'br',
+	zoom_min: // minimum zoom level
+	zoom_max: // maximum zoom level
+	bbox_min_x: // minimum longitude of the bounding box
+	bbox_min_y: // minimum latitude of the bounding box
+	bbox_max_x: // maximum longitude of the bounding box
+	bbox_max_y: // maximum latitude of the bounding box
+	...
+}
 ```
+The other properties are used internally to read the container. You can find a complete list in [the VersaTiles container specification](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#file_header)
 
-### `.getBoundingBox(function(err, bbox))`
+### async `.getMeta()`
 
-Get the bounding box as an array of floats in the order `WestLon`, `SouthLat`, `EastLon`, `NorthLat`.
-
-``` js
-[
-	13.07373046875,
-	52.32191088594773,
-	13.77685546875,
-	52.68304276227742
-]
-```
-
-### `.server(...)`
-
-Start a rudimentary webserver delivering tiles and metadata. Arguments are passed on to `http.server.listen()`
-
-``` js
-versatiles("./some.versatiles").server(8080, "localhost", function(){
-	console.log("Listening on http://localhost:8080/");
-});
-```
-
-#### Routes
-
-* `/{z}/{x}/{y}` get tile
-* `/tile.json` get [TileJSON](https://github.com/mapbox/tilejson-spec)
-* `/style.json` get minimal [StyleJSON](https://docs.mapbox.com/mapbox-gl-js/style-spec/)
-* `/` Display map in Browser with [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [maplibre-gl-inspect](https://github.com/acalcutt/maplibre-gl-inspect)
-
-## Standalone Server
-
-When called directly, versatiles can act as a standalone server.
-
-*This is for testing purposes, please feel discouraged from using this in a production environment.*
-
-### Global Install
-
-``` sh
-npm i -g versatiles
-versatiles-server <file|url> [--tms] [--port <port>] [--host <hostname|ip>] [--base https://example.org] [--header-<header-key> <header-value>]
-```
-
-### Local Install
-
-``` sh
-npm i versatiles
-node node_modules/versatiles/versatiles.js <file|url> [--tms] [--port <port>] [--host <hostname|ip>] [--base https://example.org] [--header-<header-key> <header-value>]
-```
+Get the meta data of a VersaTiles container
 
 ## License
 
 [Unlicense](./LICENSE.md)
+
+## Future work
+
+This library could be extended to run in a web browser to read VersaTiles containers via `fetch`.

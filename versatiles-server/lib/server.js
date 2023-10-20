@@ -2,7 +2,7 @@
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { Versatiles } from 'versatiles';
+import VersaTiles from 'versatiles';
 import { generateStyle } from './style.js';
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
@@ -24,7 +24,7 @@ const MIMETYPES = {
 
 export class Server {
 	options = {
-		recompress: false,
+		compress: false,
 		baseUrl: false,
 		glyphsUrl: false,
 		spriteUrl: false,
@@ -36,7 +36,7 @@ export class Server {
 	constructor(source, options) {
 		Object.assign(this.options, options);
 
-		this.layer = { container: new Versatiles(source) }
+		this.layer = { container: new VersaTiles(source) }
 	}
 	async #prepareLayer() {
 		let header;
@@ -46,16 +46,16 @@ export class Server {
 			this.layer.mime = MIMETYPES[header.tile_format] || 'application/octet-stream';
 		}
 
-		if (!this.layer.precompression) {
+		if (!this.layer.compression) {
 			header ??= await this.layer.container.getHeader();
-			this.layer.precompression = header.tile_precompression;
+			this.layer.compression = header.tile_compression;
 		}
 
 		return this.layer;
 	}
 	async start() {
 		const layer = await this.#prepareLayer();
-		const recompress = this.options.recompress || false;
+		const compress = this.options.compress || false;
 
 		const staticContent = await this.#buildStaticContent(layer);
 
@@ -79,7 +79,7 @@ export class Server {
 					x = parseInt(x, 10);
 					y = parseInt(y, 10);
 					z = parseInt(z, 10);
-					return respondWithContent(await layer.container.getTile(z, x, y), layer.mime, layer.precompression);
+					return respondWithContent(await layer.container.getTile(z, x, y), layer.mime, layer.compression);
 				}
 
 			} catch (err) {
@@ -98,7 +98,7 @@ export class Server {
 				switch (compression) {
 					case 'br':
 						if (accept_br) break;
-						if (recompress && accept_gzip) {
+						if (compress && accept_gzip) {
 							data = await gzip(await unbrotli(data));
 							compression = 'gzip';
 							break;
@@ -112,12 +112,12 @@ export class Server {
 						compression = null;
 						break;
 					default:
-						if (recompress && accept_br) {
+						if (compress && accept_br) {
 							data = await brotli(data);
 							compression = 'br';
 							break;
 						}
-						if (recompress && accept_gzip) {
+						if (compress && accept_gzip) {
 							data = await gzip(data);
 							compression = 'gzip';
 							break;
@@ -168,7 +168,7 @@ export class Server {
 			),
 			async () => {
 				let header = await layer.container.getHeader();
-				header = Object.fromEntries('magic,version,tile_format,tile_precompression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
+				header = Object.fromEntries('magic,version,tile_format,tile_compression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
 				staticContent.add('/tiles/header.json', header, 'application/json; charset=utf-8');
 			}
 		].map(f => f()))

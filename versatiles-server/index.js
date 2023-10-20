@@ -9,13 +9,13 @@ const program = new Command();
 program
 	.showHelpAfterError()
 	.name('versatiles-server')
-	.description('Simple versatiles server')
-	.option('--tms', 'use TMS tile order (flip y axis)')
-	.option('-r, --recompress', 'recompress tiles if needed. slower but reduces traffic.')
+	.description('Simple VersaTiles server')
+	.option('-t, --tms', 'use TMS tile order (flip y axis)')
+	.option('-c, --compress', 'compress data if needed. Slower, but reduces traffic.')
 	.option('-p, --port <port>', 'port', )
 	.option('-i, --host <hostname|ip>', 'hostname or ip')
-	.option('--base <http://baseurl/>')
-	.argument('<source>', 'versatile source, can be an url or filename of a "*.versatiles" file')
+	.option('-b, --base <http://baseurl/>', 'default is: "http://localhost:<port>/"')
+	.argument('<source>', 'VersaTiles container, can be an url or filename of a "*.versatiles" file')
 
 program.parse();
 

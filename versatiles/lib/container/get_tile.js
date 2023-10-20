@@ -1,7 +1,7 @@
 
 export async function getTile(z, x, y) {
 	// when y index is inverted
-	if (this.opt.tms) y = Math.pow(2, z) - y - 1;
+	if (this.options.tms) y = Math.pow(2, z) - y - 1;
 
 	// ensure block index is loaded
 	const blockIndex = await this.getBlockIndex()

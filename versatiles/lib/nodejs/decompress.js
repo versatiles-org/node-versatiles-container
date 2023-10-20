@@ -12,6 +12,7 @@ export function decompress(data, type) {
 				if (err) return rej(err); res(dataOut);
 			})
 		)
-		default: return data;
+		default:
+			return data;
 	}
 }

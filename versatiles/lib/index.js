@@ -9,18 +9,23 @@ import { getTile } from './container/get_tile.js';
 import { getTileIndex } from './container/get_tile_index.js';
 
 export class Versatiles {
-	opt = {
+	options = {
 		tms: false
 	}
-	constructor(source, options) {
-		Object.assign(this.opt, options)
 
-		if (source.startsWith('https://')) {
-			this.read = new HttpReader(source);
-		} else if (source.startsWith('http://')) {
-			this.read = new HttpReader(source);
-		} else {
-			this.read = new FileReader(source);
+	constructor(source, options) {
+		Object.assign(this.options, options)
+
+		if (typeof source === 'string') {
+			if (source.startsWith('https://')) {
+				this.read = new HttpReader(source);
+			} else if (source.startsWith('http://')) {
+				this.read = new HttpReader(source);
+			} else {
+				this.read = new FileReader(source);
+			}
+		} else if (typeof source === 'function') {
+			this.read = source;
 		}
 
 		Object.assign(this, {
@@ -31,5 +36,11 @@ export class Versatiles {
 			getTile,
 			getTileIndex,
 		})
+	}
+
+	async getTileUncompressed(z, x, y) {
+		let tile = await this.getTile(z, x, y);
+		let header = await this.getHeader()
+		return await this.decompress(tile, header.tile_compression);
 	}
 }

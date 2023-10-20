@@ -7,7 +7,7 @@ export async function getMeta() {
 	if (this.header.meta_length > 0) {
 		let header = await this.getHeader();
 		let data = await this.read(header.meta_offset, header.meta_length);
-		data = await this.decompress(data, header.tile_precompression);
+		data = await this.decompress(data, header.tile_compression);
 
 		try {
 			meta = JSON.parse(data);
