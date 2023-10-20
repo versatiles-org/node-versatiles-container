@@ -1,7 +1,9 @@
 
-import { default as HttpReader } from './nodejs/reader_http.js';
-import { default as FileReader } from './nodejs/reader_file.js';
-import getHeader from './container/get_header.js';
+import HttpReader from './nodejs/reader_http.js';
+import FileReader from './nodejs/reader_file.js';
+import { getHeader } from './container/get_header.js';
+import { getMeta } from './container/get_meta.js';
+import { decompress } from './nodejs/decompress.js';
 
 export class Versatiles {
 	opt = {
@@ -20,6 +22,8 @@ export class Versatiles {
 
 		Object.assign(this, {
 			getHeader,
+			getMeta,
+			decompress,
 		})
 	}
 }

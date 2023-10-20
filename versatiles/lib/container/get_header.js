@@ -13,7 +13,7 @@ const FORMATS = {
 	],
 };
 
-export default async function getHeader() {
+export async function getHeader() {
 	// deliver if known
 	if (this.header) return this.header;
 

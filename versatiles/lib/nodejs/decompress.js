@@ -1,10 +1,17 @@
-const zlib = require("node:zlib");
+import zlib from 'zlib';
 
-// decompression helper
-export async function decompress(type, data) {
+export function decompress(data, type) {
 	switch (type) {
-		case 'br': zlib.brotliDecompress(data); break;
-		case 'gzip': zlib.gunzip(data); break;
+		case 'br': return new Promise((res, rej) =>
+			zlib.brotliDecompress(data, (err, dataOut) => {
+				if (err) return rej(err); res(dataOut);
+			})
+		)
+		case 'gzip': return new Promise((res, rej) =>
+			zlib.ungzip(data, (err, dataOut) => {
+				if (err) return rej(err); res(dataOut);
+			})
+		)
 		default: return data;
 	}
 }

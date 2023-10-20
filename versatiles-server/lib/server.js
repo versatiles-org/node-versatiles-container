@@ -68,7 +68,7 @@ export class Server {
 				}
 
 				if (p === '/tiles/tile.json') {
-					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8', 'br');
+					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8');
 				}
 
 				if (p === '/tiles/header.json') {
@@ -164,7 +164,7 @@ function gzip(dataIn) {
 
 function ungzip(dataIn) {
 	return new Promise((res, rej) =>
-		zlib.ungzip(dataIn, (err, dataOut) => {
+		zlib.gunzip(dataIn, (err, dataOut) => {
 			if (err) return rej(err); res(dataOut);
 		})
 	)
@@ -172,7 +172,7 @@ function ungzip(dataIn) {
 
 function brotli(dataIn) {
 	return new Promise((res, rej) =>
-		zlib.brotli(dataIn, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11, } }, (err, dataOut) => {
+		zlib.brotliCompress(dataIn, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11, } }, (err, dataOut) => {
 			if (err) return rej(err); res(dataOut);
 		})
 	)
@@ -180,7 +180,7 @@ function brotli(dataIn) {
 
 function unbrotli(dataIn) {
 	return new Promise((res, rej) =>
-		zlib.unbrotli(dataIn, (err, dataOut) => {
+		zlib.brotliDecompress(dataIn, (err, dataOut) => {
 			if (err) return rej(err); res(dataOut);
 		})
 	)
