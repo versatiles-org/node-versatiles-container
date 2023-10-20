@@ -39,10 +39,10 @@ export async function getHeader() {
 				bbox_min_y: data.readFloatBE(22),
 				bbox_max_x: data.readFloatBE(26),
 				bbox_max_y: data.readFloatBE(30),
-				meta_offset: data.readBigUInt64BE(34),
-				meta_length: data.readBigUInt64BE(42),
-				block_index_offset: data.readBigUInt64BE(50),
-				block_index_length: data.readBigUInt64BE(58),
+				meta_offset: Number(data.readBigUInt64BE(34)),
+				meta_length: Number(data.readBigUInt64BE(42)),
+				block_index_offset: Number(data.readBigUInt64BE(50)),
+				block_index_length: Number(data.readBigUInt64BE(58)),
 			}
 			break;
 		case 'v02':
@@ -57,10 +57,10 @@ export async function getHeader() {
 				bbox_min_y: data.readInt32BE(22) / 1e7,
 				bbox_max_x: data.readInt32BE(26) / 1e7,
 				bbox_max_y: data.readInt32BE(30) / 1e7,
-				meta_offset: data.readBigUInt64BE(34),
-				meta_length: data.readBigUInt64BE(42),
-				block_index_offset: data.readBigUInt64BE(50),
-				block_index_length: data.readBigUInt64BE(58),
+				meta_offset: Number(data.readBigUInt64BE(34)),
+				meta_length: Number(data.readBigUInt64BE(42)),
+				block_index_offset: Number(data.readBigUInt64BE(50)),
+				block_index_length: Number(data.readBigUInt64BE(58)),
 			};
 			break;
 		default:

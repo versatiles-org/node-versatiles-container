@@ -14,7 +14,7 @@ export default function getHTTPReader(url) {
 			url,
 			headers: {
 				...this.requestheaders,
-				"Range": `bytes=${position}-${BigInt(position) + BigInt(length) - 1n}`,
+				"Range": `bytes=${position}-${position + length - 1}`,
 			}
 		});
 

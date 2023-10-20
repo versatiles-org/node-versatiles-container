@@ -7,7 +7,6 @@
 	<meta name="viewport" content="width=device-width">
 	<script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
 	<script src="https://cdn.jsdelivr.net/gh/acalcutt/maplibre-gl-inspect@v1.4.3/dist/maplibre-gl-inspect.min.js"></script>
-	<script src="https://github.com/versatiles-org/versatiles-styles/releases/latest/download/versatiles-styles.js"></script>
 	<link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet">
 	<link href="https://cdn.jsdelivr.net/gh/acalcutt/maplibre-gl-inspect@v1.4.3/dist/maplibre-gl-inspect.css" rel="stylesheet">
 	<style>
@@ -25,19 +24,20 @@
 <body>
 	<div id="map"></div>
 	<script>
-		const style = versatiles_styles.colorful();
-		const map = new maplibregl.Map({
-			container: 'map',
-			style,
-			hash: true,
-		});
+		(async () => {
+			const map = new maplibregl.Map({
+				container: 'map',
+				style: await (await fetch('tiles/style.json')).json(),
+				hash: true,
+			});
 
-		map.dragRotate.disable();
-		map.touchZoomRotate.disableRotation();
+			map.dragRotate.disable();
+			map.touchZoomRotate.disableRotation();
 
-		map.addControl(new maplibregl.NavigationControl());
-		map.addControl(new MaplibreInspect({ showInspectMap: true, showMapPopup: false, showInspectMapPopup: false, showInspectButton: false }));
+			map.addControl(new maplibregl.NavigationControl());
+			//map.addControl(new MaplibreInspect({ showInspectMap: true, showMapPopup: false, showInspectMapPopup: false, showInspectButton: false }));
 
+		})()
 	</script>
 </body>
 

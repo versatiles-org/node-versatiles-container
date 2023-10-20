@@ -4,6 +4,7 @@ import zlib from 'node:zlib';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { Versatiles } from 'versatiles';
+import { generateStyle } from './style.js';
 
 const __dirname = (new URL('../', import.meta.url)).pathname;
 
@@ -21,17 +22,20 @@ const MIMETYPES = {
 }
 
 export class Server {
-	opt = {
+	options = {
 		recompress: false,
+		baseUrl: false,
+		glyphsUrl: false,
+		spriteUrl: false,
+		tilesUrl: false,
+		port: 8080,
 	};
 	layer;
 	server;
-	constructor(source, opt) {
-		Object.assign(this.opt, opt);
+	constructor(source, options) {
+		Object.assign(this.options, options);
 
-		this.layer = {
-			container: new Versatiles(source)
-		}
+		this.layer = { container: new Versatiles(source) }
 	}
 	async #prepareLayer() {
 		let header;
@@ -50,7 +54,7 @@ export class Server {
 	}
 	async start() {
 		const layer = await this.#prepareLayer();
-		const recompress = this.opt.recompress || false;
+		const recompress = this.options.recompress || false;
 
 		this.server = createServer(async (req, res) => {
 
@@ -61,19 +65,27 @@ export class Server {
 			//const baseurl = this.opt.base || (req.headers["x-forwarded-proto"] || "http") + '://' + (req.headers["x-forwarded-host"] || req.headers.host);
 
 			try {
-
 				if ((p === '/') || (p === '/index.html')) {
 					const html = await readFile(resolve(__dirname, 'static/index.html'));
 					return respondWithContent(html, 'text/html; charset=utf-8');
 				}
 
+				if (p === '/tiles/style.json') {
+					let style = await generateStyle(layer.container, this.options);
+					style = JSON.stringify(style);
+					return respondWithContent(style, 'application/json; charset=utf-8');
+				}
+
 				if (p === '/tiles/tile.json') {
-					return respondWithContent(await layer.container.getMeta(), 'application/json; charset=utf-8');
+					let meta = await layer.container.getMeta();
+					meta = JSON.stringify(meta);
+					return respondWithContent(meta, 'application/json; charset=utf-8');
 				}
 
 				if (p === '/tiles/header.json') {
 					let header = await layer.container.getHeader();
 					header = Object.fromEntries('magic,version,tile_format,tile_precompression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
+					header = JSON.stringify(header);
 					return respondWithContent(header, 'application/json; charset=utf-8');
 				}
 
@@ -97,7 +109,6 @@ export class Server {
 				const accept_gzip = accepted_encoding.includes('gzip');
 				const accept_br = accepted_encoding.includes('br');
 
-				if (typeof data === 'object') data = JSON.stringify(data);
 				if (typeof data === 'string') data = Buffer.from(data);
 
 				switch (compression) {
@@ -146,7 +157,7 @@ export class Server {
 			}
 		});
 
-		const port = arguments.port ?? 8080;
+		const port = this.options.port;
 
 		await new Promise(r => this.server.listen(port, () => r()));
 

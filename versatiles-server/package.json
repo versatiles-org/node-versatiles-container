@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "commander": "^11.1.0",
-    "versatiles": "^1.0.0"
+    "versatiles": "^1.0.0",
+    "versatiles-styles": "^3.2.1"
   }
 }
