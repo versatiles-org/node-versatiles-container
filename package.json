@@ -1,5 +1,5 @@
 {
-  "name": "versatiles",
+  "private": true,
   "workspaces": [
     "versatiles",
     "versatiles-server"

@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "jest",
-    "server": "node index.js"
+    "server": "node index.js",
+    "update": "node update_static_assets.js"
   },
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
@@ -35,7 +36,8 @@
     "versatiles"
   ],
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "tar-stream": "^3.1.6"
   },
   "dependencies": {
     "commander": "^11.1.0",
