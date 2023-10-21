@@ -1,32 +1,70 @@
-
 import HttpReader from './nodejs/reader_http.js';
 import FileReader from './nodejs/reader_file.js';
 import { decompress } from './nodejs/decompress.js';
 
-const COMPRESSION = [null, 'gzip', 'br'];
+const COMPRESSION: (string | null)[] = [null, 'gzip', 'br'];
 
-const FORMATS = {
-	'c01': ['png', 'jpeg', 'webp', ...Array(13), 'pbf'], // legacy opencloudtiles
+const FORMATS: Record<string, string[]> = {
+	'c01': ['png', 'jpeg', 'webp', ...Array(13).fill(null), 'pbf'],
 	'v01': ['png', 'jpeg', 'webp', 'pbf'],
 	'v02': [
-		'bin', ...Array(15),
-		'png', 'jpeg', 'webp', 'avif', 'svg', ...Array(11),
+		'bin', ...Array(15).fill(null),
+		'png', 'jpeg', 'webp', 'avif', 'svg', ...Array(11).fill(null),
 		'pbf', 'geojson', 'topojson', 'json'
 	],
 };
 
-export class Versatiles {
-	options = {
-		tms: false
-	}
+interface Header {
+	magic: string;
+	version: string;
+	tile_format: string;
+	tile_compression: string | null;
+	zoom_min: number;
+	zoom_max: number;
+	bbox_min_x: number;
+	bbox_min_y: number;
+	bbox_max_x: number;
+	bbox_max_y: number;
+	meta_offset: number;
+	meta_length: number;
+	block_index_offset: number;
+	block_index_length: number;
+}
 
-	constructor(source, options) {
-		Object.assign(this.options, options)
+interface Block {
+	level: number;
+	column: number;
+	row: number;
+	col_min: number;
+	row_min: number;
+	col_max: number;
+	row_max: number;
+	block_offset: number;
+	tile_blobs_length: number | null;
+	tile_index_offset: number;
+	tile_index_length: number;
+	tile_index: Buffer | null;
+}
+
+interface Options {
+	tms: boolean	
+}
+
+export class Versatiles {
+	options: Options = {
+		tms: false
+	};
+	read: Function;
+	decompress: Function;
+	header?: Header;
+	meta?: any;
+	block_index?: Map<string, Block>;
+
+	constructor(source: string | Function, options?: Options) {
+		Object.assign(this.options, options);
 
 		if (typeof source === 'string') {
-			if (source.startsWith('https://')) {
-				this.read = new HttpReader(source);
-			} else if (source.startsWith('http://')) {
+			if (source.startsWith('https://') || source.startsWith('http://')) {
 				this.read = new HttpReader(source);
 			} else {
 				this.read = new FileReader(source);
@@ -38,13 +76,13 @@ export class Versatiles {
 		this.decompress = decompress;
 	}
 
-	async getTileUncompressed(z, x, y) {
+	async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer> {
 		let tile = await this.getTile(z, x, y);
-		let header = await this.getHeader()
+		let header = await this.getHeader();
 		return await this.decompress(tile, header.tile_compression);
 	}
 
-	async getHeader() {
+	async getHeader(): Promise<Header> {
 		// deliver if known
 		if (this.header) return this.header;
 
@@ -103,7 +141,7 @@ export class Versatiles {
 		return this.header;
 	}
 
-	async getMeta() {
+	async getMeta(): Promise<any> {
 		if (this.meta) return this.meta;
 
 		let meta = {};
@@ -126,7 +164,7 @@ export class Versatiles {
 		return this.meta;
 	}
 
-	async getBlockIndex() {
+	async getBlockIndex(): Promise<Map<string, Block>> {
 		if (this.block_index) return this.block_index;
 
 		let header = await this.getHeader()
@@ -192,7 +230,7 @@ export class Versatiles {
 		return this.block_index;
 	}
 
-	async getTileIndex(block) {
+	async getTileIndex(block: Block): Promise<Buffer> {
 		if (block.tile_index) return block.tile_index;
 
 		let data = await this.read(block.tile_index_offset, block.tile_index_length)
@@ -201,7 +239,7 @@ export class Versatiles {
 		return block.tile_index;
 	}
 
-	async getTile(z, x, y) {
+	async getTile(z: number, x: number, y: number): Promise<Buffer> {
 		// when y index is inverted
 		if (this.options.tms) y = Math.pow(2, z) - y - 1;
 

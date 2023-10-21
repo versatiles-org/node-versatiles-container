@@ -1,20 +1,19 @@
-
 import fs from 'fs';
 
-export default function getFileReader(filename) {
-	let fd = fs.openSync(filename, 'r');
+export default function getFileReader(filename: string): (position: number, length: number) => Promise<Buffer> {
+	const fd = fs.openSync(filename, 'r');
 
-	return async function read(position, length) {
-		return await new Promise((resolve, reject) => {
+	return async function read(position: number, length: number): Promise<Buffer> {
+		return new Promise((resolve, reject) => {
 			fs.read(fd, {
 				buffer: Buffer.alloc(length),
-				position: position,
+				position,
 				offset: 0,
-				length: length,
-			}, (err, r, buf) => {
+				length,
+			}, (err, _, buf) => {
 				if (err) return reject(err);
 				resolve(buf);
-			})
-		})
+			});
+		});
 	}
 }

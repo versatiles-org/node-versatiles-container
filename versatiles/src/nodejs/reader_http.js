@@ -1,21 +1,39 @@
 import https from 'https';
 import http from 'http';
+import { IncomingMessage, Agent } from 'http';
 
 const DEFAULT_TIMEOUT = 10000;
 
-const clients = {
-	https: { client: https, agent: new https.Agent({ keepAlive: true }) },
-	http: { client: http, agent: new http.Agent({ keepAlive: true }) },
+interface ClientInfo {
+	client: typeof https | typeof http;
+	agent: Agent;
 }
 
-export default function getHTTPReader(url) {
-	return async function read(position, length) {
+interface GetParams {
+	url: string;
+	headers: { [key: string]: string };
+	timeout?: number;
+}
+
+interface GetResponse {
+	statusCode: number;
+	headers: { [key: string]: string };
+	body: Buffer;
+}
+
+const clients: { [key: string]: ClientInfo } = {
+	https: { client: https, agent: new https.Agent({ keepAlive: true }) },
+	http: { client: http, agent: new http.Agent({ keepAlive: true }) },
+};
+
+export default function getHTTPReader(url: string): (position: number, length: number) => Promise<Buffer> {
+	return async function read(position: number, length: number): Promise<Buffer> {
 		const response = await get({
 			url,
 			headers: {
 				...this.requestheaders,
 				"Range": `bytes=${position}-${position + length - 1}`,
-			}
+			},
 		});
 
 		if (response.statusCode !== 206) {
@@ -23,29 +41,26 @@ export default function getHTTPReader(url) {
 		}
 
 		return response.body;
-	}
+	};
 }
 
-async function get(params) {
+async function get(params: GetParams): Promise<GetResponse> {
 	let { url, headers, timeout } = params;
 
 	headers["User-Agent"] = "Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)";
 
-	// detect protocol
-	const protocol = url.split(':')[0];
+	const protocol = new URL(url).protocol.slice(0, -1);
 	if (!clients[protocol]) throw new Error('Unknown Protocol');
 
-	// timeout param
 	timeout = (Number.isInteger(timeout) && timeout > 0) ? timeout : DEFAULT_TIMEOUT;
 	if (timeout <= 0) throw new Error('Timeout');
 
-	let response = await new Promise((resolve, reject) => {
+	let response: IncomingMessage = await new Promise((resolve, reject) => {
 		let watchdog = setTimeout(() => {
-			if (!request.destroyed) request.destroy();
 			reject('Timeout');
 		}, timeout);
 
-		clients[protocol].client
+		const request = clients[protocol].client
 			.request(url, {
 				method: 'GET',
 				agent: clients[protocol].agent,
@@ -53,37 +68,33 @@ async function get(params) {
 				timeout,
 			})
 			.on('response', response => {
-				if (request.destroyed) return;
 				clearTimeout(watchdog);
-				resolve(response)
+				resolve(response);
 			})
 			.on('error', err => {
-				if (request.destroyed) return;
 				clearTimeout(watchdog);
 				reject(err);
 			})
 			.end();
 	});
 
-	// Handle non-success status codes
-	if (Math.floor(response.statusCode / 100) !== 2) {
+	if (Math.floor(response.statusCode! / 100) !== 2) {
 		response.destroy();
 		throw new Error(`Response Status Code: ${response.statusCode}`);
 	}
 
 	return await new Promise((resolve, reject) => {
-		// get buffer
-		let buffers = [];
+		let buffers: Buffer[] = [];
 		response
 			.on('data', chunk => buffers.push(chunk))
 			.on('error', err => {
 				response.destroy();
-				reject(err)
+				reject(err);
 			})
 			.once('end', () => resolve({
-				statusCode: response.statusCode,
+				statusCode: response.statusCode!,
 				headers: response.headers,
-				body: Buffer.concat(buffers)
+				body: Buffer.concat(buffers),
 			}));
-	})
+	});
 }
