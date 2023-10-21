@@ -1,13 +1,44 @@
+/**
+ * VersaTiles module
+ * @module VersaTiles
+ */
+
 import HttpReader from './nodejs/reader_http.js';
 import FileReader from './nodejs/reader_file.js';
 import { decompress } from './nodejs/decompress.js';
 
 
 
+/**
+ * Compression Types
+ * @typedef {('gzip'|'br'|null)} Compression
+ */
 export type Compression = 'gzip' | 'br' | null;
 
+/**
+ * File Format Types
+ * @typedef {('avif'|'bin'|'geojson'|'jpeg'|'json'|'pbf'|'png'|'svg'|'topojson'|'webp'|null)} Format
+ */
 export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp' | null;
 
+/**
+ * Header interface
+ * @interface Header
+ * @property {string} magic
+ * @property {string} version
+ * @property {Format} tile_format
+ * @property {Compression} tile_compression
+ * @property {number} zoom_min
+ * @property {number} zoom_max
+ * @property {number} bbox_min_x
+ * @property {number} bbox_min_y
+ * @property {number} bbox_max_x
+ * @property {number} bbox_max_y
+ * @property {number} meta_offset
+ * @property {number} meta_length
+ * @property {number} block_index_offset
+ * @property {number} block_index_length
+ */
 export interface Header {
 	magic: string;
 	version: string;
@@ -25,6 +56,22 @@ export interface Header {
 	block_index_length: number;
 }
 
+/**
+ * Block interface
+ * @interface Block
+ * @property {number} level
+ * @property {number} column
+ * @property {number} row
+ * @property {number} col_min
+ * @property {number} row_min
+ * @property {number} col_max
+ * @property {number} row_max
+ * @property {number} block_offset
+ * @property {(number|null)} tile_blobs_length
+ * @property {number} tile_index_offset
+ * @property {number} tile_index_length
+ * @property {(Buffer|null)} tile_index
+ */
 export interface Block {
 	level: number;
 	column: number;
@@ -40,11 +87,25 @@ export interface Block {
 	tile_index: Buffer | null;
 }
 
+/**
+ * Options interface
+ * @interface Options
+ * @property {boolean} tms
+ */
 export interface Options {
 	tms: boolean
 }
 
+/**
+ * Reader function type
+ * @typedef {function(number, number): Promise<Buffer>} Reader
+ */
 export type Reader = (position: number, length: number) => Promise<Buffer>
+
+/**
+ * Decompressor function type
+ * @typedef {function(Buffer, Compression): Promise<Buffer>} Decompressor
+ */
 export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
 
 
@@ -62,6 +123,9 @@ const COMPRESSIONS: Compression[] = [null, 'gzip', 'br'];
 
 
 
+/**
+ * VersaTiles class
+ */
 export class VersaTiles {
 	#options: Options = {
 		tms: false
@@ -72,6 +136,12 @@ export class VersaTiles {
 	#meta?: Object;
 	#block_index?: Map<string, Block>;
 
+	/**
+	 * Creates a new VersaTiles instance.
+	 * @param {string|Reader} source - The data source, either a URL string or a Reader function.
+	 * @param {Options} [options] - Additional options.
+	 * @throws {Error} Throws an error if the source type is invalid.
+	 */
 	constructor(source: string | Reader, options?: Options) {
 		Object.assign(this.#options, options);
 
@@ -90,12 +160,26 @@ export class VersaTiles {
 		this.#decompress = decompress;
 	}
 
+	/**
+	 * Gets an uncompressed tile.
+	 * @async
+	 * @param {number} z - Zoom level.
+	 * @param {number} x - X coordinate.
+	 * @param {number} y - Y coordinate.
+	 * @returns {Promise<Buffer>} The uncompressed tile data.
+	 */
 	async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer> {
 		let tile = await this.getTile(z, x, y);
 		let header = await this.getHeader();
 		return await this.#decompress(tile, header.tile_compression);
 	}
 
+	/**
+	 * Gets the header information.
+	 * @async
+	 * @returns {Promise<Header>} The header object.
+	 * @throws {Error} Throws an error if the container is invalid.
+	 */
 	async getHeader(): Promise<Header> {
 		// deliver if known
 		if (this.#header) return this.#header;
@@ -155,6 +239,11 @@ export class VersaTiles {
 		return this.#header;
 	}
 
+	/**
+	 * Gets the metadata.
+	 * @async
+	 * @returns {Promise<Object>} The metadata object.
+	 */
 	async getMeta(): Promise<Object> {
 		if (this.#meta) return this.#meta;
 
@@ -179,6 +268,11 @@ export class VersaTiles {
 		return this.#meta;
 	}
 
+	/**
+	 * Gets the block index.
+	 * @async
+	 * @returns {Promise<Map<string, Block>>} The block index map.
+	 */
 	async getBlockIndex(): Promise<Map<string, Block>> {
 		if (this.#block_index) return this.#block_index;
 
@@ -245,6 +339,12 @@ export class VersaTiles {
 		return this.#block_index;
 	}
 
+	/**
+	 * Gets the tile index for a block.
+	 * @async
+	 * @param {Block} block - The block to get the tile index for.
+	 * @returns {Promise<Buffer>} The tile index buffer.
+	 */
 	async getTileIndex(block: Block): Promise<Buffer> {
 		if (block.tile_index) return block.tile_index;
 
@@ -255,6 +355,15 @@ export class VersaTiles {
 		return data;
 	}
 
+	/**
+	 * Gets a tile.
+	 * @async
+	 * @param {number} z - Zoom level.
+	 * @param {number} x - X coordinate.
+	 * @param {number} y - Y coordinate.
+	 * @returns {Promise<Buffer>} The tile data.
+	 * @throws {Error} Throws an error if the block or tile is not found.
+	 */
 	async getTile(z: number, x: number, y: number): Promise<Buffer> {
 		// when y index is inverted
 		if (this.#options.tms) y = Math.pow(2, z) - y - 1;
