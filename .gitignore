@@ -1,3 +1,4 @@
 node_modules
 .DS_Store
+versatiles/dist
 versatiles-server/static/assets

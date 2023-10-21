@@ -10,7 +10,7 @@ export function decompress(data: Buffer, type: string | null): Promise<Buffer> |
 				});
 				break;
 			case 'gzip':
-				zlib.ungzip(data, (err, dataOut) => {
+				zlib.gunzip(data, (err, dataOut) => {
 					if (err) return reject(err);
 					resolve(dataOut);
 				});

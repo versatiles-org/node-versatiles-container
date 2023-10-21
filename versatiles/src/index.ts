@@ -2,6 +2,8 @@ import HttpReader from './nodejs/reader_http.js';
 import FileReader from './nodejs/reader_file.js';
 import { decompress } from './nodejs/decompress.js';
 
+
+
 const COMPRESSION: (string | null)[] = [null, 'gzip', 'br'];
 
 const FORMATS: Record<string, string[]> = {
@@ -14,7 +16,9 @@ const FORMATS: Record<string, string[]> = {
 	],
 };
 
-interface Header {
+
+
+export interface Header {
 	magic: string;
 	version: string;
 	tile_format: string;
@@ -31,7 +35,7 @@ interface Header {
 	block_index_length: number;
 }
 
-interface Block {
+export interface Block {
 	level: number;
 	column: number;
 	row: number;
@@ -46,31 +50,37 @@ interface Block {
 	tile_index: Buffer | null;
 }
 
-interface Options {
-	tms: boolean	
+export interface Options {
+	tms: boolean
 }
+
+export type Reader = (position: number, length: number) => Promise<Buffer>
+
+
 
 export class Versatiles {
 	options: Options = {
 		tms: false
 	};
-	read: Function;
+	read: Reader;
 	decompress: Function;
 	header?: Header;
-	meta?: any;
+	meta?: Object;
 	block_index?: Map<string, Block>;
 
-	constructor(source: string | Function, options?: Options) {
+	constructor(source: string | Reader, options?: Options) {
 		Object.assign(this.options, options);
 
 		if (typeof source === 'string') {
 			if (source.startsWith('https://') || source.startsWith('http://')) {
-				this.read = new HttpReader(source);
+				this.read = HttpReader(source);
 			} else {
-				this.read = new FileReader(source);
+				this.read = FileReader(source);
 			}
 		} else if (typeof source === 'function') {
 			this.read = source;
+		} else {
+			throw new Error('source must be a string or a Reader');
 		}
 
 		this.decompress = decompress;
@@ -141,18 +151,19 @@ export class Versatiles {
 		return this.header;
 	}
 
-	async getMeta(): Promise<any> {
+	async getMeta(): Promise<Object> {
 		if (this.meta) return this.meta;
 
+		let header = await this.getHeader();
 		let meta = {};
 
-		if (this.header.meta_length > 0) {
+		if (header.meta_length > 0) {
 			let header = await this.getHeader();
 			let data = await this.read(header.meta_offset, header.meta_length);
 			data = await this.decompress(data, header.tile_compression);
 
 			try {
-				meta = JSON.parse(data);
+				meta = JSON.parse(data.toString());
 			} catch (err) {
 				meta = {}; // empty
 			}
@@ -176,7 +187,7 @@ export class Versatiles {
 		// read index from buffer
 		let blocks = [];
 
-		switch (this.header.version) {
+		switch (header.version) {
 			case 'c01':
 			case 'v01':
 
@@ -234,9 +245,10 @@ export class Versatiles {
 		if (block.tile_index) return block.tile_index;
 
 		let data = await this.read(block.tile_index_offset, block.tile_index_length)
-		block.tile_index = await this.decompress(data, 'br');
+		data = await this.decompress(data, 'br');
+		block.tile_index = data;
 
-		return block.tile_index;
+		return data;
 	}
 
 	async getTile(z: number, x: number, y: number): Promise<Buffer> {

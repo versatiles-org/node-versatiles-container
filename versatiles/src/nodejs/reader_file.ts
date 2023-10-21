@@ -1,6 +1,7 @@
 import fs from 'fs';
+import { Reader } from '../index';
 
-export default function getFileReader(filename: string): (position: number, length: number) => Promise<Buffer> {
+export default function getFileReader(filename: string): Reader {
 	const fd = fs.openSync(filename, 'r');
 
 	return async function read(position: number, length: number): Promise<Buffer> {
