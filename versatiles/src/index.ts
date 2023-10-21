@@ -4,25 +4,15 @@ import { decompress } from './nodejs/decompress.js';
 
 
 
-const COMPRESSION: (string | null)[] = [null, 'gzip', 'br'];
+export type Compression = 'gzip' | 'br' | null;
 
-const FORMATS: Record<string, string[]> = {
-	'c01': ['png', 'jpeg', 'webp', ...Array(13).fill(null), 'pbf'],
-	'v01': ['png', 'jpeg', 'webp', 'pbf'],
-	'v02': [
-		'bin', ...Array(15).fill(null),
-		'png', 'jpeg', 'webp', 'avif', 'svg', ...Array(11).fill(null),
-		'pbf', 'geojson', 'topojson', 'json'
-	],
-};
-
-
+export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp' | null;
 
 export interface Header {
 	magic: string;
 	version: string;
-	tile_format: string;
-	tile_compression: string | null;
+	tile_format: Format;
+	tile_compression: Compression;
 	zoom_min: number;
 	zoom_max: number;
 	bbox_min_x: number;
@@ -55,15 +45,29 @@ export interface Options {
 }
 
 export type Reader = (position: number, length: number) => Promise<Buffer>
+export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
 
 
 
-export class Versatiles {
+const FORMATS: Record<string, Format[]> = {
+	'c01': ['png', 'jpeg', 'webp', ...Array(13).fill(null), 'pbf'],
+	'v01': ['png', 'jpeg', 'webp', 'pbf'],
+	'v02': [
+		'bin', ...Array(15).fill(null),
+		'png', 'jpeg', 'webp', 'avif', 'svg', ...Array(11).fill(null),
+		'pbf', 'geojson', 'topojson', 'json'
+	],
+};
+const COMPRESSIONS: Compression[] = [null, 'gzip', 'br'];
+
+
+
+export class VersaTiles {
 	options: Options = {
 		tms: false
 	};
 	read: Reader;
-	decompress: Function;
+	decompress: Decompressor;
 	header?: Header;
 	meta?: Object;
 	block_index?: Map<string, Block>;
@@ -111,7 +115,7 @@ export class Versatiles {
 					magic: data.toString('utf8', 0, 14),
 					version: version,
 					tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
-					tile_compression: COMPRESSION[data.readUInt8(15)] || null,
+					tile_compression: COMPRESSIONS[data.readUInt8(15)] || null,
 					zoom_min: data.readUInt8(16),
 					zoom_max: data.readUInt8(17),
 					bbox_min_x: data.readFloatBE(18),
@@ -129,7 +133,7 @@ export class Versatiles {
 					magic: data.toString('utf8', 0, 14),
 					version: version,
 					tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
-					tile_compression: COMPRESSION[data.readUInt8(15)] || null,
+					tile_compression: COMPRESSIONS[data.readUInt8(15)] || null,
 					zoom_min: data.readUInt8(16),
 					zoom_max: data.readUInt8(17),
 					bbox_min_x: data.readInt32BE(18) / 1e7,

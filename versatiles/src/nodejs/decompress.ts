@@ -1,8 +1,9 @@
 import zlib from 'zlib';
+import { Compression } from '../index';
 
-export function decompress(data: Buffer, type: string | null): Promise<Buffer> | Buffer {
+export function decompress(data: Buffer, compression: Compression): Promise<Buffer> {
 	return new Promise((resolve, reject) => {
-		switch (type) {
+		switch (compression) {
 			case 'br':
 				zlib.brotliDecompress(data, (err, dataOut) => {
 					if (err) return reject(err);
