@@ -63,44 +63,44 @@ const COMPRESSIONS: Compression[] = [null, 'gzip', 'br'];
 
 
 export class VersaTiles {
-	options: Options = {
+	#options: Options = {
 		tms: false
 	};
-	read: Reader;
-	decompress: Decompressor;
-	header?: Header;
-	meta?: Object;
-	block_index?: Map<string, Block>;
+	#read: Reader;
+	#decompress: Decompressor;
+	#header?: Header;
+	#meta?: Object;
+	#block_index?: Map<string, Block>;
 
 	constructor(source: string | Reader, options?: Options) {
-		Object.assign(this.options, options);
+		Object.assign(this.#options, options);
 
 		if (typeof source === 'string') {
 			if (source.startsWith('https://') || source.startsWith('http://')) {
-				this.read = HttpReader(source);
+				this.#read = HttpReader(source);
 			} else {
-				this.read = FileReader(source);
+				this.#read = FileReader(source);
 			}
 		} else if (typeof source === 'function') {
-			this.read = source;
+			this.#read = source;
 		} else {
 			throw new Error('source must be a string or a Reader');
 		}
 
-		this.decompress = decompress;
+		this.#decompress = decompress;
 	}
 
 	async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer> {
 		let tile = await this.getTile(z, x, y);
 		let header = await this.getHeader();
-		return await this.decompress(tile, header.tile_compression);
+		return await this.#decompress(tile, header.tile_compression);
 	}
 
 	async getHeader(): Promise<Header> {
 		// deliver if known
-		if (this.header) return this.header;
+		if (this.#header) return this.#header;
 
-		let data = await this.read(0, 66);
+		let data = await this.#read(0, 66);
 
 		// check magic bytes
 		if (!/^versatiles_v0[12]$/.test(data.toString('utf8', 0, 14))) {
@@ -111,7 +111,7 @@ export class VersaTiles {
 
 		switch (version) {
 			case 'v01':
-				this.header = {
+				this.#header = {
 					magic: data.toString('utf8', 0, 14),
 					version: version,
 					tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
@@ -129,7 +129,7 @@ export class VersaTiles {
 				}
 				break;
 			case 'v02':
-				this.header = {
+				this.#header = {
 					magic: data.toString('utf8', 0, 14),
 					version: version,
 					tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
@@ -150,21 +150,21 @@ export class VersaTiles {
 				throw new Error('Invalid Container');
 		}
 
-		Object.freeze(this.header);
+		Object.freeze(this.#header);
 
-		return this.header;
+		return this.#header;
 	}
 
 	async getMeta(): Promise<Object> {
-		if (this.meta) return this.meta;
+		if (this.#meta) return this.#meta;
 
 		let header = await this.getHeader();
 		let meta = {};
 
 		if (header.meta_length > 0) {
 			let header = await this.getHeader();
-			let data = await this.read(header.meta_offset, header.meta_length);
-			data = await this.decompress(data, header.tile_compression);
+			let data = await this.#read(header.meta_offset, header.meta_length);
+			data = await this.#decompress(data, header.tile_compression);
 
 			try {
 				meta = JSON.parse(data.toString());
@@ -173,20 +173,20 @@ export class VersaTiles {
 			}
 		}
 
-		this.meta = meta;
-		Object.freeze(this.meta);
+		this.#meta = meta;
+		Object.freeze(this.#meta);
 
-		return this.meta;
+		return this.#meta;
 	}
 
 	async getBlockIndex(): Promise<Map<string, Block>> {
-		if (this.block_index) return this.block_index;
+		if (this.#block_index) return this.#block_index;
 
 		let header = await this.getHeader()
 
 		// read block_index buffer
-		let data = await this.read(header.block_index_offset, header.block_index_length)
-		data = await this.decompress(data, 'br')
+		let data = await this.#read(header.block_index_offset, header.block_index_length)
+		data = await this.#decompress(data, 'br')
 
 		// read index from buffer
 		let blocks = [];
@@ -240,16 +240,16 @@ export class VersaTiles {
 		}
 
 		// build map
-		this.block_index = new Map(blocks.map(b => [`${b.level},${b.column},${b.row}`, b]));
+		this.#block_index = new Map(blocks.map(b => [`${b.level},${b.column},${b.row}`, b]));
 
-		return this.block_index;
+		return this.#block_index;
 	}
 
 	async getTileIndex(block: Block): Promise<Buffer> {
 		if (block.tile_index) return block.tile_index;
 
-		let data = await this.read(block.tile_index_offset, block.tile_index_length)
-		data = await this.decompress(data, 'br');
+		let data = await this.#read(block.tile_index_offset, block.tile_index_length)
+		data = await this.#decompress(data, 'br');
 		block.tile_index = data;
 
 		return data;
@@ -257,7 +257,7 @@ export class VersaTiles {
 
 	async getTile(z: number, x: number, y: number): Promise<Buffer> {
 		// when y index is inverted
-		if (this.options.tms) y = Math.pow(2, z) - y - 1;
+		if (this.#options.tms) y = Math.pow(2, z) - y - 1;
 
 		// ensure block index is loaded
 		const blockIndex = await this.getBlockIndex()
@@ -291,6 +291,6 @@ export class VersaTiles {
 		// shortcut: return empty buffer
 		if (tile_length === 0) return Buffer.allocUnsafe(0);
 
-		return await this.read(tile_offset, tile_length);
+		return await this.#read(tile_offset, tile_length);
 	}
 }
