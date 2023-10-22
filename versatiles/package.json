@@ -34,8 +34,8 @@
     "versatiles"
   ],
   "devDependencies": {
-    "documentation": "^14.0.2",
     "jest": "^29.7.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "@microsoft/tsdoc": "^0.14.2"
   }
 }
