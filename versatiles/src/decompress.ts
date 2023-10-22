@@ -1,5 +1,5 @@
 import zlib from 'zlib';
-import { Compression } from '../index';
+import { Compression } from './interfaces';
 
 /**
  * Decompresses a buffer using the specified compression algorithm.

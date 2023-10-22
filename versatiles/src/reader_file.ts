@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Reader } from '../index';
+import { Reader } from './interfaces';
 
 /**
  * Creates a file reader function for reading chunks of data from a file.
