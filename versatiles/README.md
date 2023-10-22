@@ -22,7 +22,7 @@ fs.writeFileSync('tile.' + header.tile_format, tile);
 
 ## VersaTiles
 
-[versatiles/dist/index.js:29-280](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L29-L280 "Source code on GitHub")
+[versatiles/dist/index.js:29-280](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L29-L280 "Source code on GitHub")
 
 VersaTiles class
 
@@ -33,7 +33,7 @@ VersaTiles class
 
 ### getHeader
 
-[versatiles/dist/index.js:68-120](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L68-L120 "Source code on GitHub")
+[versatiles/dist/index.js:68-120](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L68-L120 "Source code on GitHub")
 
 Gets the header information.
 
@@ -43,7 +43,7 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### getMeta
 
-[versatiles/dist/index.js:126-145](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L126-L145 "Source code on GitHub")
+[versatiles/dist/index.js:126-145](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L126-L145 "Source code on GitHub")
 
 Gets the metadata.
 
@@ -51,7 +51,7 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### getBlockIndex
 
-[versatiles/dist/index.js:151-210](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L151-L210 "Source code on GitHub")
+[versatiles/dist/index.js:151-210](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L151-L210 "Source code on GitHub")
 
 Gets the block index.
 
@@ -59,7 +59,7 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### getTileIndex
 
-[versatiles/dist/index.js:217-224](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L217-L224 "Source code on GitHub")
+[versatiles/dist/index.js:217-224](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L217-L224 "Source code on GitHub")
 
 Gets the tile index for a block.
 
@@ -71,7 +71,7 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### getTile
 
-[versatiles/dist/index.js:234-266](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L234-L266 "Source code on GitHub")
+[versatiles/dist/index.js:234-266](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L234-L266 "Source code on GitHub")
 
 Gets a tile.
 
@@ -89,7 +89,7 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### getTileUncompressed
 
-[versatiles/dist/index.js:275-279](https://github.com/versatiles-org/node-versatiles/blob/2e77eb2f223acffafdfa28a0e70e4af67103adae/versatiles/dist/index.js#L275-L279 "Source code on GitHub")
+[versatiles/dist/index.js:275-279](https://github.com/versatiles-org/node-versatiles/blob/5e6719f22030134e133e7f8d2cc53b54817c3cc7/versatiles/dist/index.js#L275-L279 "Source code on GitHub")
 
 Gets an uncompressed tile.
 

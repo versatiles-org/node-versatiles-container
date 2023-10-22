@@ -1,7 +1,6 @@
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
-import url from 'node:url';
 
 export class StaticContent {
 	map;
