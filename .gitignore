@@ -3,3 +3,4 @@ node_modules
 versatiles/dist
 doc/
 versatiles-server/static/assets/
+versatiles/test.md
