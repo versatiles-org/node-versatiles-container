@@ -1,0 +1,17 @@
+{
+  "private":true,
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "doc": "npm run build; npx documentation readme dist/index.js --document-exported=true --format=md --github=true --markdown-toc=false --quiet --resolve=node --section=API"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "license": "Unlicense",
+  "devDependencies": {
+    "@types/node": "^20.8.7",
+    "typedoc": "^0.25.2",
+    "typescript": "^5.2.2"
+  }
+}

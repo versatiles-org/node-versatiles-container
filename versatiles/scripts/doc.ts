@@ -1,5 +1,5 @@
 
-import { } from 'node:fs';
+import { } from 'fs';
 import { resolve } from 'node:path';
 import { TSDocParser } from '@microsoft/tsdoc';
 import { readFile } from 'node:fs/promises';

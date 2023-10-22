@@ -1,6 +1,6 @@
 node_modules
 .DS_Store
 versatiles/dist
-doc/
+versatiles/doc/
 versatiles-server/static/assets/
-versatiles/test.md
+test.md
