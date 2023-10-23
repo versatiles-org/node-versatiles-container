@@ -3,7 +3,7 @@ import HttpReader from './reader_http.js';
 import FileReader from './reader_file.js';
 import { decompress } from './decompress.js';
 import { Block, Compression, Decompressor, Format, Header, Options, Reader, TileIndex } from './interfaces.js';
-export { Block, Compression, Format, Header, Options, Reader } from './interfaces.js';
+export { Block, Compression, Format, Header, Options, Reader, TileIndex } from './interfaces.js';
 
 
 
@@ -232,10 +232,8 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Gets the tile index for a block.
+	 * Gets the tile index for given block.
 	 * This is used internally to keep a lookup of every tile in the block.
-	 * 
-	 * The keys of this `map` have the form "{z},{x},{y}".
 	 * @async
 	 * @param {Block} block - The block to get the tile index for.
 	 * @returns {Promise<TileIndex>} The tile index buffer.
@@ -260,15 +258,16 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Gets a tile.
+	 * Returns a tile as Buffer.
+	 * If the container header has defined a tile_compression, the returned Buffer contains compressed tile data. Use the method `getTileUncompressed` to get uncompressed tile data.
+	 * If the tile cannot be found, `null` is returned.
 	 * @async
 	 * @param {number} z - Zoom level.
 	 * @param {number} x - X coordinate.
 	 * @param {number} y - Y coordinate.
-	 * @returns {Promise<Buffer>} The tile data.
-	 * @throws {Error} Throws an error if the block or tile is not found.
+	 * @returns {Promise<Buffer|null>} The tile data.
 	 */
-	async getTile(z: number, x: number, y: number): Promise<Buffer> {
+	async getTile(z: number, x: number, y: number): Promise<Buffer | null> {
 		// when y index is inverted
 		if (this.#options.tms) y = Math.pow(2, z) - y - 1;
 
@@ -284,33 +283,40 @@ export class VersaTiles {
 		const ty = y & 0xFF;
 
 		// check if block containing tile is within bounds
-		let blockKey = `${z},${bx},${by}`;
-		let block = blockIndex.get(blockKey);
-		if (!block) throw new Error('block not found');
+		const blockKey = `${z},${bx},${by}`;
+		const block = blockIndex.get(blockKey);
+		if (!block) return null;
 
 		// check if block contains tile
-		if (tx < block.col_min || tx > block.col_max) throw new Error('Invalid X within Block');
-		if (ty < block.row_min || ty > block.row_max) throw new Error('Invalid Y within Block');
+		if (tx < block.col_min || tx > block.col_max) return null;
+		if (ty < block.row_min || ty > block.row_max) return null;
 
 		// calculate sequential tile number
 		const j = (ty - block.row_min) * (block.col_max - block.col_min + 1) + (tx - block.col_min);
 
 		// get tile index
-		let tile_index = await this.getTileIndex(block);
+		const tile_index = await this.getTileIndex(block);
+		const offset = tile_index.offsets[j];
+		const length = tile_index.lengths[j];
 
-		return await this.#read(tile_index.offsets[j], tile_index.lengths[j]);
+		if (length === 0) return null;
+
+		return await this.#read(offset, length);
 	}
 
 	/**
-	 * Gets an uncompressed tile.
+	 * Returns an uncompressed tile as Buffer.
+	 * Use the method `getTile` to get pre-compressed tile data.
+	 * If the tile cannot be found, `null` is returned.
 	 * @async
 	 * @param {number} z - Zoom level.
 	 * @param {number} x - X coordinate.
 	 * @param {number} y - Y coordinate.
-	 * @returns {Promise<Buffer>} The uncompressed tile data.
+	 * @returns {Promise<Buffer|null>} The uncompressed tile data.
 	 */
-	async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer> {
+	async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer | null> {
 		let tile = await this.getTile(z, x, y);
+		if (!tile) return null;
 		let header = await this.getHeader();
 		return await this.#decompress(tile, header.tile_compression);
 	}

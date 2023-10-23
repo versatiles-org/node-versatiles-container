@@ -1,18 +1,18 @@
 
 /**
- * Compression Types
+ * Different types of supported compressions. `null` means uncompressed.
  * @typedef {('gzip'|'br'|null)} Compression
  */
 export type Compression = 'gzip' | 'br' | null;
 
 /**
- * File Format Types
+ * Different file formats.
  * @typedef {('avif'|'bin'|'geojson'|'jpeg'|'json'|'pbf'|'png'|'svg'|'topojson'|'webp'|null)} Format
  */
 export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp' | null;
 
 /**
- * Header interface
+ * Defines the header of a container.
  * @interface Header
  * @property {string} magic
  * @property {string} version
@@ -47,7 +47,7 @@ export interface Header {
 }
 
 /**
- * Block interface
+ * Defines a block of tiles, including all necessary metadata.
  * @interface Block
  * @property {number} level
  * @property {number} column
@@ -79,8 +79,8 @@ export interface Block {
 }
 
 /**
- * TileIndex interface
- * @interface Block
+ * Defines an index of tiles inside a block.
+ * @interface TileIndex
  * @property {Float64Array} offsets
  * @property {Float64Array} lengths
  */
@@ -90,7 +90,7 @@ export interface TileIndex {
 }
 
 /**
- * Options interface
+ * Defines supported options for reading a container.
  * @interface Options
  * @property {boolean} tms
  */
@@ -99,7 +99,9 @@ export interface Options {
 }
 
 /**
- * Reader function type
+ * Defines an asynchronous container reader function.
+ * It's basically a function that returns `length`s bytes starting at `position` of a container file.
+ * You can define your own reader function to access containers via any network/interface/hardware.
  * @typedef {function(number, number): Promise<Buffer>} Reader
  */
 export type Reader = (position: number, length: number) => Promise<Buffer>
