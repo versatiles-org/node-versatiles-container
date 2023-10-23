@@ -47,6 +47,9 @@ function* generate2Declaration(ref: DeclarationReflection): Generator<string> {
 		const children = group.children.filter(c => !c.flags.isPrivate);
 		if (children.length === 0) continue;
 
+		// sort by order in code
+		children.sort((a,b) => a.id - b.id);
+
 		switch (group.title) {
 			case 'Constructors':
 				if (children.length !== 1) throw Error()
