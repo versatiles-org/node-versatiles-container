@@ -60,7 +60,8 @@ export interface Header {
  * @property {(number|null)} tile_blobs_length
  * @property {number} tile_index_offset
  * @property {number} tile_index_length
- * @property {(Buffer|null)} tile_index
+ * @property {number} tile_count
+ * @property {TileIndex=} tile_index
  */
 export interface Block {
 	level: number;
@@ -71,10 +72,21 @@ export interface Block {
 	col_max: number;
 	row_max: number;
 	block_offset: number;
-	tile_blobs_length: number | null;
 	tile_index_offset: number;
 	tile_index_length: number;
-	tile_index: Buffer | null;
+	tile_count: number;
+	tile_index?: TileIndex;
+}
+
+/**
+ * TileIndex interface
+ * @interface Block
+ * @property {Float64Array} offsets
+ * @property {Float64Array} lengths
+ */
+export interface TileIndex {
+	offsets: Float64Array;
+	lengths: Float64Array;
 }
 
 /**
