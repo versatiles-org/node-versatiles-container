@@ -34,20 +34,17 @@ export type Reader = (position: number, length: number) => Promise<Buffer>;
 
 /**
  * Defines the header of a container.
- * @property {string} magic
- * @property {string} version
- * @property {Format} tile_format
- * @property {Compression} tile_compression
- * @property {number} zoom_min
- * @property {number} zoom_max
- * @property {number} bbox_min_x
- * @property {number} bbox_min_y
- * @property {number} bbox_max_x
- * @property {number} bbox_max_y
- * @property {number} meta_offset
- * @property {number} meta_length
- * @property {number} block_index_offset
- * @property {number} block_index_length
+ * @property {string} magic - first bytes of the container, usually "versatiles_v02"
+ * @property {string} version - version of the versatiles container, usually "v02"
+ * @property {Format} tileFormat - file format of the stored tiles
+ * @property {Compression} tileCompression - compression of the stored tiles
+ * @property {number} zoomMin - minimum zoom level
+ * @property {number} zoomMax - maximum zoom level
+ * @property {[number, number, number, number]} bbox - bounding box of this container: `[lon_min, lat_min, lon_min, lat_min]`
+ * @property {number} metaOffset - position of the first byte of the metadata inside the container. metadata is compressed with `tileCompression`.
+ * @property {number} metaLength - length of the metadata in bytes. `metaLength = 0` means there is no metadata.
+ * @property {number} blockIndexOffset - position of the first byte of the block index inside the container. block index is compressed with brotli.
+ * @property {number} blockIndexLength - length of the block index in bytes. `blockIndexLength = 0` means there aren't any tiles in the container.
  */
 export interface Header {
 	magic: string;
@@ -56,7 +53,7 @@ export interface Header {
 	tileCompression: Compression;
 	zoomMin: number;
 	zoomMax: number;
-	bbox: [number, number, number, number]; //minX, minY, maxX, maxY
+	bbox: [number, number, number, number];
 	metaOffset: number;
 	metaLength: number;
 	blockIndexOffset: number;
@@ -66,20 +63,19 @@ export interface Header {
 
 
 /**
- * Defines a block of tiles, including all necessary metadata.
- * @property {number} level
- * @property {number} column
- * @property {number} row
- * @property {number} col_min
- * @property {number} row_min
- * @property {number} col_max
- * @property {number} row_max
- * @property {number} block_offset
- * @property {(number|null)} tile_blobs_length
- * @property {number} tile_index_offset
- * @property {number} tile_index_length
- * @property {number} tile_count
- * @property {TileIndex=} tile_index
+ * Defines a block of tiles, including all necessary metadata. see also the [spec v02](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#block_index)
+ * @property {number} level - zoom level
+ * @property {number} column - column of the block in this zoom level
+ * @property {number} row - row of the block in this zoom level
+ * @property {number} colMin - minimum column where a tile is stored in this block (0..255)
+ * @property {number} rowMin - minimum row where a tile is stored in this block (0..255)
+ * @property {number} colMax - maximum column where a tile is stored in this block (0..255)
+ * @property {number} rowMax - maximum row where a tile is stored in this block (0..255)
+ * @property {number} blockOffset - byte position of this block in the container
+ * @property {number} tileIndexOffset - byte position of the tile index in the container
+ * @property {number} tileIndexLength - byte length of the tile index
+ * @property {number} tileCount - number of tiles in this block
+ * @property {TileIndex=} tileIndex - tile index, if it was already fetched
  */
 export interface Block {
 	level: number;
@@ -100,8 +96,8 @@ export interface Block {
 
 /**
  * Defines an index of tiles inside a block.
- * @property {Float64Array} offsets
- * @property {Float64Array} lengths
+ * @property {Float64Array} offsets - array of positions of the first byte of the tiles inside the block. tiles are compressed with `tileCompression`.
+ * @property {Float64Array} lengths - array of length of the tiles in bytes. `lengths[i] = 0` means that this tile does not stored.
  */
 export interface TileIndex {
 	offsets: Float64Array;
@@ -112,7 +108,7 @@ export interface TileIndex {
 
 /**
  * Defines supported options for reading a container.
- * @property {boolean} tms
+ * @property {boolean} tms - if true, the [TMS (Tile Map Service) tile ordering](https://wiki.openstreetmap.org/wiki/TMS)  is used, so y = 0 means south
  */
 export interface Options {
 	tms: boolean
