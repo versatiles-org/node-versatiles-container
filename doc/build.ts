@@ -118,21 +118,23 @@ function getParameter(ref: DeclarationReflection | ParameterReflection) {
 function getSummary(comment: Comment | undefined): string | undefined {
 	if (!comment) return;
 	let lines = comment.summary;
-	return lines.map(line => line.text).join(' ');
+	return lines.map(l => l.text).join('');
 }
 
 function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield ''
-	if (!ref.comment) {
+	let comment = ref.comment;
+	if (!comment) {
+		let temp:any = ref.type;
+		comment= temp?.declaration?.signatures[0].comment
+	}
+	if (!comment) {
 		yield getSourceLink(ref)
 		return;
 	}
-	let lines = ref.comment.summary;
-	for (let i = 0; i < lines.length; i++) {
-		let text = lines[i].text.replace(/\n/m, '  \n');
-		if (i === lines.length - 1) text += ' ' + getSourceLink(ref)
-		yield text;
-	}
+	const lines = comment.summary;
+	const line = lines.map(l => l.text).join('') + ' ' + getSourceLink(ref);
+	yield line.replace(/\n/m, '  \n');
 }
 
 function getParameters(refs: ParameterReflection[]): string {
@@ -168,7 +170,7 @@ function getType(someType: SomeType): string {
 				const type = signature.type ? getTypeRec(signature.type) : 'void';
 				let parameters = (signature.parameters || [])
 					.map(p => {
-						let type = p.type ? '`:`' + getType(p.type) : '';
+						let type = p.type ? '`: `' + getType(p.type) : '';
 						return `\`${p.name}\`${type}`
 					}).join('`, `')
 				return `\`(\`${parameters}\`) => \`${type}`;
