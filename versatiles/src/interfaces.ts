@@ -1,7 +1,6 @@
 
 /**
  * Different types of supported compressions. `null` means uncompressed.
- * @typeParam {('gzip'|'br'|null)} Compression
  */
 export type Compression = 'gzip' | 'br' | null;
 
@@ -9,9 +8,15 @@ export type Compression = 'gzip' | 'br' | null;
 
 /**
  * Different file formats.
- * @typeParam {('avif'|'bin'|'geojson'|'jpeg'|'json'|'pbf'|'png'|'svg'|'topojson'|'webp'|null)} Format
  */
 export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp' | null;
+
+
+
+/**
+ * Decompressor function type
+ */
+export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
 
 
 
@@ -19,17 +24,11 @@ export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png
  * Defines an asynchronous container reader function.
  * It's basically a function that returns `length`s bytes starting at `position` of a container file.
  * You can define your own reader function to access containers via any network/interface/hardware.
- * @typeParam {function(number, number): Promise<Buffer>} Reader
+ * @property {number} position - offset of first byte to read
+ * @property {number} length - number of bytes to read
  */
-export type Reader = (position: number, length: number) => Promise<Buffer>
+export type Reader = (position: number, length: number) => Promise<Buffer>;
 
-
-
-/**
- * Decompressor function type
- * @typeParam {function(Buffer, Compression): Promise<Buffer>} Decompressor
- */
-export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
 
 
 

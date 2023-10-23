@@ -159,6 +159,7 @@ export class VersaTiles {
 	 * This is used internally to keep a lookup of every tile block in the container.
 	 * The keys of this `map` have the form "{z},{x},{y}".
 	 * @async
+	 * @internal
 	 * @returns {Promise<Map<string, Block>>} The block index map.
 	 */
 	async getBlockIndex(): Promise<Map<string, Block>> {
@@ -235,6 +236,7 @@ export class VersaTiles {
 	 * Gets the tile index for given block.
 	 * This is used internally to keep a lookup of every tile in the block.
 	 * @async
+	 * @internal
 	 * @param {Block} block - The block to get the tile index for.
 	 * @returns {Promise<TileIndex>} The tile index buffer.
 	 */
