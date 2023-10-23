@@ -88,36 +88,30 @@ export class VersaTiles {
 				this.#header = {
 					magic: data.toString('utf8', 0, 14),
 					version: version,
-					tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
-					tile_compression: COMPRESSIONS[data.readUInt8(15)] || null,
-					zoom_min: data.readUInt8(16),
-					zoom_max: data.readUInt8(17),
-					bbox_min_x: data.readFloatBE(18),
-					bbox_min_y: data.readFloatBE(22),
-					bbox_max_x: data.readFloatBE(26),
-					bbox_max_y: data.readFloatBE(30),
-					meta_offset: Number(data.readBigUInt64BE(34)),
-					meta_length: Number(data.readBigUInt64BE(42)),
-					block_index_offset: Number(data.readBigUInt64BE(50)),
-					block_index_length: Number(data.readBigUInt64BE(58)),
+					tileFormat: FORMATS[version][data.readUInt8(14)] || 'bin',
+					tileCompression: COMPRESSIONS[data.readUInt8(15)] || null,
+					zoomMin: data.readUInt8(16),
+					zoomMax: data.readUInt8(17),
+					bbox: [data.readFloatBE(18), data.readFloatBE(22), data.readFloatBE(26), data.readFloatBE(30)],
+					metaOffset: Number(data.readBigUInt64BE(34)),
+					metaLength: Number(data.readBigUInt64BE(42)),
+					blockIndexOffset: Number(data.readBigUInt64BE(50)),
+					blockIndexLength: Number(data.readBigUInt64BE(58)),
 				}
 				break;
 			case 'v02':
 				this.#header = {
 					magic: data.toString('utf8', 0, 14),
 					version: version,
-					tile_format: FORMATS[version][data.readUInt8(14)] || 'bin',
-					tile_compression: COMPRESSIONS[data.readUInt8(15)] || null,
-					zoom_min: data.readUInt8(16),
-					zoom_max: data.readUInt8(17),
-					bbox_min_x: data.readInt32BE(18) / 1e7,
-					bbox_min_y: data.readInt32BE(22) / 1e7,
-					bbox_max_x: data.readInt32BE(26) / 1e7,
-					bbox_max_y: data.readInt32BE(30) / 1e7,
-					meta_offset: Number(data.readBigUInt64BE(34)),
-					meta_length: Number(data.readBigUInt64BE(42)),
-					block_index_offset: Number(data.readBigUInt64BE(50)),
-					block_index_length: Number(data.readBigUInt64BE(58)),
+					tileFormat: FORMATS[version][data.readUInt8(14)] || 'bin',
+					tileCompression: COMPRESSIONS[data.readUInt8(15)] || null,
+					zoomMin: data.readUInt8(16),
+					zoomMax: data.readUInt8(17),
+					bbox: [data.readInt32BE(18) / 1e7, data.readInt32BE(22) / 1e7, data.readInt32BE(26) / 1e7, data.readInt32BE(30) / 1e7],
+					metaOffset: Number(data.readBigUInt64BE(34)),
+					metaLength: Number(data.readBigUInt64BE(42)),
+					blockIndexOffset: Number(data.readBigUInt64BE(50)),
+					blockIndexLength: Number(data.readBigUInt64BE(58)),
 				};
 				break;
 			default:
@@ -142,10 +136,10 @@ export class VersaTiles {
 		let header = await this.getHeader();
 		let metadata = null;
 
-		if (header.meta_length > 0) {
+		if (header.metaLength > 0) {
 			let header = await this.getHeader();
-			metadata = await this.#read(header.meta_offset, header.meta_length);
-			metadata = await this.#decompress(metadata, header.tile_compression);
+			metadata = await this.#read(header.metaOffset, header.metaLength);
+			metadata = await this.#decompress(metadata, header.tileCompression);
 		}
 
 		this.#metadata = metadata;
@@ -168,7 +162,7 @@ export class VersaTiles {
 		let header = await this.getHeader()
 
 		// read block_index buffer
-		let data = await this.#read(header.block_index_offset, header.block_index_length)
+		let data = await this.#read(header.blockIndexOffset, header.blockIndexLength)
 		data = await this.#decompress(data, 'br')
 
 		// read index from buffer
@@ -213,21 +207,21 @@ export class VersaTiles {
 
 		return this.#block_index;
 
-		function addBlock(data: Buffer, block_offset: bigint, tile_index_offset: bigint, tile_index_length: bigint | number) {
+		function addBlock(data: Buffer, blockOffset: bigint, tileIndexOffset: bigint, tileIndexLength: bigint | number) {
 			let block = {
 				level: data.readUInt8(0),
 				column: data.readUInt32BE(1),
 				row: data.readUInt32BE(5),
-				col_min: data.readUInt8(9),
-				row_min: data.readUInt8(10),
-				col_max: data.readUInt8(11),
-				row_max: data.readUInt8(12),
-				block_offset: Number(block_offset),
-				tile_index_offset: Number(tile_index_offset),
-				tile_index_length: Number(tile_index_length),
-				tile_count: 0,
+				colMin: data.readUInt8(9),
+				rowMin: data.readUInt8(10),
+				colMax: data.readUInt8(11),
+				rowMax: data.readUInt8(12),
+				blockOffset: Number(blockOffset),
+				tileIndexOffset: Number(tileIndexOffset),
+				tileIndexLength: Number(tileIndexLength),
+				tileCount: 0,
 			}
-			block.tile_count = (block.col_max - block.col_min + 1) * (block.row_max - block.row_min + 1);
+			block.tileCount = (block.colMax - block.colMin + 1) * (block.rowMax - block.rowMin + 1);
 			blocks.push(block);
 		}
 	}
@@ -241,22 +235,22 @@ export class VersaTiles {
 	 * @returns {Promise<TileIndex>} The tile index buffer.
 	 */
 	async getTileIndex(block: Block): Promise<TileIndex> {
-		if (block.tile_index) return block.tile_index;
+		if (block.tileIndex) return block.tileIndex;
 
-		let buffer = await this.#read(block.tile_index_offset, block.tile_index_length)
+		let buffer = await this.#read(block.tileIndexOffset, block.tileIndexLength)
 		buffer = await this.#decompress(buffer, 'br');
 
-		const offsets = new Float64Array(block.tile_count);
-		const lengths = new Float64Array(block.tile_count);
+		const offsets = new Float64Array(block.tileCount);
+		const lengths = new Float64Array(block.tileCount);
 
-		for (let i = 0; i < block.tile_count; i++) {
-			offsets[i] = Number(buffer.readBigUInt64BE(12 * i)) + block.block_offset;
+		for (let i = 0; i < block.tileCount; i++) {
+			offsets[i] = Number(buffer.readBigUInt64BE(12 * i)) + block.blockOffset;
 			lengths[i] = buffer.readUInt32BE(12 * i + 8);
 		}
 
-		block.tile_index = { offsets, lengths }
+		block.tileIndex = { offsets, lengths }
 
-		return block.tile_index;
+		return block.tileIndex;
 	}
 
 	/**
@@ -290,11 +284,11 @@ export class VersaTiles {
 		if (!block) return null;
 
 		// check if block contains tile
-		if (tx < block.col_min || tx > block.col_max) return null;
-		if (ty < block.row_min || ty > block.row_max) return null;
+		if (tx < block.colMin || tx > block.colMax) return null;
+		if (ty < block.rowMin || ty > block.rowMax) return null;
 
 		// calculate sequential tile number
-		const j = (ty - block.row_min) * (block.col_max - block.col_min + 1) + (tx - block.col_min);
+		const j = (ty - block.rowMin) * (block.colMax - block.colMin + 1) + (tx - block.colMin);
 
 		// get tile index
 		const tile_index = await this.getTileIndex(block);
@@ -320,6 +314,6 @@ export class VersaTiles {
 		let tile = await this.getTile(z, x, y);
 		if (!tile) return null;
 		let header = await this.getHeader();
-		return await this.#decompress(tile, header.tile_compression);
+		return await this.#decompress(tile, header.tileCompression);
 	}
 }

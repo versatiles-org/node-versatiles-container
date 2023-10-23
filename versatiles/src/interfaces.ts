@@ -52,18 +52,15 @@ export type Reader = (position: number, length: number) => Promise<Buffer>;
 export interface Header {
 	magic: string;
 	version: string;
-	tile_format: Format;
-	tile_compression: Compression;
-	zoom_min: number;
-	zoom_max: number;
-	bbox_min_x: number;
-	bbox_min_y: number;
-	bbox_max_x: number;
-	bbox_max_y: number;
-	meta_offset: number;
-	meta_length: number;
-	block_index_offset: number;
-	block_index_length: number;
+	tileFormat: Format;
+	tileCompression: Compression;
+	zoomMin: number;
+	zoomMax: number;
+	bbox: [number, number, number, number]; //minX, minY, maxX, maxY
+	metaOffset: number;
+	metaLength: number;
+	blockIndexOffset: number;
+	blockIndexLength: number;
 }
 
 
@@ -88,15 +85,15 @@ export interface Block {
 	level: number;
 	column: number;
 	row: number;
-	col_min: number;
-	row_min: number;
-	col_max: number;
-	row_max: number;
-	block_offset: number;
-	tile_index_offset: number;
-	tile_index_length: number;
-	tile_count: number;
-	tile_index?: TileIndex;
+	colMin: number;
+	rowMin: number;
+	colMax: number;
+	rowMax: number;
+	blockOffset: number;
+	tileIndexOffset: number;
+	tileIndexLength: number;
+	tileCount: number;
+	tileIndex?: TileIndex;
 }
 
 
