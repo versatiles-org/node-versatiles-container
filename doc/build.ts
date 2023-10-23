@@ -77,8 +77,9 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 	if (ref.signatures.length !== 1) throw Error();
 	const sig = ref.signatures[0];
 
-	let line = '### ';
-	if (isConstructor) line += 'constructor: ';
+	// make heading
+	let heading = '### ';
+	if (isConstructor) heading += 'constructor: ';
 	let name = sig.name;
 	let returnType = sig.type;
 	if ((returnType?.type === 'reference') && (returnType?.name === 'Promise')) {
@@ -87,9 +88,9 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 		returnType = returnType.typeArguments[0];
 		name = 'async ' + name;
 	}
-	line += `\`${name}(${getParameters(sig.parameters || [])})\``;
+	heading += `\`${name}(${getParameters(sig.parameters || [])})\``;
+	yield heading;
 
-	yield line;
 	yield ''
 	yield* generateSummaryBlock(sig);
 
