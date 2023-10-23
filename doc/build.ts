@@ -77,9 +77,6 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 	if (ref.signatures.length !== 1) throw Error();
 	const sig = ref.signatures[0];
 
-	console.log('declaration', ref);
-	console.log('signature', sig);
-
 	yield `### ${isConstructor ? 'constructor: ' : ''}\`${getFunction(sig)}\``
 	yield ''
 	yield* generateSummaryBlock(sig);
@@ -100,6 +97,7 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 
 function getParameter(ref: DeclarationReflection | ParameterReflection) {
 	let line = `  - \`${ref.name}\`${getTypeDeclaration(ref.type)}`.replace(/``/g, '');
+	if (ref.flags.isOptional) line += ' (optional)';
 	let summary = getSummary(ref.comment);
 	if (summary) line += '  \n    ' + summary;
 	return line;
