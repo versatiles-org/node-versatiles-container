@@ -66,6 +66,11 @@ function* generate2Declaration(declaration: DeclarationReflection): Generator<st
 				throw Error();
 		}
 	}
+
+	if (declaration.type) {
+		yield ''
+		yield '**Type:** '+getType(declaration.type)
+	}
 }
 
 function* generateConstructor(declaration: DeclarationReflection): Generator<string> {
@@ -80,7 +85,7 @@ function* generateConstructor(declaration: DeclarationReflection): Generator<str
 }
 
 function* generateProperty(declaration: DeclarationReflection): Generator<string> {
-	yield `  - ${getParameter(declaration)}`;
+	yield getParameter(declaration);
 }
 
 function* generateMethod(declaration: DeclarationReflection): Generator<string> {
@@ -99,20 +104,19 @@ function* generateParameters(component: SignatureReflection): Generator<string> 
 		yield ``;
 		yield `**Parameters:**`;
 		for (let parameter of component.parameters) {
-			yield `  - ${getParameter(parameter)}`;
+			yield getParameter(parameter);
 		}
 	}
 	if (component.type) {
 		yield ``;
-		yield `**Returns:**`;
-		yield `  - ${getType(component.type)} `;
+		yield `**Returns:** ${getType(component.type)} `;
 	}
 }
 
 function getParameter(declaration: DeclarationReflection | ParameterReflection) {
-	let line = `\`${declaration.name}\`${getTypeDeclaration(declaration.type)}`.replace(/``/g, '');
+	let line = `  - \`${declaration.name}\`${getTypeDeclaration(declaration.type)}`.replace(/``/g, '');
 	let summary = getSummary(declaration.comment);
-	if (summary) line += ' - ' + summary;
+	if (summary) line += '  \n    ' + summary;
 	return line;
 }
 
@@ -147,7 +151,7 @@ function getParameters(parameters: ParameterReflection[]): string {
 
 function getTypeDeclaration(someType: SomeType | undefined): string {
 	if (!someType) return '';
-	return ('\`: \`' + getType(someType)).replace(/``/g, '');
+	return (': ' + getType(someType)).replace(/``/g, '');
 }
 
 function getType(someType: SomeType): string {
@@ -164,11 +168,22 @@ function getType(someType: SomeType): string {
 				if (someType.reflection) result = `[${result}](#S${someType.reflection.id})`;
 				if (someType.typeArguments?.length) result += '`<`'
 					+ (someType.typeArguments || [])
-						.map(getType).join('\`,\`')
+						.map(getTypeRec).join('\`,\`')
 					+ '`>`';
 				return result;
+			case 'reflection':
+				if (!someType.declaration.signatures) throw Error();
+				if (someType.declaration.signatures.length !== 1) throw Error();
+				const signature = someType.declaration.signatures[0];
+				const type = signature.type ? getTypeRec(signature.type) : 'void';
+				let parameters = (signature.parameters || [])
+					.map(p => {
+						let type = p.type ? '`:`' + getType(p.type) : '';
+						return `\`${p.name}\`${type}`
+					}).join('`, `')
+				return `\`(\`${parameters}\`) => \`${type}`;
 			case 'union':
-				return someType.types.map(getType).join('\` | \`');
+				return someType.types.map(getTypeRec).join('\` | \`');
 			default:
 				console.log(someType);
 				throw Error()
