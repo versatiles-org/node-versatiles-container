@@ -77,7 +77,19 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 	if (ref.signatures.length !== 1) throw Error();
 	const sig = ref.signatures[0];
 
-	yield `### ${isConstructor ? 'constructor: ' : ''}\`${getFunction(sig)}\``
+	let line = '### ';
+	if (isConstructor) line += 'constructor: ';
+	let name = sig.name;
+	let returnType = sig.type;
+	if ((returnType?.type === 'reference') && (returnType?.name === 'Promise')) {
+		// is an async function
+		if (!returnType.typeArguments) throw Error();
+		returnType = returnType.typeArguments[0];
+		name = 'async ' + name;
+	}
+	line += `\`${name}(${getParameters(sig.parameters || [])})\``;
+
+	yield line;
 	yield ''
 	yield* generateSummaryBlock(sig);
 
@@ -89,9 +101,9 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 		}
 	}
 
-	if (sig.type) {
+	if (returnType) {
 		yield '';
-		yield `**Returns:** ${getType(sig.type)} `;
+		yield `**Returns:** ${getType(returnType)} `;
 	}
 }
 
@@ -122,10 +134,6 @@ function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection)
 		if (i === lines.length - 1) text += ' ' + getSourceLink(ref)
 		yield text;
 	}
-}
-
-function getFunction(ref: SignatureReflection): string {
-	return `${ref.name}(${getParameters(ref.parameters || [])})`;
 }
 
 function getParameters(refs: ParameterReflection[]): string {
