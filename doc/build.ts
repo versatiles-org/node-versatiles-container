@@ -125,8 +125,8 @@ function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection)
 	yield ''
 	let comment = ref.comment;
 	if (!comment) {
-		let temp:any = ref.type;
-		comment= temp?.declaration?.signatures[0].comment
+		let temp: any = ref.type;
+		comment = temp?.declaration?.signatures[0].comment
 	}
 	if (!comment) {
 		yield getSourceLink(ref)
@@ -174,6 +174,8 @@ function getType(someType: SomeType): string {
 						return `\`${p.name}\`${type}`
 					}).join('`, `')
 				return `\`(\`${parameters}\`) => \`${type}`;
+			case 'tuple':
+				return `\`[\`${someType.elements.map(getTypeRec).join('`, `')}\`]\``;
 			case 'union':
 				return someType.types.map(getTypeRec).join('\` | \`');
 			default:
