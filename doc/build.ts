@@ -20,30 +20,30 @@ writeFileSync(resolve(__dirname, 'versatiles/test.md'), markdown);
 
 
 
-function* generateDocument(project: ProjectReflection): Generator<string> {
-	if (!project.groups) throw Error();
-	for (let group of project.groups) yield* generate1Group(group);
+function* generateDocument(ref: ProjectReflection): Generator<string> {
+	if (!ref.groups) throw Error();
+	for (let group of ref.groups) yield* generate1Group(group);
 }
 
 function* generate1Group(group: ReflectionGroup): Generator<string> {
 	for (let declaration of group.children) yield* generate2Declaration(declaration);
 }
 
-function* generate2Declaration(declaration: DeclarationReflection): Generator<string> {
-	yield ``;
+function* generate2Declaration(ref: DeclarationReflection): Generator<string> {
+	yield '';
 
 	let typeName;
-	switch (declaration.kind) {
+	switch (ref.kind) {
 		case ReflectionKind.Class: typeName = 'Class'; break;
 		case ReflectionKind.Interface: typeName = 'Interface'; break;
 		case ReflectionKind.TypeAlias: typeName = 'Type'; break;
 		default: throw Error();
 	}
 
-	yield `# ${typeName}: \`${declaration.name}\`<a id="${getAnchor(declaration)}"></a>`
-	yield* generateSummaryBlock(declaration);
+	yield `# ${typeName}: \`${ref.name}\`<a id="${getAnchor(ref)}"></a>`
+	yield* generateSummaryBlock(ref);
 
-	for (let group of declaration.groups || []) {
+	for (let group of ref.groups || []) {
 		const children = group.children.filter(c => !c.flags.isPrivate);
 		if (children.length === 0) continue;
 
@@ -54,7 +54,7 @@ function* generate2Declaration(declaration: DeclarationReflection): Generator<st
 				continue;
 			case 'Properties':
 				yield '## Properties'
-				for (let child of children) yield* generateProperty(child);
+				for (let child of children) yield getParameter(child);
 				continue;
 			case 'Methods':
 				yield '## Methods'
@@ -66,44 +66,41 @@ function* generate2Declaration(declaration: DeclarationReflection): Generator<st
 		}
 	}
 
-	if (declaration.type) {
+	if (ref.type) {
 		yield ''
-		yield '**Type:** ' + getType(declaration.type)
+		yield '**Type:** ' + getType(ref.type)
 	}
 }
 
-function* generateProperty(declaration: DeclarationReflection): Generator<string> {
-	yield getParameter(declaration);
-}
+function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = false): Generator<string> {
+	if (!ref.signatures) throw Error();
+	if (ref.signatures.length !== 1) throw Error();
+	const sig = ref.signatures[0];
 
-function* generateMethod(declaration: DeclarationReflection, isConstructor: boolean = false): Generator<string> {
-	if (!declaration.signatures) throw Error();
-	if (declaration.signatures.length !== 1) throw Error();
-	const signature = declaration.signatures[0];
+	console.log('declaration', ref);
+	console.log('signature', sig);
 
-	yield `### ${isConstructor ? 'constructor: ' : ''}\`${getFunction(signature)}\``
+	yield `### ${isConstructor ? 'constructor: ' : ''}\`${getFunction(sig)}\``
 	yield ''
-	yield* generateSummaryBlock(signature);
-	yield* generateParameters(signature);
-}
+	yield* generateSummaryBlock(sig);
 
-function* generateParameters(component: SignatureReflection): Generator<string> {
-	if (component.parameters && component.parameters.length > 0) {
-		yield ``;
+	if (sig.parameters && sig.parameters.length > 0) {
+		yield '';
 		yield `**Parameters:**`;
-		for (let parameter of component.parameters) {
+		for (let parameter of sig.parameters) {
 			yield getParameter(parameter);
 		}
 	}
-	if (component.type) {
-		yield ``;
-		yield `**Returns:** ${getType(component.type)} `;
+
+	if (sig.type) {
+		yield '';
+		yield `**Returns:** ${getType(sig.type)} `;
 	}
 }
 
-function getParameter(declaration: DeclarationReflection | ParameterReflection) {
-	let line = `  - \`${declaration.name}\`${getTypeDeclaration(declaration.type)}`.replace(/``/g, '');
-	let summary = getSummary(declaration.comment);
+function getParameter(ref: DeclarationReflection | ParameterReflection) {
+	let line = `  - \`${ref.name}\`${getTypeDeclaration(ref.type)}`.replace(/``/g, '');
+	let summary = getSummary(ref.comment);
 	if (summary) line += '  \n    ' + summary;
 	return line;
 }
@@ -114,27 +111,27 @@ function getSummary(comment: Comment | undefined): string | undefined {
 	return lines.map(line => line.text).join(' ');
 }
 
-function* generateSummaryBlock(component: DeclarationReflection | SignatureReflection): Generator<string> {
-	yield ``
-	if (!component.comment) {
-		yield getSourceLink(component)
+function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
+	yield ''
+	if (!ref.comment) {
+		yield getSourceLink(ref)
 		return;
 	}
-	let lines = component.comment.summary;
+	let lines = ref.comment.summary;
 	for (let i = 0; i < lines.length; i++) {
 		let line = lines[i];
 		let text = line.text;
-		if (i === lines.length - 1) text += ' ' + getSourceLink(component)
+		if (i === lines.length - 1) text += ' ' + getSourceLink(ref)
 		yield text;
 	}
 }
 
-function getFunction(signature: SignatureReflection): string {
-	return `${signature.name}(${getParameters(signature.parameters || [])})`;
+function getFunction(ref: SignatureReflection): string {
+	return `${ref.name}(${getParameters(ref.parameters || [])})`;
 }
 
-function getParameters(parameters: ParameterReflection[]): string {
-	return parameters.map(p => p.name).join(', ');
+function getParameters(refs: ParameterReflection[]): string {
+	return refs.map(p => p.name).join(', ');
 }
 
 function getTypeDeclaration(someType: SomeType | undefined): string {
@@ -179,23 +176,23 @@ function getType(someType: SomeType): string {
 	}
 }
 
-function getSourceLink(component: DeclarationReflection | SignatureReflection): string {
-	if (!component.sources) return '';
-	if (component.sources.length < 1) return '';
-	if (component.sources.length > 1) throw Error();
-	const source = component.sources[0];
+function getSourceLink(ref: DeclarationReflection | SignatureReflection): string {
+	if (!ref.sources) return '';
+	if (ref.sources.length < 1) return '';
+	if (ref.sources.length > 1) throw Error();
+	const source = ref.sources[0];
 	return `<sup><a href="${source.url}">[src]</a></sup>`;
 }
 
-function getAnchor(reflection: DeclarationReflection | Reflection): string {
+function getAnchor(ref: DeclarationReflection | Reflection): string {
 	let typeName;
-	switch (reflection.kind) {
+	switch (ref.kind) {
 		case ReflectionKind.Class: typeName = 'class'; break;
 		case ReflectionKind.Interface: typeName = 'interface'; break;
 		case ReflectionKind.TypeAlias: typeName = 'type'; break;
 		default:
-			console.log(reflection);
+			console.log(ref);
 			throw Error('unknown kind');
 	}
-	return `${typeName}_${reflection.name}`;
+	return `${typeName}_${ref.name}`;
 }
