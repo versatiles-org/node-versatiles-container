@@ -129,8 +129,7 @@ function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection)
 	}
 	let lines = ref.comment.summary;
 	for (let i = 0; i < lines.length; i++) {
-		let line = lines[i];
-		let text = line.text;
+		let text = lines[i].text.replace(/\n/m, '  \n');
 		if (i === lines.length - 1) text += ' ' + getSourceLink(ref)
 		yield text;
 	}
