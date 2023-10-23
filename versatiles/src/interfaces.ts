@@ -1,19 +1,40 @@
 
 /**
  * Different types of supported compressions. `null` means uncompressed.
- * @typedef {('gzip'|'br'|null)} Compression
+ * @typeParam {('gzip'|'br'|null)} Compression
  */
 export type Compression = 'gzip' | 'br' | null;
 
+
+
 /**
  * Different file formats.
- * @typedef {('avif'|'bin'|'geojson'|'jpeg'|'json'|'pbf'|'png'|'svg'|'topojson'|'webp'|null)} Format
+ * @typeParam {('avif'|'bin'|'geojson'|'jpeg'|'json'|'pbf'|'png'|'svg'|'topojson'|'webp'|null)} Format
  */
 export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp' | null;
 
+
+
+/**
+ * Defines an asynchronous container reader function.
+ * It's basically a function that returns `length`s bytes starting at `position` of a container file.
+ * You can define your own reader function to access containers via any network/interface/hardware.
+ * @typeParam {function(number, number): Promise<Buffer>} Reader
+ */
+export type Reader = (position: number, length: number) => Promise<Buffer>
+
+
+
+/**
+ * Decompressor function type
+ * @typeParam {function(Buffer, Compression): Promise<Buffer>} Decompressor
+ */
+export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
+
+
+
 /**
  * Defines the header of a container.
- * @interface Header
  * @property {string} magic
  * @property {string} version
  * @property {Format} tile_format
@@ -46,9 +67,10 @@ export interface Header {
 	block_index_length: number;
 }
 
+
+
 /**
  * Defines a block of tiles, including all necessary metadata.
- * @interface Block
  * @property {number} level
  * @property {number} column
  * @property {number} row
@@ -78,9 +100,10 @@ export interface Block {
 	tile_index?: TileIndex;
 }
 
+
+
 /**
  * Defines an index of tiles inside a block.
- * @interface TileIndex
  * @property {Float64Array} offsets
  * @property {Float64Array} lengths
  */
@@ -89,25 +112,12 @@ export interface TileIndex {
 	lengths: Float64Array;
 }
 
+
+
 /**
  * Defines supported options for reading a container.
- * @interface Options
  * @property {boolean} tms
  */
 export interface Options {
 	tms: boolean
 }
-
-/**
- * Defines an asynchronous container reader function.
- * It's basically a function that returns `length`s bytes starting at `position` of a container file.
- * You can define your own reader function to access containers via any network/interface/hardware.
- * @typedef {function(number, number): Promise<Buffer>} Reader
- */
-export type Reader = (position: number, length: number) => Promise<Buffer>
-
-/**
- * Decompressor function type
- * @typedef {function(Buffer, Compression): Promise<Buffer>} Decompressor
- */
-export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
