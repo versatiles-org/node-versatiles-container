@@ -1,5 +1,18 @@
+import {
+	Application,
+	Comment,
+	DeclarationReflection,
+	ParameterReflection,
+	ProjectReflection,
+	Reflection,
+	ReflectionKind,
+	SignatureReflection,
+	SomeType
+} from 'typedoc';
 
-import { Application, Comment, DeclarationReflection, ParameterReflection, ProjectReflection, Reflection, ReflectionGroup, ReflectionKind, SignatureReflection, SomeType } from 'typedoc';
+
+
+const NEW_LINE = '\n';
 
 
 /**
@@ -10,56 +23,51 @@ import { Application, Comment, DeclarationReflection, ParameterReflection, Proje
 export async function buildDoc(entryPoints: string[], tsconfig: string): Promise<string> {
 	const app = await Application.bootstrap({ entryPoints, tsconfig });
 	const project = await app.convert();
-	if (!project) throw Error();
-
-	const markdown: string = Array.from(generateDocument(project)).join('\n');
-	return markdown;
-}
-
-
-
-function* generateDocument(ref: ProjectReflection): Generator<string> {
-	if (!ref.groups) throw Error();
-	for (let group of ref.groups) {
-		for (let ref of group.children) {
-			yield* generateDeclaration(ref);
-		}
+ 
+	if (!project) {
+	  throw new Error('Failed to convert project.');
 	}
-}
+ 
+	return Array.from(generateDocument(project)).join(NEW_LINE);
+ }
+ 
+ // Generate Markdown documentation for a project
+ function* generateDocument(project: ProjectReflection): Generator<string> {
+	if (!project.groups) {
+	  throw new Error('No reflection groups found.');
+	}
+ 
+	for (const group of project.groups) {
+	  for (const declaration of group.children) {
+		 yield* generateDeclaration(declaration);
+	  }
+	}
+ }
 
 function* generateDeclaration(ref: DeclarationReflection): Generator<string> {
-	yield '';
-
-	let typeName;
-	switch (ref.kind) {
-		case ReflectionKind.Class: typeName = 'Class'; break;
-		case ReflectionKind.Interface: typeName = 'Interface'; break;
-		case ReflectionKind.TypeAlias: typeName = 'Type'; break;
-		default: throw Error();
-	}
-
-	yield `# ${typeName}: \`${ref.name}\`<a id="${getAnchor(ref)}"></a>`
+	const typeName = getTypeName(ref.kind);
+	yield `# ${typeName}: \`${ref.name}\`<a id="${getAnchor(ref)}"></a>`;
 	yield* generateSummaryBlock(ref);
 
 	for (let group of ref.groups || []) {
-		const children = group.children.filter(c => !c.flags.isPrivate);
-		if (children.length === 0) continue;
+		const nonPrivateChildren = group.children.filter(c => !c.flags.isPrivate);
+		if (nonPrivateChildren.length === 0) continue;
 
 		// sort by order in code
-		children.sort((a, b) => a.id - b.id);
+		nonPrivateChildren.sort((a, b) => a.id - b.id);
 
 		switch (group.title) {
 			case 'Constructors':
-				if (children.length !== 1) throw Error()
-				yield* generateMethod(children[0], true);
+				if (nonPrivateChildren.length !== 1) throw Error()
+				yield* generateMethod(nonPrivateChildren[0], true);
 				continue;
 			case 'Properties':
 				yield '**Properties**'
-				for (let child of children) yield getParameter(child);
+				for (let child of nonPrivateChildren) yield getParameter(child);
 				continue;
 			case 'Methods':
 				yield '**Methods**'
-				for (let child of children) yield* generateMethod(child);
+				for (let child of nonPrivateChildren) yield* generateMethod(child);
 				continue;
 			default:
 				console.log(group);
@@ -68,8 +76,16 @@ function* generateDeclaration(ref: DeclarationReflection): Generator<string> {
 	}
 
 	if (ref.type) {
-		yield ''
-		yield '**Type:** ' + getType(ref.type)
+		yield `${NEW_LINE}**Type:** ${getType(ref.type)}`;
+	}
+}
+
+function getTypeName(kind: ReflectionKind): string {
+	switch (kind) {
+		case ReflectionKind.Class: return 'Class';
+		case ReflectionKind.Interface: return 'Interface';
+		case ReflectionKind.TypeAlias: return 'Type';
+		default: throw new Error(`Unknown reflection kind: ${kind}`);
 	}
 }
 
@@ -113,7 +129,7 @@ function getParameter(ref: DeclarationReflection | ParameterReflection) {
 	let line = `  - \`${ref.name}\`${getTypeDeclaration(ref.type)}`.replace(/``/g, '');
 	if (ref.flags.isOptional) line += ' (optional)';
 	let summary = getSummary(ref.comment);
-	if (summary) line += '  \n    ' + summary;
+	if (summary) line += `  ${NEW_LINE}    ` + summary;
 	return line;
 }
 
@@ -136,7 +152,7 @@ function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection)
 	}
 	const lines = comment.summary;
 	const line = lines.map(l => l.text).join('') + ' ' + getSourceLink(ref);
-	yield line.replace(/\n/m, '  \n');
+	yield line.replace(/\n/m, `  ${NEW_LINE}`);
 }
 
 function getParameters(refs: ParameterReflection[]): string {

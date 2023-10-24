@@ -30,7 +30,6 @@ export function updateTOC(main: string, heading: string): string {
 			return `${indention}* [${text}](#${anchor})\n`
 		})
 		.join('');
-	console.log(toc);
 	return injectMarkdown(main, toc, heading);
 }
 
