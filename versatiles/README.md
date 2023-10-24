@@ -28,8 +28,8 @@ VersaTiles class
 
 ### Parameters
 
-*   `source` &#x20;
-*   `options` &#x20;
+* `source` &#x20;
+* `options` &#x20;
 
 ### getHeader
 
@@ -37,7 +37,7 @@ VersaTiles class
 
 Gets the header information.
 
-*   Throws **[Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)** Throws an error if the container is invalid.
+* Throws **[Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)** Throws an error if the container is invalid.
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<Header>** The header object.
 
@@ -65,7 +65,7 @@ Gets the tile index for a block.
 
 #### Parameters
 
-*   `block` **Block** The block to get the tile index for.
+* `block` **Block** The block to get the tile index for.
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Buffer](https://nodejs.org/api/buffer.html)>** The tile index buffer.
 
@@ -77,13 +77,13 @@ Gets a tile.
 
 #### Parameters
 
-*   `z` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Zoom level.
-*   `x` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** X coordinate.
-*   `y` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Y coordinate.
+* `z` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Zoom level.
+* `x` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** X coordinate.
+* `y` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Y coordinate.
 
 <!---->
 
-*   Throws **[Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)** Throws an error if the block or tile is not found.
+* Throws **[Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error)** Throws an error if the block or tile is not found.
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Buffer](https://nodejs.org/api/buffer.html)>** The tile data.
 
@@ -95,9 +95,9 @@ Gets an uncompressed tile.
 
 #### Parameters
 
-*   `z` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Zoom level.
-*   `x` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** X coordinate.
-*   `y` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Y coordinate.
+* `z` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Zoom level.
+* `x` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** X coordinate.
+* `y` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Y coordinate.
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Buffer](https://nodejs.org/api/buffer.html)>** The uncompressed tile data.
 
@@ -105,13 +105,13 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ## `new VersaTiles(src, { tms: true })`
 
-*   `src`: defines a readable VersaTiles container. It can be:
-    *   a string with a file path, e.g. `"tiles/planet.versatiles"`,
-    *   a string with an url, e.g. `"https://example.org/planet.versatiles"`,
-    *   an async function of the form:\
-        `async function read(position, length) { }`\
-        that returns `length` bytes starting at `position`. This allows you to implement your own interface to read a VersaTiles container e.g. over other network protocols.
-*   `tms`: set `true` if the VersaTiles container uses [TMS scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
+* `src`: defines a readable VersaTiles container. It can be:
+  * a string with a file path, e.g. `"tiles/planet.versatiles"`,
+  * a string with an url, e.g. `"https://example.org/planet.versatiles"`,
+  * an async function of the form:\
+    `async function read(position, length) { }`\
+    that returns `length` bytes starting at `position`. This allows you to implement your own interface to read a VersaTiles container e.g. over other network protocols.
+* `tms`: set `true` if the VersaTiles container uses [TMS scheme with inverted Y index](https://gist.github.com/tmcw/4954720)
 
 ## async `.getTile(z, x, y)`
 
