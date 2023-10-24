@@ -10,17 +10,14 @@ import {
 	SomeType
 } from 'typedoc';
 
-
-
 const NEW_LINE = '\n';
 
-
 /**
- * build a markdown documentation from typescript files
- * @param entryPoints - array of absolute typescript filenames
- * @param tsconfig - absolute filename of the tsconfig.json
+ * Generate markdown documentation from TypeScript files.
+ * @param entryPoints - Array of absolute TypeScript file paths.
+ * @param tsconfig - Absolute file path of tsconfig.json.
  */
-export async function buildDoc(entryPoints: string[], tsconfig: string): Promise<string> {
+export async function generateMarkdownDocumentation(entryPoints: string[], tsconfig: string): Promise<string> {
 	const app = await Application.bootstrap({ entryPoints, tsconfig });
 	const project = await app.convert();
 
@@ -28,59 +25,59 @@ export async function buildDoc(entryPoints: string[], tsconfig: string): Promise
 		throw new Error('Failed to convert project.');
 	}
 
-	return Array.from(generateDocument(project)).join(NEW_LINE);
+	return Array.from(renderProjectDocumentation(project)).join(NEW_LINE);
 }
 
-// Generate Markdown documentation for a project
-function* generateDocument(project: ProjectReflection): Generator<string> {
+function* renderProjectDocumentation(project: ProjectReflection): Generator<string> {
 	if (!project.groups) {
 		throw new Error('No reflection groups found.');
 	}
 
 	for (const group of project.groups) {
 		for (const declaration of group.children) {
-			yield* generateDeclaration(declaration);
+			yield* renderDeclaration(declaration);
 		}
 	}
 }
 
-function* generateDeclaration(ref: DeclarationReflection): Generator<string> {
-	const typeName = getTypeName(ref.kind);
-	yield `# ${typeName}: \`${ref.name}\`<a id="${getAnchor(ref)}"></a>`;
-	yield* generateSummaryBlock(ref);
+function* renderDeclaration(declaration: DeclarationReflection): Generator<string> {
+	const typeName = resolveTypeName(declaration.kind);
+	yield `# ${typeName}: \`${declaration.name}\`<a id="${generateAnchor(declaration)}"></a>`;
+	yield* renderSummaryBlock(declaration);
 
-	for (let group of ref.groups || []) {
-		const nonPrivateChildren = group.children.filter(c => !c.flags.isPrivate);
-		if (nonPrivateChildren.length === 0) continue;
+	for (const group of declaration.groups || []) {
+		const publicMembers = group.children.filter(member => !member.flags.isPrivate);
+		if (publicMembers.length === 0) continue;
 
-		// sort by order in code
-		nonPrivateChildren.sort((a, b) => a.id - b.id);
+		// Sort by order in code
+		publicMembers.sort((a, b) => a.id - b.id);
 
 		switch (group.title) {
 			case 'Constructors':
-				if (nonPrivateChildren.length !== 1) throw Error()
-				yield* generateMethod(nonPrivateChildren[0], true);
+				if (publicMembers.length !== 1) throw Error()
+				yield* renderMethod(publicMembers[0], true);
 				continue;
 			case 'Properties':
-				yield '**Properties**'
-				for (let child of nonPrivateChildren) yield getParameter(child);
+				yield '**Properties**';
+				for (const member of publicMembers) yield formatParameter(member);
 				continue;
 			case 'Methods':
-				yield '**Methods**'
-				for (let child of nonPrivateChildren) yield* generateMethod(child);
+				yield '**Methods**';
+				for (const member of publicMembers) yield* renderMethod(member);
 				continue;
 			default:
 				console.log(group);
-				throw Error();
+				throw Error('Unknown group title');
 		}
 	}
 
-	if (ref.type) {
-		yield `${NEW_LINE}**Type:** ${getType(ref.type)}`;
+	if (declaration.type) {
+		yield `${NEW_LINE}**Type:** ${resolveType(declaration.type)}`;
 	}
 }
 
-function getTypeName(kind: ReflectionKind): string {
+// Helper Functions
+function resolveTypeName(kind: ReflectionKind): string {
 	switch (kind) {
 		case ReflectionKind.Class: return 'Class';
 		case ReflectionKind.Interface: return 'Interface';
@@ -89,82 +86,76 @@ function getTypeName(kind: ReflectionKind): string {
 	}
 }
 
-function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = false): Generator<string> {
-	if (!ref.signatures) throw Error();
-	if (ref.signatures.length !== 1) throw Error();
-	const sig = ref.signatures[0];
+function* renderMethod(declaration: DeclarationReflection, isConstructor: boolean = false): Generator<string> {
+	const signature = declaration.signatures?.[0];
 
-	// make heading
+	if (!signature) throw new Error('Method signature not found');
+
 	let heading = '## ';
 	if (isConstructor) heading += 'constructor: ';
-	let name = sig.name;
-	let returnType = sig.type;
+	let functionName = signature.name;
+	let returnType = signature.type;
 	if ((returnType?.type === 'reference') && (returnType?.name === 'Promise')) {
 		// is an async function
 		if (!returnType.typeArguments) throw Error();
 		returnType = returnType.typeArguments[0];
-		name = 'async ' + name;
+		functionName = 'async ' + functionName;
 	}
-	heading += `\`${name}(${getParameters(sig.parameters || [])})\``;
+	heading += `\`${functionName}(${formatMethodParameters(signature.parameters || [])})\``;
 	yield heading;
 
-	yield ''
-	yield* generateSummaryBlock(sig);
+	yield '';
+	yield* renderSummaryBlock(signature);
 
-	if (sig.parameters && sig.parameters.length > 0) {
+	if (signature.parameters && signature.parameters.length > 0) {
 		yield '';
-		yield `**Parameters:**`;
-		for (let parameter of sig.parameters) {
-			yield getParameter(parameter);
+		yield '**Parameters:**';
+		for (const parameter of signature.parameters) {
+			yield formatParameter(parameter);
 		}
 	}
 
 	if (returnType) {
 		yield '';
-		yield `**Returns:** ${getType(returnType)} `;
+		yield `**Returns:** ${resolveType(returnType)}`;
 	}
 }
 
-function getParameter(ref: DeclarationReflection | ParameterReflection) {
-	let line = `  - \`${ref.name}\`${getTypeDeclaration(ref.type)}`.replace(/``/g, '');
+function formatMethodParameters(parameters: ParameterReflection[]): string {
+	return parameters.map(param => param.name).join(', ');
+}
+
+function formatParameter(ref: DeclarationReflection | ParameterReflection): string {
+	let line = `  - \`${ref.name}\`${resolveTypeDeclaration(ref.type)}`.replace(/``/g, '');
 	if (ref.flags.isOptional) line += ' (optional)';
-	let summary = getSummary(ref.comment);
+	const summary = extractSummary(ref.comment);
 	if (summary) line += `  ${NEW_LINE}    ` + summary;
 	return line;
 }
 
-function getSummary(comment: Comment | undefined): string | undefined {
+function extractSummary(comment: Comment | undefined): string | undefined {
 	if (!comment) return;
-	let lines = comment.summary;
-	return lines.map(l => l.text).join('');
+	return comment.summary.map(line => line.text).join('');
 }
 
-function* generateSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
-	yield ''
-	let comment = ref.comment;
+function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
+	yield '';
+	let comment: Comment = ref.comment || (ref.type as any)?.declaration?.signatures[0]?.comment;
 	if (!comment) {
-		let temp: any = ref.type;
-		comment = temp?.declaration?.signatures[0].comment
-	}
-	if (!comment) {
-		yield getSourceLink(ref)
+		yield generateSourceLink(ref);
 		return;
 	}
-	const lines = comment.summary;
-	const line = lines.map(l => l.text).join('') + ' ' + getSourceLink(ref);
-	yield line.replace(/\n/m, `  ${NEW_LINE}`);
+
+	const summary = comment.summary.map(line => line.text).join('') + ' ' + generateSourceLink(ref);
+	yield summary.replace(/\n/m, `  ${NEW_LINE}`);
 }
 
-function getParameters(refs: ParameterReflection[]): string {
-	return refs.map(p => p.name).join(', ');
-}
-
-function getTypeDeclaration(someType: SomeType | undefined): string {
+function resolveTypeDeclaration(someType: SomeType | undefined): string {
 	if (!someType) return '';
-	return ('`: `' + getType(someType)).replace(/``/g, '');
+	return `\`: \`${resolveType(someType)}`.replace(/``/g, '');
 }
 
-function getType(someType: SomeType): string {
+function resolveType(someType: SomeType): string {
 	return getTypeRec(someType).replace(/``/g, '');
 
 	function getTypeRec(someType: SomeType): string {
@@ -175,7 +166,7 @@ function getType(someType: SomeType): string {
 				return `\`${JSON.stringify(someType.value)}\``;
 			case 'reference':
 				let result = `\`${someType.name}\``;
-				if (someType.reflection) result = `[${result}](#${getAnchor(someType.reflection)})`;
+				if (someType.reflection) result = `[${result}](#${generateAnchor(someType.reflection)})`;
 				if (someType.typeArguments?.length) result += '`<`'
 					+ (someType.typeArguments || [])
 						.map(getTypeRec).join('\`,\`')
@@ -188,7 +179,7 @@ function getType(someType: SomeType): string {
 				const type = signature.type ? getTypeRec(signature.type) : 'void';
 				let parameters = (signature.parameters || [])
 					.map(p => {
-						let type = p.type ? '`: `' + getType(p.type) : '';
+						let type = p.type ? '`: `' + getTypeRec(p.type) : '';
 						return `\`${p.name}\`${type}`
 					}).join('`, `')
 				return `\`(\`${parameters}\`) => \`${type}`;
@@ -203,15 +194,15 @@ function getType(someType: SomeType): string {
 	}
 }
 
-function getSourceLink(ref: DeclarationReflection | SignatureReflection): string {
-	if (!ref.sources) return '';
-	if (ref.sources.length < 1) return '';
+function generateSourceLink(ref: DeclarationReflection | SignatureReflection): string {
+	if (!ref.sources || ref.sources.length < 1) return '';
+
 	if (ref.sources.length > 1) throw Error();
 	const source = ref.sources[0];
 	return `<sup><a href="${source.url}">[src]</a></sup>`;
 }
 
-function getAnchor(ref: DeclarationReflection | Reflection): string {
+function generateAnchor(ref: DeclarationReflection | Reflection): string {
 	let typeName;
 	switch (ref.kind) {
 		case ReflectionKind.Class: typeName = 'class'; break;
@@ -219,7 +210,7 @@ function getAnchor(ref: DeclarationReflection | Reflection): string {
 		case ReflectionKind.TypeAlias: typeName = 'type'; break;
 		default:
 			console.log(ref);
-			throw Error('unknown kind');
+			throw new Error('Unknown reflection kind');
 	}
 	return `${typeName}_${ref.name}`.toLowerCase();
 }

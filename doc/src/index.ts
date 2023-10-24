@@ -1,7 +1,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { buildDoc } from './builder.js';
+import { generateMarkdownDocumentation } from './builder.js';
 import { injectMarkdown, updateTOC } from './markdown.js';
 
 
@@ -14,7 +14,7 @@ const filenameReadme = resolve(dirname(filenameTSConfig), 'README.md');
 if (!existsSync(filenameReadme)) throw Error('README.md is missing: ' + filenameReadme)
 
 console.log(' - build documentation');
-const docMD = await buildDoc([fullname], filenameTSConfig);
+const docMD = await generateMarkdownDocumentation([fullname], filenameTSConfig);
 
 let readmeMD = readFileSync(filenameReadme, 'utf8');
 
