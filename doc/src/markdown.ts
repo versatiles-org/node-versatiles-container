@@ -1,16 +1,16 @@
 
-import { Root, RootContent } from 'mdast';
+import { Heading, Root, RootContent } from 'mdast';
 import { remark } from 'remark';
 
 
 export function injectMarkdown(main: string, segment: string, heading: string): string {
-	let mainAst = remark().parse(main);
-	let segmentAst = remark().parse(segment);
-	let headingAst = remark().parse(heading);
+	const mainAst = remark().parse(main);
+	const segmentAst = remark().parse(segment);
+	const headingAst = remark().parse(heading);
 
-	let startIndex = findSegmentStart(mainAst, headingAst);
-	let depth = getHeadingDepth(mainAst, startIndex);
-	let endIndex = findNextHeading(mainAst, startIndex + 1, depth);
+	const startIndex = findSegmentStart(mainAst, headingAst);
+	const depth = getHeadingDepth(mainAst, startIndex);
+	const endIndex = findNextHeading(mainAst, startIndex + 1, depth);
 	indentChapter(segmentAst, depth);
 	spliceAst(mainAst, segmentAst, startIndex + 1, endIndex);
 
@@ -18,26 +18,29 @@ export function injectMarkdown(main: string, segment: string, heading: string): 
 }
 
 export function updateTOC(main: string, heading: string): string {
-	let mainAst = remark().parse(main);
-	let toc = mainAst.children
+	const mainAst = remark().parse(main);
+	const headingText = getMDText(remark().parse(heading));
+	const toc = mainAst.children
 		.flatMap(c => {
 			if (c.type !== 'heading') return [];
-			const indention = '  '.repeat((c.depth - 1) * 2);
 			const text = getMDText(c);
-			const anchor = text.toLowerCase().replace(/\s/g, '_');
-			return `${indention}- [${text}](#${anchor})\n`
+			if (text === headingText) return [];
+			const indention = '  '.repeat((c.depth - 1) * 2);
+			const anchor = getMDAnchor(c);
+			return `${indention}* [${text}](#${anchor})\n`
 		})
 		.join('');
+	console.log(toc);
 	return injectMarkdown(main, toc, heading);
 }
 
 function findSegmentStart(mainAst: Root, sectionAst: Root): number {
 	if (sectionAst.children.length !== 1) throw Error();
 	if (sectionAst.children[0].type !== 'heading') throw Error();
-	let sectionDepth = sectionAst.children[0].depth;
-	let sectionText = getMDText(sectionAst);
+	const sectionDepth = sectionAst.children[0].depth;
+	const sectionText = getMDText(sectionAst);
 
-	let index = mainAst.children.findIndex(
+	const index = mainAst.children.findIndex(
 		c => (c.type === 'heading') && (c.depth === sectionDepth) && (getMDText(c) === sectionText)
 	)
 
@@ -48,7 +51,7 @@ function findSegmentStart(mainAst: Root, sectionAst: Root): number {
 
 function findNextHeading(mainAst: Root, startIndex: number, depth: number): number {
 	for (let i = startIndex; i < mainAst.children.length; i++) {
-		let child = mainAst.children[i];
+		const child = mainAst.children[i];
 		if (child.type !== 'heading') continue;
 		if (child.depth !== depth) continue;
 		return i;
@@ -57,7 +60,7 @@ function findNextHeading(mainAst: Root, startIndex: number, depth: number): numb
 }
 
 function getHeadingDepth(mainAst: Root, index: number): number {
-	let node = mainAst.children[index];
+	const node = mainAst.children[index];
 	if (!node) throw Error();
 	if (node.type !== 'heading') throw Error();
 	return node.depth;
@@ -100,30 +103,29 @@ function getMDText(node: RootContent | Root): string {
 	}
 }
 
+function getMDAnchor(node: Heading): string {
+	if (node.type !== 'heading') throw Error();
 
-/*
-const docAst = remark().parse(docMD);
+	let text = '';
+	for (const c of node.children) {
+		switch (c.type) {
+			case 'html':
+				const match = c.value.match(/<a\s.*id\s*=\s*['"]([^'"]+)/i);
+				if (match) return match[1];
+				break;
+			case 'text':
+			case 'inlineCode':
+				text += c.value; break;
+			default:
+				console.log(c);
+				throw Error('unknown type: ' + c.type);
+		}
+	}
 
-const readmeMD = readFileSync(filenameReadme, 'utf8');
-const readmeAst = remark().parse(readmeMD);
+	text = text.toLowerCase()
+		.replace(/[()]+/g, '')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^\-+|\-+$/g, '');
 
-// find heading in readme
-let index0 = readmeAst.children.findIndex(c => (c.type === 'heading') && (getText(c) === section))
-
-
-//console.log({docAst});
-console.log(readmeAst.children);
-
-//await remark()
-//	.use(plugin, { section, content: docAst })
-//	.process(readmeContent);
-
-
-
-function getText(node:remark):string {
-	let result = remark().stringify(Root node);
-	console.log(result);
-	process.exit();
-
+	return text;
 }
-*/

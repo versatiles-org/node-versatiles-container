@@ -54,11 +54,11 @@ function* generate2Declaration(ref: DeclarationReflection): Generator<string> {
 				yield* generateMethod(children[0], true);
 				continue;
 			case 'Properties':
-				yield '## Properties'
+				yield '**Properties**'
 				for (let child of children) yield getParameter(child);
 				continue;
 			case 'Methods':
-				yield '## Methods'
+				yield '**Methods**'
 				for (let child of children) yield* generateMethod(child);
 				continue;
 			default:
@@ -79,7 +79,7 @@ function* generateMethod(ref: DeclarationReflection, isConstructor: boolean = fa
 	const sig = ref.signatures[0];
 
 	// make heading
-	let heading = '### ';
+	let heading = '## ';
 	if (isConstructor) heading += 'constructor: ';
 	let name = sig.name;
 	let returnType = sig.type;
@@ -205,5 +205,5 @@ function getAnchor(ref: DeclarationReflection | Reflection): string {
 			console.log(ref);
 			throw Error('unknown kind');
 	}
-	return `${typeName}_${ref.name}`;
+	return `${typeName}_${ref.name}`.toLowerCase();
 }
