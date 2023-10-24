@@ -1,22 +1,20 @@
 
-import { writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { Application, Comment, DeclarationReflection, ParameterReflection, ProjectReflection, Reflection, ReflectionGroup, ReflectionKind, SignatureReflection, SomeType } from 'typedoc';
 
-const filename = 'versatiles/src/index.ts';
-const __dirname = (new URL('../', import.meta.url)).pathname;
 
-const app = await Application.bootstrap({
-	entryPoints: [resolve(__dirname, filename)],
-	tsconfig: resolve(__dirname, 'versatiles/tsconfig.json'),
-});
+/**
+ * build a markdown documentation from typescript files
+ * @param entryPoints - array of absolute typescript filenames
+ * @param tsconfig - absolute filename of the tsconfig.json
+ */
+export async function buildDoc(entryPoints: string[], tsconfig: string): Promise<string> {
+	const app = await Application.bootstrap({ entryPoints, tsconfig });
+	const project = await app.convert();
+	if (!project) throw Error();
 
-const project = await app.convert();
-if (!project) throw Error();
-
-const markdown: string = Array.from(generateDocument(project)).join('\n');
-
-writeFileSync(resolve(__dirname, 'versatiles/test.md'), markdown);
+	const markdown: string = Array.from(generateDocument(project)).join('\n');
+	return markdown;
+}
 
 
 
@@ -48,7 +46,7 @@ function* generate2Declaration(ref: DeclarationReflection): Generator<string> {
 		if (children.length === 0) continue;
 
 		// sort by order in code
-		children.sort((a,b) => a.id - b.id);
+		children.sort((a, b) => a.id - b.id);
 
 		switch (group.title) {
 			case 'Constructors':

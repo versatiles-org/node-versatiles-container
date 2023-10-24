@@ -8,8 +8,9 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
   "license": "Unlicense",
+  "type": "module",
   "devDependencies": {
     "@types/node": "^20.8.7",
     "remark": "^15.0.1",
