@@ -20,14 +20,14 @@ export async function buildDoc(entryPoints: string[], tsconfig: string): Promise
 
 function* generateDocument(ref: ProjectReflection): Generator<string> {
 	if (!ref.groups) throw Error();
-	for (let group of ref.groups) yield* generate1Group(group);
+	for (let group of ref.groups) {
+		for (let ref of group.children) {
+			yield* generateDeclaration(ref);
+		}
+	}
 }
 
-function* generate1Group(group: ReflectionGroup): Generator<string> {
-	for (let declaration of group.children) yield* generate2Declaration(declaration);
-}
-
-function* generate2Declaration(ref: DeclarationReflection): Generator<string> {
+function* generateDeclaration(ref: DeclarationReflection): Generator<string> {
 	yield '';
 
 	let typeName;
