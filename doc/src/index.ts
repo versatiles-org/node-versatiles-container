@@ -4,14 +4,18 @@ import { dirname, resolve } from 'node:path';
 import { generateMarkdownDocumentation } from './builder.js';
 import { injectMarkdown, updateTOC } from './markdown.js';
 
+const filename = process.argv[2];
+const section = process.argv[3];
 
-const filename = 'versatiles/src/index.ts';
-const section = '# API';
+if (!filename) throw Error ('first argument must be a TypeScript file');
+if (!section) throw Error ('second argument must be a Markdown heading inside the README');
 
 const fullname = resolve((new URL('../../', import.meta.url)).pathname, filename);
+if (!existsSync(fullname)) throw Error('file does not exist: ' + fullname);
+
 const filenameTSConfig = getTSConfig(fullname)
 const filenameReadme = resolve(dirname(filenameTSConfig), 'README.md');
-if (!existsSync(filenameReadme)) throw Error('README.md is missing: ' + filenameReadme)
+if (!existsSync(filenameReadme)) throw Error('README.md is missing: ' + filenameReadme);
 
 console.log(' - build documentation');
 const docMD = await generateMarkdownDocumentation([fullname], filenameTSConfig);

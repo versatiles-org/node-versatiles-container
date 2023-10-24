@@ -4,5 +4,10 @@
     "doc",
     "versatiles",
     "versatiles-server"
-  ]
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "update_readme": "npm run -w versatiles update_readme"
+  }
 }

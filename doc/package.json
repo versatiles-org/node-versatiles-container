@@ -1,13 +1,10 @@
 {
   "private": true,
-  "name": "node-versatiles-doc",
+  "name": "doc",
   "scripts": {
-    "build": "tsc",
     "test": "jest",
-    "doc": "npm run build; npx documentation readme dist/index.js --document-exported=true --format=md --github=true --markdown-toc=false --quiet --resolve=node --section=API"
+    "update_readme": "npx tsx src/index.ts"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
   "license": "Unlicense",
   "type": "module",
