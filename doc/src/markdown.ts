@@ -17,6 +17,20 @@ export function injectMarkdown(main: string, segment: string, heading: string): 
 	return remark().stringify(mainAst);
 }
 
+export function updateTOC(main: string, heading: string): string {
+	let mainAst = remark().parse(main);
+	let toc = mainAst.children
+		.flatMap(c => {
+			if (c.type !== 'heading') return [];
+			const indention = '  '.repeat((c.depth - 1) * 2);
+			const text = getMDText(c);
+			const anchor = text.toLowerCase().replace(/\s/g, '_');
+			return `${indention}- [${text}](#${anchor})\n`
+		})
+		.join('');
+	return injectMarkdown(main, toc, heading);
+}
+
 function findSegmentStart(mainAst: Root, sectionAst: Root): number {
 	if (sectionAst.children.length !== 1) throw Error();
 	if (sectionAst.children[0].type !== 'heading') throw Error();
@@ -72,11 +86,14 @@ function spliceAst(mainAst: Root, segmentAst: Root, startIndex: number, endIndex
 
 function getMDText(node: RootContent | Root): string {
 	switch (node.type) {
+		case 'inlineCode':
 		case 'text':
 			return node.value;
 		case 'heading':
 		case 'root':
 			return node.children.map(getMDText).join('');
+		case 'html':
+			return '';
 		default:
 			console.log(node);
 			throw Error('unknown type: ' + node.type);

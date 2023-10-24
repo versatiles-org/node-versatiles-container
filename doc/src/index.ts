@@ -2,7 +2,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { buildDoc } from './builder.js';
-import { injectMarkdown } from './merge_markdown.js';
+import { injectMarkdown, updateTOC } from './markdown.js';
 
 
 const filename = 'versatiles/src/index.ts';
@@ -13,10 +13,17 @@ const filenameTSConfig = getTSConfig(fullname)
 const filenameReadme = resolve(dirname(filenameTSConfig), 'README.md');
 if (!existsSync(filenameReadme)) throw Error('README.md is missing: ' + filenameReadme)
 
+console.log(' - build documentation');
 const docMD = await buildDoc([fullname], filenameTSConfig);
 
 let readmeMD = readFileSync(filenameReadme, 'utf8');
+
+console.log(' - inject documentation');
 readmeMD = injectMarkdown(readmeMD, docMD, section);
+
+console.log(' - inject toc');
+readmeMD = updateTOC(readmeMD, '# Table of Content');
+
 writeFileSync(filenameReadme, readmeMD);
 
 function getTSConfig(startFilename: string): string {
