@@ -23,26 +23,26 @@ const NEW_LINE = '\n';
 export async function buildDoc(entryPoints: string[], tsconfig: string): Promise<string> {
 	const app = await Application.bootstrap({ entryPoints, tsconfig });
 	const project = await app.convert();
- 
+
 	if (!project) {
-	  throw new Error('Failed to convert project.');
+		throw new Error('Failed to convert project.');
 	}
- 
+
 	return Array.from(generateDocument(project)).join(NEW_LINE);
- }
- 
- // Generate Markdown documentation for a project
- function* generateDocument(project: ProjectReflection): Generator<string> {
+}
+
+// Generate Markdown documentation for a project
+function* generateDocument(project: ProjectReflection): Generator<string> {
 	if (!project.groups) {
-	  throw new Error('No reflection groups found.');
+		throw new Error('No reflection groups found.');
 	}
- 
+
 	for (const group of project.groups) {
-	  for (const declaration of group.children) {
-		 yield* generateDeclaration(declaration);
-	  }
+		for (const declaration of group.children) {
+			yield* generateDeclaration(declaration);
+		}
 	}
- }
+}
 
 function* generateDeclaration(ref: DeclarationReflection): Generator<string> {
 	const typeName = getTypeName(ref.kind);
