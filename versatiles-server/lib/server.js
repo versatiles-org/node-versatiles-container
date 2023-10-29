@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import VersaTiles from 'versatiles';
+import { VersaTiles } from 'versatiles';
 import { generateStyle } from './style.js';
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
@@ -42,12 +42,12 @@ export class Server {
 
 		if (!this.layer.mime) {
 			header ??= await this.layer.container.getHeader();
-			this.layer.mime = MIMETYPES[header.tile_format] || 'application/octet-stream';
+			this.layer.mime = MIMETYPES[header.tileFormat] || 'application/octet-stream';
 		}
 
 		if (!this.layer.compression) {
 			header ??= await this.layer.container.getHeader();
-			this.layer.compression = header.tile_compression;
+			this.layer.compression = header.tileCompression;
 		}
 
 		return this.layer;
@@ -162,7 +162,7 @@ export class Server {
 			),
 			async () => staticContent.add(
 				'/tiles/tile.json',
-				await layer.container.getMeta(),
+				await layer.container.getMetadata(),
 				'application/json; charset=utf-8'
 			),
 			async () => {

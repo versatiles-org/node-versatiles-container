@@ -1,5 +1,5 @@
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 export class StaticContent {
@@ -19,6 +19,8 @@ export class StaticContent {
 		this.map.set(path, [content, mime, compression]);
 	}
 	addFolder(url, dir) {
+		if (!existsSync(dir)) return;
+
 		const rec = (url, dir) => {
 			readdirSync(dir).forEach(name => {
 				if (name.startsWith('.')) return;

@@ -31,9 +31,9 @@ const SHORTBREAD_LAYERS = [
 ];
 
 export async function generateStyle(container, options) {
-	let header = await container.getHeader();
+	let tileFormat = await container.getTileFormat();
 
-	switch (header.tile_format) {
+	switch (tileFormat) {
 		case 'pbf':
 			return await generatePBFStyle();
 		case 'png':
@@ -42,11 +42,11 @@ export async function generateStyle(container, options) {
 		case 'avif':
 			throw new Error('not implemented yet');
 		default:
-			throw new Error(`can not generate style for tile format "${header.tile_format}"`);
+			throw new Error(`can not generate style for tile format "${tileFormat}"`);
 	}
 
 	async function generatePBFStyle() {
-		let meta = await container.getMeta();
+		let meta = await container.getMetadata();
 		if (isShortbread(meta)) return generateShortbreadStyle();
 		throw new Error('not implemented yet');
 	}
@@ -78,6 +78,10 @@ function resolveUrl(...paths) {
 
 function isShortbread(meta) {
 	try {
+
+		if (Buffer.isBuffer(meta)) meta = meta.toString();
+		if (typeof meta === 'string') meta = JSON.parse(meta);
+
 		let layerSet = new Set(meta.vector_layers.map(l => l.id));
 		let count = SHORTBREAD_LAYERS.reduce((s, id) => s + layerSet.has(id), 0);
 		return count > 0.9 * SHORTBREAD_LAYERS.length;
