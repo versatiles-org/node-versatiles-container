@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "jest",
-    "server": "node index.js",
+    "start": "node index.js",
     "update": "node update_static_assets.js"
   },
   "type": "module",
