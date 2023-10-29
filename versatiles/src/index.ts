@@ -30,7 +30,7 @@ export class VersaTiles {
 	#reader: Reader;
 	#decompress: Decompressor;
 	#header?: Header;
-	#metadata?: Buffer | null;
+	#metadata?: object | null;
 	#block_index?: Map<string, Block>;
 
 	/**
@@ -118,8 +118,6 @@ export class VersaTiles {
 				throw new Error('Invalid Container');
 		}
 
-		Object.freeze(this.#header);
-
 		return this.#header;
 	}
 
@@ -128,25 +126,32 @@ export class VersaTiles {
 	 * For vector tiles metadata is usually a Buffer containing a JSON, describing `vector_layers`.
 	 * If there is no metadata in the container, this function returns `null`.
 	 * @async
-	 * @returns {Promise<Buffer | null>} The metadata object.
+	 * @returns {Promise<object | null>} The metadata object, or null.
 	 */
-	async getMetadata(): Promise<Buffer | null> {
+	async getMetadata(): Promise<object | null> {
 		if (this.#metadata !== undefined) return this.#metadata;
 
-		let header = await this.getHeader();
-		let metadata = null;
+		const header = await this.getHeader();
 
-		if (header.metaLength > 0) {
-			let header = await this.getHeader();
-			metadata = await this.#read(header.metaOffset, header.metaLength);
-			metadata = await this.#decompress(metadata, header.tileCompression);
+		if (header.metaLength === 0) {
+			this.#metadata = null;
+		} else {
+			let buffer: Buffer = await this.#read(header.metaOffset, header.metaLength);
+			buffer = await this.#decompress(buffer, header.tileCompression);
+			this.#metadata = <object>JSON.parse(buffer.toString());
 		}
-
-		this.#metadata = metadata;
-		Object.freeze(this.#metadata);
-
 		return this.#metadata;
 	}
+
+	/**
+	 * Gets the format of the tiles, like "png" or "pbf"
+	 * @async
+	 * @returns {Promise<Format>} The tile format.
+	 */
+	async getTileFormat(): Promise<Format | null> {
+		return (await this.getHeader()).tileFormat;
+	}
+
 
 	/**
 	 * Gets the block index.

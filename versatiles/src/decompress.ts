@@ -1,5 +1,5 @@
 import zlib from 'zlib';
-import { Compression } from './interfaces';
+import { Compression } from './interfaces.js';
 
 /**
  * Decompresses a buffer using the specified compression algorithm.

@@ -9,6 +9,7 @@ A client library for [VersaTiles containers](https://github.com/versatiles-org/v
     * [constructor: new VersaTiles(source, options)](#constructor-new-versatilessource-options)
     * [async getHeader()](#async-getheader)
     * [async getMetadata()](#async-getmetadata)
+    * [async getTileFormat()](#async-gettileformat)
     * [async getBlockIndex()](#async-getblockindex)
     * [async getTileIndex(block)](#async-gettileindexblock)
     * [async getTile(z, x, y)](#async-gettilez-x-y)
@@ -43,11 +44,11 @@ fs.writeFileSync('tile.' + header.tile_format, tile);
 
 ## Class: `VersaTiles`<a id="class_versatiles"></a>
 
-VersaTiles class is a wrapper around a `*.versatiles` container that allows to access all tiles, metadata and other properties. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L26">\[src]</a></sup>
+VersaTiles class is a wrapper around a `*.versatiles` container that allows to access all tiles, metadata and other properties. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L26">\[src]</a></sup>
 
 ### constructor: `new VersaTiles(source, options)`
 
-Creates a new VersaTiles instance. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L42">\[src]</a></sup>
+Creates a new VersaTiles instance. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L42">\[src]</a></sup>
 
 **Parameters:**
 
@@ -62,7 +63,7 @@ Creates a new VersaTiles instance. <sup><a href="https://github.com/versatiles-o
 ### `async getHeader()`
 
 Gets the header information of this container.\
-This is used internally. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L73">\[src]</a></sup>
+This is used internally. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L73">\[src]</a></sup>
 
 **Returns:** [`Header`](#interface_header)
 
@@ -70,22 +71,28 @@ This is used internally. <sup><a href="https://github.com/versatiles-org/node-ve
 
 Gets the metadata describing the tiles.\
 For vector tiles metadata is usually a Buffer containing a JSON, describing `vector_layers`.
-If there is no metadata in the container, this function returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L133">\[src]</a></sup>
+If there is no metadata in the container, this function returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L133">\[src]</a></sup>
 
 **Returns:** `null | Buffer`
+
+### `async getTileFormat()`
+
+Gets the format of the tiles, like "png" or "pbf" <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L156">\[src]</a></sup>
+
+**Returns:** [`Format`](#type_format)
 
 ### `async getBlockIndex()`
 
 Gets the block index.\
 This is used internally to keep a lookup of every tile block in the container.
-The keys of this `map` have the form "{z},{x},{y}". <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L159">\[src]</a></sup>
+The keys of this `map` have the form "{z},{x},{y}". <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L169">\[src]</a></sup>
 
 **Returns:** `Map<string,`[`Block`](#interface_block)`>`
 
 ### `async getTileIndex(block)`
 
 Gets the tile index for given block.\
-This is used internally to keep a lookup of every tile in the block. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L237">\[src]</a></sup>
+This is used internally to keep a lookup of every tile in the block. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L247">\[src]</a></sup>
 
 **Parameters:**
 
@@ -98,7 +105,7 @@ This is used internally to keep a lookup of every tile in the block. <sup><a hre
 
 Returns a tile as Buffer.\
 If the container header has defined a tile\_compression, the returned Buffer contains compressed tile data. Use the method `getTileUncompressed` to get uncompressed tile data.
-If the tile cannot be found, `null` is returned. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L266">\[src]</a></sup>
+If the tile cannot be found, `null` is returned. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L276">\[src]</a></sup>
 
 **Parameters:**
 
@@ -115,7 +122,7 @@ If the tile cannot be found, `null` is returned. <sup><a href="https://github.co
 
 Returns an uncompressed tile as Buffer.\
 Use the method `getTile` to get pre-compressed tile data.
-If the tile cannot be found, `null` is returned. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/index.ts#L313">\[src]</a></sup>
+If the tile cannot be found, `null` is returned. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/index.ts#L323">\[src]</a></sup>
 
 **Parameters:**
 
@@ -131,7 +138,7 @@ If the tile cannot be found, `null` is returned. <sup><a href="https://github.co
 ## Interface: `Block`<a id="interface_block"></a>
 
 Interface for a block of tiles including necessary metadata.\
-For more details, refer to [spec v02](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#block_index). <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L85">\[src]</a></sup>
+For more details, refer to [spec v02](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#block_index). <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L85">\[src]</a></sup>
 **Properties**
 
 * `level: number`\
@@ -161,7 +168,7 @@ For more details, refer to [spec v02](https://github.com/versatiles-org/versatil
 
 ## Interface: `Header`<a id="interface_header"></a>
 
-Interface for the metadata header of a `*.Versatiles` container. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L52">\[src]</a></sup>
+Interface for the metadata header of a `*.Versatiles` container. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L52">\[src]</a></sup>
 **Properties**
 
 * `magic: string`\
@@ -189,7 +196,7 @@ Interface for the metadata header of a `*.Versatiles` container. <sup><a href="h
 
 ## Interface: `Options`<a id="interface_options"></a>
 
-Interface for defining the options available for reading a container. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L119">\[src]</a></sup>
+Interface for defining the options available for reading a container. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L119">\[src]</a></sup>
 **Properties**
 
 * `tms: boolean`\
@@ -197,7 +204,7 @@ Interface for defining the options available for reading a container. <sup><a hr
 
 ## Interface: `TileIndex`<a id="interface_tileindex"></a>
 
-Interface for the index structure used for tiles within a block. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L108">\[src]</a></sup>
+Interface for the index structure used for tiles within a block. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L108">\[src]</a></sup>
 **Properties**
 
 * `offsets: Float64Array`\
@@ -208,13 +215,13 @@ Interface for the index structure used for tiles within a block. <sup><a href="h
 ## Type: `Compression`<a id="type_compression"></a>
 
 Supported compression.\
-`null` signifies that the data is uncompressed. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L5">\[src]</a></sup>
+`null` signifies that the data is uncompressed. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L5">\[src]</a></sup>
 
 **Type:** `"gzip" | "br" | null`
 
 ## Type: `Format`<a id="type_format"></a>
 
-Supported tile formats. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L11">\[src]</a></sup>
+Supported tile formats. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L11">\[src]</a></sup>
 
 **Type:** `"avif" | "bin" | "geojson" | "jpeg" | "json" | "pbf" | "png" | "svg" | "topojson" | "webp" | null`
 
@@ -222,7 +229,7 @@ Supported tile formats. <sup><a href="https://github.com/versatiles-org/node-ver
 
 Type definition for an asynchronous function to read a container's content.
 
-This can be useful for accessing data stored in various storage mediums. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/fb029b4/versatiles/src/interfaces.ts#L33">\[src]</a></sup>
+This can be useful for accessing data stored in various storage mediums. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/f41a17b/versatiles/src/interfaces.ts#L33">\[src]</a></sup>
 
 **Type:** `(position: number, length: number) => Promise<Buffer>`
 
