@@ -2,14 +2,14 @@
   "name": "versatiles-server",
   "version": "1.0.0",
   "description": "A server for VersaTiles",
-  "main": "index.js",
+  "main": "dist/index.js",
   "bin": {
     "versatiles-server": "node index.js"
   },
   "scripts": {
-    "test": "jest",
+    "build": "tsc",
     "start": "node index.js",
-    "update": "node update_static_assets.js"
+    "test": "jest"
   },
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
@@ -36,8 +36,10 @@
     "versatiles"
   ],
   "devDependencies": {
+    "@types/node": "^20.8.7",
     "jest": "^29.7.0",
-    "tar-stream": "^3.1.6"
+    "tar-stream": "^3.1.6",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "commander": "^11.1.0",

@@ -1,6 +1,7 @@
-node_modules
+
 .DS_Store
+node_modules
+versatiles-server/dist/
+versatiles-server/static/assets/
 versatiles/dist
 versatiles/doc/
-versatiles-server/static/assets/
-test.md

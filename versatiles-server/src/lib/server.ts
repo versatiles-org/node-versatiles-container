@@ -1,24 +1,24 @@
-import { createServer } from 'node:http';
+import { createServer, Server as httpServer } from 'node:http';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { VersaTiles } from 'versatiles';
+import { Compression, Format, Reader, VersaTiles } from 'versatiles';
 import { generateStyle } from './style.js';
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
 
 const __dirname = (new URL('../', import.meta.url)).pathname;
 
-const MIMETYPES = {
-	bin: 'application/octet-stream',
-	png: 'image/png',
-	jpeg: 'image/jpeg',
-	webp: 'image/webp',
-	avif: 'image/avif',
-	svg: 'image/svg+xml',
-	pbf: 'application/x-protobuf',
-	geojson: 'application/geo+json',
-	topojson: 'application/topo+json',
-	json: 'application/json',
+const MIMETYPES: { [format: string]: string } = {
+	'bin': 'application/octet-stream',
+	'png': 'image/png',
+	'jpeg': 'image/jpeg',
+	'webp': 'image/webp',
+	'avif': 'image/avif',
+	'svg': 'image/svg+xml',
+	'pbf': 'application/x-protobuf',
+	'geojson': 'application/geo+json',
+	'topojson': 'application/topo+json',
+	'json': 'application/json',
 }
 
 export class Server {
@@ -30,9 +30,9 @@ export class Server {
 		tilesUrl: false,
 		port: 8080,
 	};
-	layer;
-	server;
-	constructor(source, options) {
+	layer: Layer;
+	server?: httpServer;
+	constructor(source: string | Reader, options: any) {
 		Object.assign(this.options, options);
 
 		this.layer = { container: new VersaTiles(source) }
@@ -42,7 +42,7 @@ export class Server {
 
 		if (!this.layer.mime) {
 			header ??= await this.layer.container.getHeader();
-			this.layer.mime = MIMETYPES[header.tileFormat] || 'application/octet-stream';
+			this.layer.mime = MIMETYPES[header.tileFormat || '?'] || 'application/octet-stream';
 		}
 
 		if (!this.layer.compression) {
@@ -58,36 +58,35 @@ export class Server {
 
 		const staticContent = await this.#buildStaticContent(layer);
 
-		this.server = createServer(async (req, res) => {
-
-			if (req.method !== 'GET') return respondWithError('Method not allowed', 405);
-			const p = (new URL(req.url, 'resolve://')).pathname;
-
-			// construct base url from request headers
-			//const baseurl = this.opt.base || (req.headers["x-forwarded-proto"] || "http") + '://' + (req.headers["x-forwarded-host"] || req.headers.host);
-
+		let server: httpServer = createServer(async (req, res) => {
 			try {
+				if (req.method !== 'GET') return respondWithError('Method not allowed', 405);
+				if (!req.url) return respondWithError('URL not found', 404);
+				const p = (new URL(req.url, 'resolve://')).pathname;
+
 				let response = staticContent.get(p);
 				if (response) {
 					return respondWithContent(...response);
 				}
 
 				let match;
-				if (match = p.match(/^\/tiles\/(?<z>[0-9]+)\/(?<x>[0-9]+)\/(?<y>[0-9]+).*/)) {
-					let { x, y, z } = match.groups;
-					x = parseInt(x, 10);
-					y = parseInt(y, 10);
-					z = parseInt(z, 10);
-					return respondWithContent(await layer.container.getTile(z, x, y), layer.mime, layer.compression);
+				if (match = p.match(/^\/tiles\/(?[0-9]+)\/(?[0-9]+)\/(?[0-9]+).*/)) {
+					let [_, z, x, y] = match;
+					let tile = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
+					if (!tile) return respondWithError('tile not found: ' + p, 404);
+					return respondWithContent(tile, layer.mime, layer.compression);
 				}
+
+				return respondWithError('file not found: ' + p, 404);
 
 			} catch (err) {
 				return respondWithError(err, 500);
 			}
 
-			return respondWithError('file not found: ' + p, 404);
+			async function respondWithContent(data: Buffer | string, mime?: string, compression?: Compression) {
+				mime ??= 'application/octet-stream';
+				compression ??= null;
 
-			async function respondWithContent(data, mime, compression) {
 				const accepted_encoding = req.headers['accept-encoding'] || '';
 				const accept_gzip = accepted_encoding.includes('gzip');
 				const accept_br = accepted_encoding.includes('br');
@@ -132,21 +131,22 @@ export class Server {
 				res.end(data);
 			}
 
-			function respondWithError(err, code = 500) {
+			function respondWithError(err: any, code = 500) {
 				console.error(err);
 				res.statusCode = code;
 				res.setHeader('content-type', 'text/plain');
-				res.end(err.toString());
+				res.end(String(err));
 			}
 		});
 
 		const port = this.options.port;
 
-		await new Promise(r => this.server.listen(port, () => r()));
+		await new Promise<void>(r => server.listen(port, () => r()));
+		this.server = server;
 
 		console.log(`listening on port ${port} `);
 	}
-	async #buildStaticContent(layer) {
+	async #buildStaticContent(layer: Layer) {
 		const staticContent = new StaticContent();
 
 		await Promise.all([
@@ -162,13 +162,19 @@ export class Server {
 			),
 			async () => staticContent.add(
 				'/tiles/tile.json',
-				await layer.container.getMetadata(),
+				await layer.container.getMetadata() || {},
 				'application/json; charset=utf-8'
 			),
 			async () => {
 				let header = await layer.container.getHeader();
-				header = Object.fromEntries('magic,version,tile_format,tile_compression,zoom_min,zoom_max,bbox_min_x,bbox_min_y,bbox_max_x,bbox_max_y'.split(',').map(k => [k, header[k]]))
-				staticContent.add('/tiles/header.json', header, 'application/json; charset=utf-8');
+				staticContent.add('/tiles/header.json', {
+					bbox: header.bbox,
+					tileCompression: header.tileCompression,
+					tileFormat: header.tileFormat,
+					version: header.version,
+					zoomMax: header.zoomMax,
+					zoomMin: header.zoomMin,
+				}, 'application/json; charset=utf-8');
 			}
 		].map(f => f()))
 
@@ -177,3 +183,9 @@ export class Server {
 		return staticContent;
 	}
 }
+
+type Layer = {
+	container: VersaTiles,
+	mime?: string;
+	compression?: Compression;
+};

@@ -4,8 +4,8 @@
   "description": "A client library for VersaTiles",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
-    "doc": "npm run -w doc update_readme versatiles/src/index.ts '# API'"
+    "doc": "npm run -w doc update_readme versatiles/src/index.ts '# API'",
+    "test": "jest"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

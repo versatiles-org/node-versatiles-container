@@ -1,4 +1,5 @@
 
+import { VersaTiles } from 'versatiles';
 import { colorful } from 'versatiles-styles';
 
 const SHORTBREAD_LAYERS = [
@@ -30,7 +31,7 @@ const SHORTBREAD_LAYERS = [
 	'water_polygons',
 ];
 
-export async function generateStyle(container, options) {
+export async function generateStyle(container: VersaTiles, options) {
 	let tileFormat = await container.getTileFormat();
 
 	switch (tileFormat) {
@@ -68,22 +69,31 @@ export async function generateStyle(container, options) {
 	}
 }
 
-function resolveUrl(...paths) {
+function resolveUrl(...paths: string[]): string {
 	paths = paths.map(path => path.replace(/[\{\}]/g, c => '%' + c.charCodeAt(0).toString(16)))
-	let baseUrl = paths.shift();
-	paths.forEach(path => baseUrl = (new URL(path, baseUrl)).href);
-	baseUrl = baseUrl.replace(/\%7b/g, '{').replace(/\%7d/g, '}')
-	return baseUrl;
+	let baseUrl = new URL(paths.shift() || '');
+	paths.forEach(path => baseUrl = new URL(path, baseUrl));
+	return baseUrl.href.replace(/\%7b/g, '{').replace(/\%7d/g, '}')
 }
 
-function isShortbread(meta) {
+function isShortbread(meta: Buffer | object | string | null): boolean {
+	if (!meta) return false;
+
 	try {
+		let obj: object;
+		if (Buffer.isBuffer(meta)) {
+			obj = JSON.parse(meta.toString());
+		} else if (typeof meta === 'string') {
+			obj = JSON.parse(meta);
+		} else {
+			obj = meta
+		}
+		if (!('vector_layers' in obj)) return false;
+		let vectorLayers = obj.vector_layers;
+		if (!Array.isArray(vectorLayers)) return false;
 
-		if (Buffer.isBuffer(meta)) meta = meta.toString();
-		if (typeof meta === 'string') meta = JSON.parse(meta);
-
-		let layerSet = new Set(meta.vector_layers.map(l => l.id));
-		let count = SHORTBREAD_LAYERS.reduce((s, id) => s + layerSet.has(id), 0);
+		let layerSet = new Set(vectorLayers.map(l => l.id));
+		let count = SHORTBREAD_LAYERS.reduce((s, id) => layerSet.has(id) ? s + 1 : s, 0);
 		return count > 0.9 * SHORTBREAD_LAYERS.length;
 	} catch (e) {
 		return false;

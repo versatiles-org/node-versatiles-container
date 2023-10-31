@@ -1,27 +1,32 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { Compression } from 'versatiles';
 
 export class StaticContent {
-	map;
+	map: Map<string, StaticResponse>;
 	constructor() {
 		this.map = new Map();
 	}
-	get(path) {
+	get(path: string): StaticResponse | undefined {
 		return this.map.get(path)
 	}
-	add(path, content, mime, compression) {
-		if (!Buffer.isBuffer(content)) {
-			if (typeof content === 'object') content = JSON.stringify(content);
-			if (typeof content === 'string') content = Buffer.from(content);
+	add(path: string, content: Buffer | string | object, mime: string, compression: Compression = null): void {
+		let buffer: Buffer;
+		if (Buffer.isBuffer(content)) {
+			buffer = content
+		} else if (typeof content === 'string') {
+			buffer = Buffer.from(content);
+		} else {
+			buffer = Buffer.from(JSON.stringify(content));
 		}
 		if (this.map.has(path)) throw Error();
-		this.map.set(path, [content, mime, compression]);
+		this.map.set(path, [buffer, mime, compression]);
 	}
-	addFolder(url, dir) {
+	addFolder(url: string, dir: string): void {
 		if (!existsSync(dir)) return;
 
-		const rec = (url, dir) => {
+		const rec = (url: string, dir: string): void => {
 			readdirSync(dir).forEach(name => {
 				if (name.startsWith('.')) return;
 
@@ -60,10 +65,12 @@ export class StaticContent {
 		}
 		rec(url, dir);
 
-		function urlResolve(from, to) {
+		function urlResolve(from: string, to: string): string {
 			if (!from.endsWith('/')) from += '/';
 			let resolvedUrl = new URL(to, new URL(from, 'resolve://'));
 			return resolvedUrl.pathname;
 		}
 	}
 }
+
+type StaticResponse = [Buffer, string, Compression];
