@@ -3,11 +3,8 @@ import eslint_plugin from '@typescript-eslint/eslint-plugin';
 
 export default [
 	{
-		ignores: ['dist']
-	},
-	{
 		files: [
-			'tsdoc2md/src/**/*.ts',
+			'tsdoc2readme/src/**/*.ts',
 			'versatiles/src/**/*.ts',
 			'versatiles-server/src/**/*.ts',
 		],
@@ -15,7 +12,7 @@ export default [
 			ecmaVersion: 'latest',
 			sourceType: 'module',
 			globals: {
-				browser: true,
+				browser: false,
 				es6: true,
 				node: true
 			},
@@ -234,7 +231,7 @@ export default [
 			'@typescript-eslint/no-extra-parens': ['error', 'all', { 'conditionalAssign': false, 'nestedBinaryExpressions': false, 'ternaryOperandBinaryExpressions': false }],
 
 			'space-before-function-paren': 'off',
-			'@typescript-eslint/space-before-function-paren': ['error', 'never'],
+			'@typescript-eslint/space-before-function-paren': ['error', { 'anonymous': 'always', 'named': 'never', 'asyncArrow': 'always' }],
 
 			'no-use-before-define': 'off',
 			'@typescript-eslint/no-use-before-define': ['error', { 'functions': false }],

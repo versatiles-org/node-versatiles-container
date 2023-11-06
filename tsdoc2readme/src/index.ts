@@ -4,13 +4,15 @@ import { dirname, resolve } from 'node:path';
 import { generateMarkdownDocumentation } from './builder.js';
 import { injectMarkdown, updateTOC } from './markdown.js';
 
-const filename = process.argv[2];
+// eslint-disable-next-line @typescript-eslint/prefer-destructuring
+const filenameTypeScript = process.argv[2];
+// eslint-disable-next-line @typescript-eslint/prefer-destructuring
 const section = process.argv[3];
 
-if (!filename) throw Error('first argument must be a TypeScript file');
+if (!filenameTypeScript) throw Error('first argument must be a TypeScript file');
 if (!section) throw Error('second argument must be a Markdown heading inside the README');
 
-const fullname = resolve(new URL('../../', import.meta.url).pathname, filename);
+const fullname = resolve(new URL('../../', import.meta.url).pathname, filenameTypeScript);
 if (!existsSync(fullname)) throw Error('file does not exist: ' + fullname);
 
 const filenameTSConfig = getTSConfig(fullname);
@@ -32,12 +34,12 @@ writeFileSync(filenameReadme, readmeMD);
 
 function getTSConfig(startFilename: string): string {
 	let folder = dirname(startFilename);
-	let filenameTSConfig = '';
+	let filename = '';
 	for (let i = 0; i <= 2; i++) {
-		filenameTSConfig = resolve(folder, 'tsconfig.json');
-		if (existsSync(filenameTSConfig)) break;
+		filename = resolve(folder, 'tsconfig.json');
+		if (existsSync(filename)) break;
 		folder = dirname(folder);
 	}
-	if (!existsSync(filenameTSConfig)) throw Error('tsconfig file is missing: ' + filenameTSConfig);
-	return filenameTSConfig;
+	if (!existsSync(filename)) throw Error('tsconfig file is missing: ' + filename);
+	return filename;
 }

@@ -3,12 +3,12 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import type { Compression, Reader } from 'versatiles';
-import { Format, VersaTiles } from 'versatiles';
+import { VersaTiles } from 'versatiles';
 import { generateStyle } from './style.js';
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
 
-const __dirname = new URL('../', import.meta.url).pathname;
+const DIRNAME = new URL('../', import.meta.url).pathname;
 
 const MIMETYPES: Record<string, string> = {
 	'bin': 'application/octet-stream',
@@ -23,32 +23,146 @@ const MIMETYPES: Record<string, string> = {
 	'json': 'application/json',
 };
 
+export interface Options {
+	compress?: boolean;
+	baseUrl?: string;
+	glyphsUrl?: string;
+	spriteUrl?: string;
+	tilesUrl?: string;
+	port?: number;
+}
+
 export class Server {
-	options = {
-		compress: false,
-		baseUrl: false,
-		glyphsUrl: false,
-		spriteUrl: false,
-		tilesUrl: false,
+	private readonly options: Options = {
+		compress: true,
 		port: 8080,
 	};
 
-	layer: Layer;
+	private readonly layer: Layer;
 
-	server?: httpServer;
+	private server?: httpServer;
 
-	constructor(source: Reader | string, options: any) {
+	public constructor(source: Reader | string, options: Options) {
 		Object.assign(this.options, options);
 
 		this.layer = { container: new VersaTiles(source) };
 	}
 
-	async #prepareLayer() {
+	public async start(): Promise<void> {
+		const layer = await this.#prepareLayer();
+		const compress = this.options.compress ?? false;
+
+		const staticContent = await this.#buildStaticContent(layer);
+
+		const server = createServer((req, res) => {
+			void (async (): Promise<void> => {
+				try {
+					if (req.method !== 'GET') {
+						respondWithError('Method not allowed', 405); return;
+					}
+					if (!(req.url ?? '')) {
+						respondWithError('URL not found', 404); return;
+					}
+					const p = new URL(req.url ?? '', 'resolve://').pathname;
+
+					const response = staticContent.get(p);
+					if (response) {
+						await respondWithContent(...response); return;
+					}
+
+					const match = /^\/tiles\/(?[0-9]+)\/(?[0-9]+)\/(?[0-9]+).*/.exec(p);
+					if (match) {
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						const [_, z, x, y] = match;
+						const tile = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
+						if (!tile) {
+							respondWithError('tile not found: ' + p, 404); return;
+						}
+						await respondWithContent(tile, layer.mime, layer.compression); return;
+					}
+
+					respondWithError('file not found: ' + p, 404); return;
+
+				} catch (err) {
+					respondWithError(err, 500); return;
+				}
+
+				async function respondWithContent(data: Buffer | string, mime?: string, compression?: Compression): Promise<void> {
+					mime ??= 'application/octet-stream';
+					compression ??= null;
+
+					const acceptedEncoding = req.headers['accept-encoding'] ?? '';
+					const acceptGzip = acceptedEncoding.includes('gzip');
+					const acceptBr = acceptedEncoding.includes('br');
+
+					if (typeof data === 'string') data = Buffer.from(data);
+
+					switch (compression) {
+						case 'br':
+							if (acceptBr) break;
+							if (compress && acceptGzip) {
+								data = await gzip(await unbrotli(data));
+								compression = 'gzip';
+								break;
+							}
+							data = await unbrotli(data);
+							compression = null;
+							break;
+						case 'gzip':
+							if (acceptGzip) break;
+							data = await ungzip(data);
+							compression = null;
+							break;
+						default:
+							if (compress && acceptBr) {
+								data = await brotli(data);
+								compression = 'br';
+								break;
+							}
+							if (compress && acceptGzip) {
+								data = await gzip(data);
+								compression = 'gzip';
+								break;
+							}
+							compression = null;
+							break;
+					}
+
+					if (compression) res.setHeader('content-encoding', compression);
+
+					res.statusCode = 200;
+					res.setHeader('content-type', mime);
+					res.end(data);
+				}
+
+				function respondWithError(err: unknown, code = 500): void {
+					console.error(err);
+					res.statusCode = code;
+					res.setHeader('content-type', 'text/plain');
+					res.end(String(err));
+				}
+			})();
+		});
+
+		this.server = server;
+
+		const { port } = this.options;
+
+		await new Promise<void>(r => server.listen(port, () => {
+			r();
+		}));
+
+		console.log(`listening on port ${port} `);
+	}
+
+
+	async #prepareLayer(): Promise<Layer> {
+		// eslint-disable-next-line @typescript-eslint/init-declarations
 		let header;
 
-		if (!this.layer.mime) {
+		if (this.layer.mime == null) {
 			header ??= await this.layer.container.getHeader();
-			this.layer.mime = MIMETYPES[header.tileFormat || '?'] || 'application/octet-stream';
+			this.layer.mime = MIMETYPES[header.tileFormat ?? '?'] || 'application/octet-stream';
 		}
 
 		if (!this.layer.compression) {
@@ -59,133 +173,30 @@ export class Server {
 		return this.layer;
 	}
 
-	async start() {
-		const layer = await this.#prepareLayer();
-		const compress = this.options.compress || false;
-
-		const staticContent = await this.#buildStaticContent(layer);
-
-		const server: httpServer = createServer(async(req, res) => {
-			try {
-				if (req.method !== 'GET') {
-					respondWithError('Method not allowed', 405); return; 
-				}
-				if (!req.url) {
-					respondWithError('URL not found', 404); return; 
-				}
-				const p = new URL(req.url, 'resolve://').pathname;
-
-				const response = staticContent.get(p);
-				if (response) {
-					await respondWithContent(...response); return;
-				}
-
-				let match;
-				if (match = /^\/tiles\/(?[0-9]+)\/(?[0-9]+)\/(?[0-9]+).*/.exec(p)) {
-					const [_, z, x, y] = match;
-					const tile = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
-					if (!tile) {
-						respondWithError('tile not found: ' + p, 404); return; 
-					}
-					await respondWithContent(tile, layer.mime, layer.compression); return;
-				}
-
-				respondWithError('file not found: ' + p, 404); return;
-
-			} catch (err) {
-				respondWithError(err, 500); return;
-			}
-
-			async function respondWithContent(data: Buffer | string, mime?: string, compression?: Compression) {
-				mime ??= 'application/octet-stream';
-				compression ??= null;
-
-				const accepted_encoding = req.headers['accept-encoding'] || '';
-				const accept_gzip = accepted_encoding.includes('gzip');
-				const accept_br = accepted_encoding.includes('br');
-
-				if (typeof data === 'string') data = Buffer.from(data);
-
-				switch (compression) {
-					case 'br':
-						if (accept_br) break;
-						if (compress && accept_gzip) {
-							data = await gzip(await unbrotli(data));
-							compression = 'gzip';
-							break;
-						}
-						data = await unbrotli(data);
-						compression = null;
-						break;
-					case 'gzip':
-						if (accept_gzip) break;
-						data = await ungzip(data);
-						compression = null;
-						break;
-					default:
-						if (compress && accept_br) {
-							data = await brotli(data);
-							compression = 'br';
-							break;
-						}
-						if (compress && accept_gzip) {
-							data = await gzip(data);
-							compression = 'gzip';
-							break;
-						}
-						compression = null;
-						break;
-				}
-
-				if (compression) res.setHeader('content-encoding', compression);
-
-				res.statusCode = 200;
-				res.setHeader('content-type', mime);
-				res.end(data);
-			}
-
-			function respondWithError(err: any, code = 500) {
-				console.error(err);
-				res.statusCode = code;
-				res.setHeader('content-type', 'text/plain');
-				res.end(String(err));
-			}
-		});
-
-		const { port } = this.options;
-
-		await new Promise<void>(r => server.listen(port, () => {
-			r(); 
-		}));
-		this.server = server;
-
-		console.log(`listening on port ${port} `);
-	}
-
-	async #buildStaticContent(layer: Layer) {
+	async #buildStaticContent(layer: Layer): Promise<StaticContent> {
 		const staticContent = new StaticContent();
 
 		await Promise.all([
-			async() => {
-				const html = await readFile(resolve(__dirname, 'static/index.html'));
+			async (): Promise<void> => {
+				const html = await readFile(resolve(DIRNAME, 'static/index.html'));
 				staticContent.add('/', html, 'text/html; charset=utf-8');
 				staticContent.add('/index.html', html, 'text/html; charset=utf-8');
 			},
-			async() => {
+			async (): Promise<void> => {
 				staticContent.add(
 					'/tiles/style.json',
-					await generateStyle(layer.container, this.options),
+					await generateStyle(layer.container, { ...this.options }),
 					'application/json; charset=utf-8',
-				); 
+				);
 			},
-			async() => {
+			async (): Promise<void> => {
 				staticContent.add(
 					'/tiles/tile.json',
-					await layer.container.getMetadata() || {},
+					await layer.container.getMetadata() ?? {},
 					'application/json; charset=utf-8',
-				); 
+				);
 			},
-			async() => {
+			async (): Promise<void> => {
 				const header = await layer.container.getHeader();
 				staticContent.add('/tiles/header.json', {
 					bbox: header.bbox,
@@ -198,7 +209,7 @@ export class Server {
 			},
 		].map(async f => f()));
 
-		staticContent.addFolder('/assets', resolve(__dirname, 'static/assets'));
+		staticContent.addFolder('/assets', resolve(DIRNAME, 'static/assets'));
 
 		return staticContent;
 	}

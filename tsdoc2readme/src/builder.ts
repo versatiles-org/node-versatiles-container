@@ -47,7 +47,7 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 	yield `# ${typeName}: \`${declaration.name}\`<a id="${generateAnchor(declaration)}"></a>`;
 	yield* renderSummaryBlock(declaration);
 
-	for (const group of declaration.groups || []) {
+	for (const group of declaration.groups ?? []) {
 		const publicMembers = group.children.filter(member => !member.flags.isPrivate);
 		if (publicMembers.length === 0) continue;
 
@@ -100,10 +100,10 @@ function* renderMethod(declaration: DeclarationReflection, isConstructor = false
 	if ((returnType?.type === 'reference') && (returnType.name === 'Promise')) {
 		// is an async function
 		if (!returnType.typeArguments) throw Error();
-		returnType = returnType.typeArguments[0];
+		[returnType] = returnType.typeArguments;
 		functionName = 'async ' + functionName;
 	}
-	heading += `\`${functionName}(${formatMethodParameters(signature.parameters || [])})\``;
+	heading += `\`${functionName}(${formatMethodParameters(signature.parameters ?? [])})\``;
 	yield heading;
 
 	yield '';
@@ -131,7 +131,7 @@ function formatParameter(ref: DeclarationReflection | ParameterReflection): stri
 	let line = `  - \`${ref.name}\`${resolveTypeDeclaration(ref.type)}`.replace(/``/g, '');
 	if (ref.flags.isOptional) line += ' (optional)';
 	const summary = extractSummary(ref.comment);
-	if (summary) line += `  ${NEW_LINE}    ` + summary;
+	if (summary ?? '') line += `  ${NEW_LINE}    ` + summary;
 	return line;
 }
 
@@ -142,7 +142,17 @@ function extractSummary(comment: Comment | undefined): string | undefined {
 
 function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield '';
-	const comment: Comment = ref.comment || (ref.type as any)?.declaration?.signatures[0]?.comment;
+	// eslint-disable-next-line @typescript-eslint/init-declarations
+	let comment: Comment | undefined;
+	if (ref.comment) {
+		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
+		comment = ref.comment;
+	} else {
+		// @ts-expect-error: lets try
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		comment = ref.type?.declaration?.signatures?.[0]?.comment as Comment | undefined;
+	}
+
 	if (!comment) {
 		yield generateSourceLink(ref);
 		return;
@@ -160,37 +170,36 @@ function resolveTypeDeclaration(someType: SomeType | undefined): string {
 function resolveType(someType: SomeType): string {
 	return getTypeRec(someType).replace(/``/g, '');
 
-	function getTypeRec(someType: SomeType): string {
-		switch (someType.type) {
+	function getTypeRec(some: SomeType): string {
+		switch (some.type) {
 			case 'intrinsic':
-				return `\`${someType.name}\``;
+				return `\`${some.name}\``;
 			case 'literal':
-				return `\`${JSON.stringify(someType.value)}\``;
+				return `\`${JSON.stringify(some.value)}\``;
 			case 'reference':
-				let result = `\`${someType.name}\``;
-				if (someType.reflection) result = `[${result}](#${generateAnchor(someType.reflection)})`;
-				if (someType.typeArguments?.length) result += '`<`'
-					+ (someType.typeArguments || [])
+				let result = `\`${some.name}\``;
+				if (some.reflection) result = `[${result}](#${generateAnchor(some.reflection)})`;
+				if (some.typeArguments?.length ?? 0) result += '`<`'
+					+ (some.typeArguments ?? [])
 						.map(getTypeRec).join('\`,\`')
 					+ '`>`';
 				return result;
 			case 'reflection':
-				if (!someType.declaration.signatures) throw Error();
-				if (someType.declaration.signatures.length !== 1) throw Error();
-				const signature = someType.declaration.signatures[0];
+				if (!some.declaration.signatures) throw Error();
+				if (some.declaration.signatures.length !== 1) throw Error();
+				const [signature] = some.declaration.signatures;
 				const type = signature.type ? getTypeRec(signature.type) : 'void';
-				const parameters = (signature.parameters || [])
+				const parameters = (signature.parameters ?? [])
 					.map(p => {
-						const type = p.type ? '`: `' + getTypeRec(p.type) : '';
-						return `\`${p.name}\`${type}`;
+						return `\`${p.name}\`${p.type ? '`: `' + getTypeRec(p.type) : ''}`;
 					}).join('`, `');
 				return `\`(\`${parameters}\`) => \`${type}`;
 			case 'tuple':
-				return `\`[\`${someType.elements.map(getTypeRec).join('`, `')}\`]\``;
+				return `\`[\`${some.elements.map(getTypeRec).join('`, `')}\`]\``;
 			case 'union':
-				return someType.types.map(getTypeRec).join('\` | \`');
+				return some.types.map(getTypeRec).join('\` | \`');
 			default:
-				console.log(someType);
+				console.log(some);
 				throw Error();
 		}
 	}
@@ -200,11 +209,12 @@ function generateSourceLink(ref: DeclarationReflection | SignatureReflection): s
 	if (!ref.sources || ref.sources.length < 1) return '';
 
 	if (ref.sources.length > 1) throw Error();
-	const source = ref.sources[0];
+	const [source] = ref.sources;
 	return `<sup><a href="${source.url}">[src]</a></sup>`;
 }
 
 function generateAnchor(ref: DeclarationReflection | Reflection): string {
+	// eslint-disable-next-line @typescript-eslint/init-declarations
 	let typeName;
 	switch (ref.kind) {
 		case ReflectionKind.Class: typeName = 'class'; break;

@@ -21,4 +21,4 @@ program.parse();
 
 const server = new Server(program.args[0], program.opts());
 
-server.start();
+void server.start();

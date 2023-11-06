@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "doc",
+  "name": "tsdoc2readme",
   "scripts": {
     "test": "jest",
     "update_readme": "npx tsx src/index.ts"

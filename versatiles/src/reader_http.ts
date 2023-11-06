@@ -37,23 +37,24 @@ export default function getHTTPReader(url: string): Reader {
 		 * @type {Object}
 		 */
 		const headers = {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'user-agent': 'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
 			'range': `bytes=${position}-${position + length - 1}`,
 		};
 
 		const protocol = new URL(url).protocol.slice(0, -1);
-		if (!clients[protocol]) throw new Error('Unknown Protocol');
+		if (!(protocol in clients)) throw new Error('Unknown Protocol');
 
 		/**
 		 * Performs the HTTP request and retrieves the response.
 		 * @type {IncomingMessage}
 		 */
-		const response: IncomingMessage = await new Promise((resolve, reject) => {
+		const message: IncomingMessage = await new Promise((resolve, reject) => {
 			const watchdog = setTimeout(() => {
 				reject('Timeout');
 			}, DEFAULT_TIMEOUT);
 
-			const request = clients[protocol].client
+			clients[protocol].client
 				.request(url, {
 					method: 'GET',
 					agent: clients[protocol].agent,
@@ -71,9 +72,9 @@ export default function getHTTPReader(url: string): Reader {
 				.end();
 		});
 
-		if (Math.floor(response.statusCode! / 100) !== 2) {
-			response.destroy();
-			throw new Error(`Response Status Code: ${response.statusCode}`);
+		if ((message.statusCode == null) || Math.floor(message.statusCode / 100) !== 2) {
+			message.destroy();
+			throw new Error(`Response Status Code: ${message.statusCode}`);
 		}
 
 		/**
@@ -82,14 +83,14 @@ export default function getHTTPReader(url: string): Reader {
 		 */
 		const body: Buffer = await new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
-			response
-				.on('data', chunk => buffers.push(chunk))
+			message
+				.on('data', (chunk: Buffer) => buffers.push(chunk))
 				.on('error', err => {
-					response.destroy();
+					message.destroy();
 					reject(err);
 				})
 				.once('end', () => {
-					resolve(Buffer.concat(buffers)); 
+					resolve(Buffer.concat(buffers));
 				});
 		});
 

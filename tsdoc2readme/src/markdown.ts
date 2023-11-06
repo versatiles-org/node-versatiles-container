@@ -60,12 +60,11 @@ function findNextHeading(mainAst: Root, startIndex: number, depth: number): numb
 
 function getHeadingDepth(mainAst: Root, index: number): number {
 	const node = mainAst.children[index];
-	if (!node) throw Error();
 	if (node.type !== 'heading') throw Error();
 	return node.depth;
 }
 
-function indentChapter(segmentAst: Root, depth: number) {
+function indentChapter(segmentAst: Root, depth: number): void {
 	segmentAst.children.forEach(node => {
 		switch (node.type) {
 			case 'text':
@@ -82,7 +81,8 @@ function indentChapter(segmentAst: Root, depth: number) {
 	});
 }
 
-function spliceAst(mainAst: Root, segmentAst: Root, startIndex: number, endIndex: number) {
+// eslint-disable-next-line @typescript-eslint/max-params
+function spliceAst(mainAst: Root, segmentAst: Root, startIndex: number, endIndex: number): void {
 	mainAst.children.splice(startIndex, endIndex - startIndex, ...segmentAst.children);
 }
 
@@ -103,8 +103,6 @@ function getMDText(node: Root | RootContent): string {
 }
 
 function getMDAnchor(node: Heading): string {
-	if (node.type !== 'heading') throw Error();
-
 	let text = '';
 	for (const c of node.children) {
 		switch (c.type) {

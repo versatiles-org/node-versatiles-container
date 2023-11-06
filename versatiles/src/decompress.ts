@@ -24,7 +24,7 @@ export async function decompress(buffer: Buffer, compression: Compression): Prom
 		 */
 		function handle(error: Error | null, result: Buffer): void {
 			if (error) {
-				reject(error); return; 
+				reject(error); return;
 			}
 			resolve(result);
 		}
