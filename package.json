@@ -1,4 +1,5 @@
 {
+  "name": "node-versatiles",
   "private": true,
   "workspaces": [
     "doc",
@@ -7,7 +8,13 @@
   ],
   "scripts": {
     "build": "tsc",
+    "lint": "eslint .",
     "test": "jest",
     "update_readme": "npm run -w versatiles update_readme"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1"
   }
 }

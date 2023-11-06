@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"ESNext"
+		],
+		"module": "NodeNext",
+		"target": "ES2020",
+		"strict": true,
+		"esModuleInterop": true,
+		"declaration": true
+	},
+	"include": [
+		"doc/src/**/*.ts",
+		"versatiles/src/**/*.ts",
+		"versatiles-server/src/**/*.ts"
+	]
+}

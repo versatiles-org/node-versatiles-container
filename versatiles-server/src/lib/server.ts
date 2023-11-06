@@ -1,14 +1,16 @@
-import { createServer, Server as httpServer } from 'node:http';
+import type { Server as httpServer } from 'node:http';
+import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { Compression, Format, Reader, VersaTiles } from 'versatiles';
+import type { Compression, Reader } from 'versatiles';
+import { Format, VersaTiles } from 'versatiles';
 import { generateStyle } from './style.js';
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
 
-const __dirname = (new URL('../', import.meta.url)).pathname;
+const __dirname = new URL('../', import.meta.url).pathname;
 
-const MIMETYPES: { [format: string]: string } = {
+const MIMETYPES: Record<string, string> = {
 	'bin': 'application/octet-stream',
 	'png': 'image/png',
 	'jpeg': 'image/jpeg',
@@ -19,7 +21,7 @@ const MIMETYPES: { [format: string]: string } = {
 	'geojson': 'application/geo+json',
 	'topojson': 'application/topo+json',
 	'json': 'application/json',
-}
+};
 
 export class Server {
 	options = {
@@ -30,13 +32,17 @@ export class Server {
 		tilesUrl: false,
 		port: 8080,
 	};
+
 	layer: Layer;
+
 	server?: httpServer;
-	constructor(source: string | Reader, options: any) {
+
+	constructor(source: Reader | string, options: any) {
 		Object.assign(this.options, options);
 
-		this.layer = { container: new VersaTiles(source) }
+		this.layer = { container: new VersaTiles(source) };
 	}
+
 	async #prepareLayer() {
 		let header;
 
@@ -52,35 +58,42 @@ export class Server {
 
 		return this.layer;
 	}
+
 	async start() {
 		const layer = await this.#prepareLayer();
 		const compress = this.options.compress || false;
 
 		const staticContent = await this.#buildStaticContent(layer);
 
-		let server: httpServer = createServer(async (req, res) => {
+		const server: httpServer = createServer(async(req, res) => {
 			try {
-				if (req.method !== 'GET') return respondWithError('Method not allowed', 405);
-				if (!req.url) return respondWithError('URL not found', 404);
-				const p = (new URL(req.url, 'resolve://')).pathname;
+				if (req.method !== 'GET') {
+					respondWithError('Method not allowed', 405); return; 
+				}
+				if (!req.url) {
+					respondWithError('URL not found', 404); return; 
+				}
+				const p = new URL(req.url, 'resolve://').pathname;
 
-				let response = staticContent.get(p);
+				const response = staticContent.get(p);
 				if (response) {
-					return respondWithContent(...response);
+					await respondWithContent(...response); return;
 				}
 
 				let match;
-				if (match = p.match(/^\/tiles\/(?[0-9]+)\/(?[0-9]+)\/(?[0-9]+).*/)) {
-					let [_, z, x, y] = match;
-					let tile = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
-					if (!tile) return respondWithError('tile not found: ' + p, 404);
-					return respondWithContent(tile, layer.mime, layer.compression);
+				if (match = /^\/tiles\/(?[0-9]+)\/(?[0-9]+)\/(?[0-9]+).*/.exec(p)) {
+					const [_, z, x, y] = match;
+					const tile = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
+					if (!tile) {
+						respondWithError('tile not found: ' + p, 404); return; 
+					}
+					await respondWithContent(tile, layer.mime, layer.compression); return;
 				}
 
-				return respondWithError('file not found: ' + p, 404);
+				respondWithError('file not found: ' + p, 404); return;
 
 			} catch (err) {
-				return respondWithError(err, 500);
+				respondWithError(err, 500); return;
 			}
 
 			async function respondWithContent(data: Buffer | string, mime?: string, compression?: Compression) {
@@ -139,34 +152,41 @@ export class Server {
 			}
 		});
 
-		const port = this.options.port;
+		const { port } = this.options;
 
-		await new Promise<void>(r => server.listen(port, () => r()));
+		await new Promise<void>(r => server.listen(port, () => {
+			r(); 
+		}));
 		this.server = server;
 
 		console.log(`listening on port ${port} `);
 	}
+
 	async #buildStaticContent(layer: Layer) {
 		const staticContent = new StaticContent();
 
 		await Promise.all([
-			async () => {
+			async() => {
 				const html = await readFile(resolve(__dirname, 'static/index.html'));
 				staticContent.add('/', html, 'text/html; charset=utf-8');
 				staticContent.add('/index.html', html, 'text/html; charset=utf-8');
 			},
-			async () => staticContent.add(
-				'/tiles/style.json',
-				await generateStyle(layer.container, this.options),
-				'application/json; charset=utf-8'
-			),
-			async () => staticContent.add(
-				'/tiles/tile.json',
-				await layer.container.getMetadata() || {},
-				'application/json; charset=utf-8'
-			),
-			async () => {
-				let header = await layer.container.getHeader();
+			async() => {
+				staticContent.add(
+					'/tiles/style.json',
+					await generateStyle(layer.container, this.options),
+					'application/json; charset=utf-8',
+				); 
+			},
+			async() => {
+				staticContent.add(
+					'/tiles/tile.json',
+					await layer.container.getMetadata() || {},
+					'application/json; charset=utf-8',
+				); 
+			},
+			async() => {
+				const header = await layer.container.getHeader();
 				staticContent.add('/tiles/header.json', {
 					bbox: header.bbox,
 					tileCompression: header.tileCompression,
@@ -175,8 +195,8 @@ export class Server {
 					zoomMax: header.zoomMax,
 					zoomMin: header.zoomMin,
 				}, 'application/json; charset=utf-8');
-			}
-		].map(f => f()))
+			},
+		].map(async f => f()));
 
 		staticContent.addFolder('/assets', resolve(__dirname, 'static/assets'));
 
@@ -184,8 +204,8 @@ export class Server {
 	}
 }
 
-type Layer = {
-	container: VersaTiles,
+interface Layer {
+	container: VersaTiles;
 	mime?: string;
 	compression?: Compression;
-};
+}

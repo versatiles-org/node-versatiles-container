@@ -1,5 +1,5 @@
 
-import { Heading, Root, RootContent } from 'mdast';
+import type { Heading, Root, RootContent } from 'mdast';
 import { remark } from 'remark';
 
 
@@ -27,7 +27,7 @@ export function updateTOC(main: string, heading: string): string {
 			if (text === headingText) return [];
 			const indention = '  '.repeat((c.depth - 1) * 2);
 			const anchor = getMDAnchor(c);
-			return `${indention}* [${text}](#${anchor})\n`
+			return `${indention}* [${text}](#${anchor})\n`;
 		})
 		.join('');
 	return injectMarkdown(main, toc, heading);
@@ -40,8 +40,8 @@ function findSegmentStart(mainAst: Root, sectionAst: Root): number {
 	const sectionText = getMDText(sectionAst);
 
 	const index = mainAst.children.findIndex(
-		c => (c.type === 'heading') && (c.depth === sectionDepth) && (getMDText(c) === sectionText)
-	)
+		c => (c.type === 'heading') && (c.depth === sectionDepth) && (getMDText(c) === sectionText),
+	);
 
 	if (index < 0) throw Error('section not found');
 
@@ -79,14 +79,14 @@ function indentChapter(segmentAst: Root, depth: number) {
 				console.log(node);
 				throw Error('unknown type: ' + node.type);
 		}
-	})
+	});
 }
 
 function spliceAst(mainAst: Root, segmentAst: Root, startIndex: number, endIndex: number) {
 	mainAst.children.splice(startIndex, endIndex - startIndex, ...segmentAst.children);
 }
 
-function getMDText(node: RootContent | Root): string {
+function getMDText(node: Root | RootContent): string {
 	switch (node.type) {
 		case 'inlineCode':
 		case 'text':
@@ -109,7 +109,7 @@ function getMDAnchor(node: Heading): string {
 	for (const c of node.children) {
 		switch (c.type) {
 			case 'html':
-				const match = c.value.match(/<a\s.*id\s*=\s*['"]([^'"]+)/i);
+				const match = /<a\s.*id\s*=\s*['"]([^'"]+)/i.exec(c.value);
 				if (match) return match[1];
 				break;
 			case 'text':

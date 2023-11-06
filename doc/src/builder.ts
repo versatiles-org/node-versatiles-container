@@ -1,13 +1,15 @@
-import {
-	Application,
+import type {
 	Comment,
 	DeclarationReflection,
 	ParameterReflection,
 	ProjectReflection,
 	Reflection,
-	ReflectionKind,
 	SignatureReflection,
-	SomeType
+	SomeType,
+} from 'typedoc';
+import {
+	Application,
+	ReflectionKind,
 } from 'typedoc';
 
 const NEW_LINE = '\n';
@@ -54,7 +56,7 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 
 		switch (group.title) {
 			case 'Constructors':
-				if (publicMembers.length !== 1) throw Error()
+				if (publicMembers.length !== 1) throw Error();
 				yield* renderMethod(publicMembers[0], true);
 				continue;
 			case 'Properties':
@@ -86,7 +88,7 @@ function resolveTypeName(kind: ReflectionKind): string {
 	}
 }
 
-function* renderMethod(declaration: DeclarationReflection, isConstructor: boolean = false): Generator<string> {
+function* renderMethod(declaration: DeclarationReflection, isConstructor = false): Generator<string> {
 	const signature = declaration.signatures?.[0];
 
 	if (!signature) throw new Error('Method signature not found');
@@ -95,7 +97,7 @@ function* renderMethod(declaration: DeclarationReflection, isConstructor: boolea
 	if (isConstructor) heading += 'constructor: ';
 	let functionName = signature.name;
 	let returnType = signature.type;
-	if ((returnType?.type === 'reference') && (returnType?.name === 'Promise')) {
+	if ((returnType?.type === 'reference') && (returnType.name === 'Promise')) {
 		// is an async function
 		if (!returnType.typeArguments) throw Error();
 		returnType = returnType.typeArguments[0];
@@ -140,7 +142,7 @@ function extractSummary(comment: Comment | undefined): string | undefined {
 
 function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield '';
-	let comment: Comment = ref.comment || (ref.type as any)?.declaration?.signatures[0]?.comment;
+	const comment: Comment = ref.comment || (ref.type as any)?.declaration?.signatures[0]?.comment;
 	if (!comment) {
 		yield generateSourceLink(ref);
 		return;
@@ -177,11 +179,11 @@ function resolveType(someType: SomeType): string {
 				if (someType.declaration.signatures.length !== 1) throw Error();
 				const signature = someType.declaration.signatures[0];
 				const type = signature.type ? getTypeRec(signature.type) : 'void';
-				let parameters = (signature.parameters || [])
+				const parameters = (signature.parameters || [])
 					.map(p => {
-						let type = p.type ? '`: `' + getTypeRec(p.type) : '';
-						return `\`${p.name}\`${type}`
-					}).join('`, `')
+						const type = p.type ? '`: `' + getTypeRec(p.type) : '';
+						return `\`${p.name}\`${type}`;
+					}).join('`, `');
 				return `\`(\`${parameters}\`) => \`${type}`;
 			case 'tuple':
 				return `\`[\`${someType.elements.map(getTypeRec).join('`, `')}\`]\``;
@@ -189,7 +191,7 @@ function resolveType(someType: SomeType): string {
 				return someType.types.map(getTypeRec).join('\` | \`');
 			default:
 				console.log(someType);
-				throw Error()
+				throw Error();
 		}
 	}
 }

@@ -1,5 +1,5 @@
 import zlib from 'zlib';
-import { Compression } from './interfaces.js';
+import type { Compression } from './interfaces.js';
 
 /**
  * Decompresses a buffer using the specified compression algorithm.
@@ -8,7 +8,7 @@ import { Compression } from './interfaces.js';
  * @param {Compression} compression - The compression algorithm to use ('br' for Brotli, 'gzip' for GZIP).
  * @returns {Promise<Buffer>} A promise that resolves with the decompressed buffer.
  */
-export function decompress(buffer: Buffer, compression: Compression): Promise<Buffer> {
+export async function decompress(buffer: Buffer, compression: Compression): Promise<Buffer> {
 	return new Promise((resolve, reject) => {
 		switch (compression) {
 			case 'br': zlib.brotliDecompress(buffer, handle); break;
@@ -23,7 +23,9 @@ export function decompress(buffer: Buffer, compression: Compression): Promise<Bu
 		 * @param {Buffer} result - The decompressed buffer.
 		 */
 		function handle(error: Error | null, result: Buffer): void {
-			if (error) return reject(error);
+			if (error) {
+				reject(error); return; 
+			}
 			resolve(result);
 		}
 	});

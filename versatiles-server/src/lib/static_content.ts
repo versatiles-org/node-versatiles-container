@@ -1,20 +1,23 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { Compression } from 'versatiles';
+import type { Compression } from 'versatiles';
 
 export class StaticContent {
 	map: Map<string, StaticResponse>;
+
 	constructor() {
 		this.map = new Map();
 	}
+
 	get(path: string): StaticResponse | undefined {
-		return this.map.get(path)
+		return this.map.get(path);
 	}
-	add(path: string, content: Buffer | string | object, mime: string, compression: Compression = null): void {
+
+	add(path: string, content: Buffer | object | string, mime: string, compression: Compression = null): void {
 		let buffer: Buffer;
 		if (Buffer.isBuffer(content)) {
-			buffer = content
+			buffer = content;
 		} else if (typeof content === 'string') {
 			buffer = Buffer.from(content);
 		} else {
@@ -23,6 +26,7 @@ export class StaticContent {
 		if (this.map.has(path)) throw Error();
 		this.map.set(path, [buffer, mime, compression]);
 	}
+
 	addFolder(url: string, dir: string): void {
 		if (!existsSync(dir)) return;
 
@@ -30,14 +34,14 @@ export class StaticContent {
 			readdirSync(dir).forEach(name => {
 				if (name.startsWith('.')) return;
 
-				let subDir = path.resolve(dir, name);
-				let subUrl = urlResolve(url, name);
+				const subDir = path.resolve(dir, name);
+				const subUrl = urlResolve(url, name);
 
 				if (statSync(subDir).isDirectory()) {
-					rec(subUrl, subDir)
+					rec(subUrl, subDir);
 				} else {
 					let mime = 'application/octet-stream';
-					let ext = path.extname(subDir);
+					const ext = path.extname(subDir);
 
 					switch (ext.toLowerCase()) {
 						case '.avif': mime = 'image/avif'; break;
@@ -61,13 +65,13 @@ export class StaticContent {
 
 					this.add(subUrl, readFileSync(subDir), mime);
 				}
-			})
-		}
+			});
+		};
 		rec(url, dir);
 
 		function urlResolve(from: string, to: string): string {
 			if (!from.endsWith('/')) from += '/';
-			let resolvedUrl = new URL(to, new URL(from, 'resolve://'));
+			const resolvedUrl = new URL(to, new URL(from, 'resolve://'));
 			return resolvedUrl.pathname;
 		}
 	}

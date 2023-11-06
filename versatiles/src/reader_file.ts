@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Reader } from './interfaces.js';
+import type { Reader } from './interfaces.js';
 
 /**
  * Creates a file reader function for reading chunks of data from a file.
@@ -25,9 +25,11 @@ export default function getFileReader(filename: string): Reader {
 				offset: 0,
 				length,
 			}, (err, _, buf) => {
-				if (err) return reject(err);
+				if (err) {
+					reject(err); return; 
+				}
 				resolve(buf);
 			});
 		});
-	}
+	};
 }
