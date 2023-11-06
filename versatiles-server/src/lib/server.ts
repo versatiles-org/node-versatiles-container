@@ -1,6 +1,6 @@
 import type { Server as httpServer } from 'node:http';
 import { createServer } from 'node:http';
-import { resolve } from 'node:path';
+import { resolve as resolvePath } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import type { Compression, Reader } from 'versatiles';
 import { VersaTiles } from 'versatiles';
@@ -155,6 +155,16 @@ export class Server {
 		console.log(`listening on port ${port} `);
 	}
 
+	public async stop(): Promise<void> {
+		if (this.server === undefined) return;
+		await new Promise<void>((resolve, reject) => {
+			this.server?.close(err => {
+				if (err) reject(err);
+				else resolve();
+			});
+		});
+		this.server = undefined;
+	}
 
 	async #prepareLayer(): Promise<Layer> {
 		// eslint-disable-next-line @typescript-eslint/init-declarations
@@ -178,7 +188,7 @@ export class Server {
 
 		await Promise.all([
 			async (): Promise<void> => {
-				const html = await readFile(resolve(DIRNAME, 'static/index.html'));
+				const html = await readFile(resolvePath(DIRNAME, 'static/index.html'));
 				staticContent.add('/', html, 'text/html; charset=utf-8');
 				staticContent.add('/index.html', html, 'text/html; charset=utf-8');
 			},
@@ -209,7 +219,7 @@ export class Server {
 			},
 		].map(async f => f()));
 
-		staticContent.addFolder('/assets', resolve(DIRNAME, 'static/assets'));
+		staticContent.addFolder('/assets', resolvePath(DIRNAME, 'static/assets'));
 
 		return staticContent;
 	}
