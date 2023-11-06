@@ -3,6 +3,9 @@ import eslint_plugin from '@typescript-eslint/eslint-plugin';
 
 export default [
 	{
+		ignores: ['**/dist/**/*.js']
+	},
+	{
 		files: [
 			'tsdoc2readme/src/**/*.ts',
 			'versatiles/src/**/*.ts',
