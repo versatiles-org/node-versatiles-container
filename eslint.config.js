@@ -7,9 +7,9 @@ export default [
 	},
 	{
 		files: [
-			'doc/**/*.ts',
-			'versatiles/**/*.ts',
-			'versatiles-server/**/*.ts',
+			'tsdoc2md/src/**/*.ts',
+			'versatiles/src/**/*.ts',
+			'versatiles-server/src/**/*.ts',
 		],
 		languageOptions: {
 			ecmaVersion: 'latest',

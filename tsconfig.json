@@ -10,7 +10,7 @@
 		"declaration": true
 	},
 	"include": [
-		"doc/src/**/*.ts",
+		"tsdoc2md/src/**/*.ts",
 		"versatiles/src/**/*.ts",
 		"versatiles-server/src/**/*.ts"
 	]
