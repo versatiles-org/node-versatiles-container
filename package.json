@@ -7,7 +7,7 @@
     "versatiles-server"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run -ws build",
     "lint": "eslint .",
     "test": "jest",
     "update_readme": "npm run -w versatiles update_readme"
