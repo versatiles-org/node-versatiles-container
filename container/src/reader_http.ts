@@ -6,17 +6,19 @@ import type { Reader } from './interfaces.js';
 const DEFAULT_TIMEOUT = 10000;
 
 /**
- * Describes the client and agent info for each supported protocol.
- * @interface ClientInfo
+ * Defines the structure for client and agent information specific to HTTP and HTTPS protocols.
  */
 interface ClientInfo {
+
+	/** HTTP or HTTPS client module. */
 	client: typeof http | typeof https;
+
+	/** Connection agent with the keep-alive setting for persistent connections. */
 	agent: Agent;
 }
 
 /**
- * Clients for http and https protocols.
- * @const clients
+ * A collection mapping protocol names to their respective `ClientInfo`.
  */
 const clients: Record<string, ClientInfo> = {
 	https: { client: https, agent: new https.Agent({ keepAlive: true }) },
@@ -24,18 +26,25 @@ const clients: Record<string, ClientInfo> = {
 };
 
 /**
- * Returns an HTTP Reader function for reading chunks of data from a given URL.
- * 
- * @param {string} url - The URL to read data from.
- * @returns {Reader} A reader function for reading chunks of data.
+ * Creates a function capable of reading data from a specified URL, which can be used
+ * to read data chunks in an HTTP GET request. This is particularly useful for
+ * operations such as streaming or handling large data in segments.
+ *
+ * @param url - The URL from which data will be read.
+ * @returns A `Reader` function that asynchronously reads a specified chunk of data from the URL.
  */
 export default function getHTTPReader(url: string): Reader {
-	return async function read(position: number, length: number): Promise<Buffer> {
 
-		/**
-		 * Headers to be used in the request.
-		 * @type {Object}
-		 */
+	/**
+	 * Asynchronously reads a data chunk from the provided URL based on the specified range.
+	 *
+	 * @param position - The starting byte position of the data chunk to read.
+	 * @param length - The number of bytes to read from the starting position.
+	 * @returns A promise that resolves with a `Buffer` containing the data chunk.
+	 *          If the request fails or the server responds with a non-successful status code,
+	 *          the promise is rejected with an error.
+	 */
+	return async function read(position: number, length: number): Promise<Buffer> {
 		const headers = {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'user-agent': 'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
@@ -43,7 +52,9 @@ export default function getHTTPReader(url: string): Reader {
 		};
 
 		const protocol = new URL(url).protocol.slice(0, -1);
-		if (!(protocol in clients)) throw new Error('Unknown Protocol');
+		if (!(protocol in clients)) {
+			throw new Error(`Unsupported protocol: ${protocol}`);
+		}
 
 		/**
 		 * Performs the HTTP request and retrieves the response.
@@ -51,7 +62,7 @@ export default function getHTTPReader(url: string): Reader {
 		 */
 		const message: IncomingMessage = await new Promise((resolve, reject) => {
 			const watchdog = setTimeout(() => {
-				reject('Timeout');
+				reject(new Error('Request timed out'));
 			}, DEFAULT_TIMEOUT);
 
 			clients[protocol].client
@@ -74,7 +85,7 @@ export default function getHTTPReader(url: string): Reader {
 
 		if ((message.statusCode == null) || Math.floor(message.statusCode / 100) !== 2) {
 			message.destroy();
-			throw new Error(`Response Status Code: ${message.statusCode}`);
+			throw new Error(`Server responded with status code: ${message.statusCode}`);
 		}
 
 		/**

@@ -79,8 +79,6 @@ export default [
 			'@typescript-eslint/explicit-module-boundary-types': 'error',
 			'func-call-spacing': 'off',
 			'@typescript-eslint/func-call-spacing': 'error',
-			'init-declarations': 'off',
-			'@typescript-eslint/init-declarations': 'error',
 			'key-spacing': 'off',
 			'@typescript-eslint/key-spacing': 'error',
 			'keyword-spacing': 'off',
@@ -243,6 +241,9 @@ export default [
 
 			'class-methods-use-this': 'off',
 			'@typescript-eslint/class-methods-use-this': 'off',
+
+			'init-declarations': 'off',
+			'@typescript-eslint/init-declarations': 'off',
 		}
 	}
 ]
