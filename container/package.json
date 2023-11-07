@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "A client library for VersaTiles",
   "scripts": {
+    "check": "npm run lint && npm run build && npm run test",
     "build": "tsc",
-    "doc": "npm run -w tsdoc2readme update_readme versatiles/src/index.ts '# API'",
+    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
     "lint": "eslint .",
     "test": "jest"
   },

@@ -57,6 +57,4 @@ describe('getHTTPReader', () => {
 
 		expect(buffer.toString()).toEqual(expectedContent);
 	});
-
-	// Additional tests to cover edge cases, error handling, etc., can be added here
 });

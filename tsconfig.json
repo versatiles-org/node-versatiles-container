@@ -7,7 +7,9 @@
 		"target": "ES2022",
 		"strict": true,
 		"esModuleInterop": true,
-		"declaration": true
+		"skipLibCheck": true,
+		"declaration": true,
+		"allowJs": true,
 	},
 	"include": [
 		"tsdoc2readme/src/**/*.ts",
