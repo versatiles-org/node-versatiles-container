@@ -21,7 +21,8 @@ const COMPRESSIONS: Compression[] = [null, 'gzip', 'br'];
 
 
 /**
- * VersaTiles class is a wrapper around a `*.versatiles` container that allows to access all tiles, metadata and other properties.
+ * The `VersaTiles` class is a wrapper around a `.versatiles` container file. It provides methods
+ * to access tile data, metadata, and other properties within the container.
  */
 export class VersaTiles {
 	readonly #options: Options = {
@@ -39,10 +40,12 @@ export class VersaTiles {
 	#blockIndex?: Map<string, Block>;
 
 	/**
-	 * Creates a new VersaTiles instance.
-	 * @param {string|Reader} source - The data source, usually a `*.versatiles` container. Can be either a local filename, an URL, or a [Reader](#type_Reader) function.
-	 * @param {Options=} [options] - Additional options.
-	 * @throws {Error} Throws an error if the source type is invalid.
+	 * Constructs a new instance of the VersaTiles class.
+	 * 
+	 * @param source - The data source for the tiles. This can be a URL starting with `http://` or `https://`,
+	 * a path to a local file, or a custom `Reader` function that reads data chunks based on offset and length.
+	 * @param options - Optional settings that configure tile handling.
+	 * @throws Will throw an error if the provided source is neither a string nor a Reader function.
 	 */
 	public constructor(source: Reader | string, options?: Options) {
 		if (options) Object.assign(this.#options, options);
@@ -63,11 +66,11 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Gets the header information of this container.
-	 * This is used internally.
-	 * @async
-	 * @returns {Promise<Header>} The header object.
-	 * @throws {Error} Throws an error if the container is invalid.
+	 * Asynchronously retrieves the header information from the `.versatiles` container.
+	 * This method is primarily for internal use.
+	 * 
+	 * @returns A promise that resolves with the header object.
+	 * @throws Will throw an error if the container does not start with expected magic bytes indicating a valid format.
 	 */
 	public async getHeader(): Promise<Header> {
 		// deliver if known
@@ -121,11 +124,11 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Gets the metadata describing the tiles.
-	 * For vector tiles metadata is usually a Buffer containing a JSON, describing `vector_layers`.
-	 * If there is no metadata in the container, this function returns `null`.
-	 * @async
-	 * @returns {Promise<object | null>} The metadata object, or null.
+	 * Asynchronously retrieves the metadata associated with the `.versatiles` container.
+	 * Metadata typically includes information about `vector_layers` for vector tiles.
+	 * If the container does not include metadata, this method returns `null`.
+	 * 
+	 * @returns A promise that resolves with an object representing the metadata, or null if no metadata is present.
 	 */
 	public async getMetadata(): Promise<object | null> {
 		if (this.#metadata !== undefined) return this.#metadata;
@@ -143,9 +146,9 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Gets the format of the tiles, like "png" or "pbf"
-	 * @async
-	 * @returns {Promise<Format>} The tile format.
+	 * Asynchronously determines the tile format, such as "png" or "pbf", based on the header information.
+	 * 
+	 * @returns A promise that resolves with the tile format string, or null if the format is undefined.
 	 */
 	public async getTileFormat(): Promise<Format | null> {
 		return (await this.getHeader()).tileFormat;
@@ -153,12 +156,11 @@ export class VersaTiles {
 
 
 	/**
-	 * Gets the block index.
-	 * This is used internally to keep a lookup of every tile block in the container.
-	 * The keys of this `map` have the form "{z},{x},{y}".
-	 * @async
+	 * Asynchronously retrieves a mapping of tile block indices. The map's keys are formatted as "{z},{x},{y}".
+	 * This method is for internal use to manage tile lookup within the container.
+	 * 
+	 * @returns A promise that resolves with the block index map.
 	 * @internal
-	 * @returns {Promise<Map<string, Block>>} The block index map.
 	 */
 	public async getBlockIndex(): Promise<Map<string, Block>> {
 		if (this.#blockIndex) return this.#blockIndex;
@@ -232,12 +234,12 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Gets the tile index for given block.
-	 * This is used internally to keep a lookup of every tile in the block.
-	 * @async
+	 * Asynchronously retrieves the tile index for a specified block. This is an internal method used to 
+	 * maintain a lookup for every tile within a block.
+	 * 
+	 * @param block - The block for which to retrieve the tile index.
+	 * @returns A promise that resolves with the tile index.
 	 * @internal
-	 * @param {Block} block - The block to get the tile index for.
-	 * @returns {Promise<TileIndex>} The tile index buffer.
 	 */
 	public async getTileIndex(block: Block): Promise<TileIndex> {
 		if (block.tileIndex) return block.tileIndex;
@@ -259,14 +261,15 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Returns a tile as Buffer.
-	 * If the container header has defined a tile_compression, the returned Buffer contains compressed tile data. Use the method `getTileUncompressed` to get uncompressed tile data.
-	 * If the tile cannot be found, `null` is returned.
-	 * @async
-	 * @param {number} z - Zoom level.
-	 * @param {number} x - X coordinate.
-	 * @param {number} y - Y coordinate.
-	 * @returns {Promise<Buffer|null>} The tile data.
+	 * Asynchronously retrieves a specific tile's data as a Buffer. If the tile data is compressed as
+	 * defined in the container header, the returned Buffer will contain the compressed data.
+	 * To obtain uncompressed data, use the `getTileUncompressed` method.
+	 * If the specified tile does not exist, the method returns `null`.
+	 * 
+	 * @param z - The zoom level of the tile.
+	 * @param x - The x coordinate of the tile within its zoom level.
+	 * @param y - The y coordinate of the tile within its zoom level.
+	 * @returns A promise that resolves with the tile data as a Buffer, or null if the tile cannot be found.
 	 */
 	public async getTile(z: number, x: number, y: number): Promise<Buffer | null> {
 		// when y index is inverted
@@ -306,14 +309,15 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Returns an uncompressed tile as Buffer.
-	 * Use the method `getTile` to get pre-compressed tile data.
-	 * If the tile cannot be found, `null` is returned.
-	 * @async
-	 * @param {number} z - Zoom level.
-	 * @param {number} x - X coordinate.
-	 * @param {number} y - Y coordinate.
-	 * @returns {Promise<Buffer|null>} The uncompressed tile data.
+	 * Asynchronously retrieves a specific tile's uncompressed data as a Buffer. This method first
+	 * retrieves the compressed tile data using `getTile` and then decompresses it based on the
+	 * compression setting in the container header.
+	 * If the specified tile does not exist, the method returns `null`.
+	 * 
+	 * @param z - The zoom level of the tile.
+	 * @param x - The x coordinate of the tile within its zoom level.
+	 * @param y - The y coordinate of the tile within its zoom level.
+	 * @returns A promise that resolves with the uncompressed tile data as a Buffer, or null if the tile cannot be found.
 	 */
 	public async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer | null> {
 		const tile = await this.getTile(z, x, y);
@@ -322,6 +326,14 @@ export class VersaTiles {
 		return this.#decompress(tile, header.tileCompression);
 	}
 
+	/**
+	 * A private method to read a chunk of data from the source based on the specified offset and length.
+	 * 
+	 * @param offset - The offset from the start of the source data to begin reading.
+	 * @param length - The number of bytes to read from the source.
+	 * @returns A promise that resolves with the read data as a Buffer.
+	 * @private
+	 */
 	async #read(offset: number, length: number): Promise<Buffer> {
 		if (length === 0) return Buffer.allocUnsafe(0);
 		return this.#reader(offset, length);
