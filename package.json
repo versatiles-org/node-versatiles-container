@@ -3,13 +3,12 @@
   "private": true,
   "workspaces": [
     "tsdoc2readme",
-    "versatiles",
-    "versatiles-server"
+    "container",
+    "server"
   ],
   "scripts": {
     "build": "npm run -ws build",
     "lint": "eslint .",
-    "test": "jest",
     "update_readme": "npm run -w versatiles update_readme"
   },
   "type": "module",

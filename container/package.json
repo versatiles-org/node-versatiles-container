@@ -1,5 +1,5 @@
 {
-  "name": "versatiles",
+  "name": "@versatiles/container",
   "version": "1.0.0",
   "description": "A client library for VersaTiles",
   "scripts": {
@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
   "engines": {
     "node": ">= 18"
@@ -34,7 +34,7 @@
     "versatiles"
   ],
   "devDependencies": {
-    "@types/node": "^20.8.7",
+    "@types/node": "^20.8.10",
     "jest": "^29.7.0",
     "typescript": "^5.2.2"
   }

@@ -142,15 +142,18 @@ function extractSummary(comment: Comment | undefined): string | undefined {
 
 function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield '';
+
 	// eslint-disable-next-line @typescript-eslint/init-declarations
 	let comment: Comment | undefined;
 	if (ref.comment) {
 		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
 		comment = ref.comment;
 	} else {
-		// @ts-expect-error: lets try
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		comment = ref.type?.declaration?.signatures?.[0]?.comment as Comment | undefined;
+		if (ref.type) {
+			// @ts-expect-error I dont think I can handle this
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			comment = ref.type.declaration?.signatures?.[0]?.comment as Comment | undefined;
+		}
 	}
 
 	if (!comment) {

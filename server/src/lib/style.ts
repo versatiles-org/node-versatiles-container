@@ -1,8 +1,8 @@
 
-import type { VersaTiles } from 'versatiles';
+import type { VersaTiles } from '../../../container/dist/index.js';
 import { Colorful } from 'versatiles-styles';
 
-const SHORTBREAD_LAYERS = [
+export const SHORTBREAD_LAYERS = [
 	'place_labels',
 	'addresses',
 	'aerialways',
@@ -75,14 +75,14 @@ export async function generateStyle(container: VersaTiles, options: Record<strin
 	}
 }
 
-function resolveUrl(...paths: string[]): string {
+export function resolveUrl(...paths: string[]): string {
 	paths = paths.map(path => path.replace(/[\{\}]/g, c => '%' + c.charCodeAt(0).toString(16)));
 	let baseUrl = new URL(paths.shift() ?? '');
 	paths.forEach(path => baseUrl = new URL(path, baseUrl));
 	return baseUrl.href.replace(/\%7b/g, '{').replace(/\%7d/g, '}');
 }
 
-function isShortbread(meta: Buffer | object | string | null): boolean {
+export function isShortbread(meta: Buffer | object | string | null): boolean {
 	if (meta == null) return false;
 
 	try {

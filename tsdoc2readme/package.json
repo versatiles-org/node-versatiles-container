@@ -6,7 +6,9 @@
     "test": "jest",
     "update_readme": "npx tsx src/index.ts"
   },
-  "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
   "type": "module",
   "devDependencies": {

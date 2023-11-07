@@ -1,7 +1,7 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
-import type { Compression } from 'versatiles';
+import type { Compression } from '../../../container/dist/index.js';
 
 export class StaticContent {
 	readonly #map: Map<string, StaticResponse>;

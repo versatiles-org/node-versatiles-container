@@ -1,8 +1,9 @@
 {
-  "name": "versatiles-server",
+  "name": "@versatiles/server",
   "version": "1.0.0",
   "description": "A server for VersaTiles",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "versatiles-server": "node index.js"
   },
@@ -12,7 +13,7 @@
     "test": "jest"
   },
   "type": "module",
-  "author": "yetzt <node@yetzt.me>, Michael Kreil <github@michael-kreil.de>",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
   "engines": {
     "node": ">= 18"
@@ -36,14 +37,18 @@
     "versatiles"
   ],
   "devDependencies": {
+    "@types/jest": "^29.5.7",
     "@types/node": "^20.8.7",
     "jest": "^29.7.0",
+    "jest-ts-webcompat-resolver": "^1.0.0",
     "tar-stream": "^3.1.6",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
     "commander": "^11.1.0",
     "versatiles": "^1.0.0",
-    "versatiles-styles": "^3.3.3"
+    "@versatiles/style": "^3.4.0"
   }
 }
