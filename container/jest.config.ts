@@ -7,7 +7,7 @@ const config: Config = {
 	},
 	testRegex: 'src/.*\\.test\\.ts',
 	extensionsToTreatAsEsm: ['.ts'],
-	collectCoverage: true,
+	//collectCoverage: true,
 	resolver: 'jest-ts-webcompat-resolver',
 }
 

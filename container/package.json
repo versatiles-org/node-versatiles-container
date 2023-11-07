@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "doc": "npm run -w tsdoc2readme update_readme versatiles/src/index.ts '# API'",
+    "lint": "eslint .",
     "test": "jest"
   },
   "main": "dist/index.js",
