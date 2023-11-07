@@ -10,9 +10,9 @@
   "license": "Unlicense",
   "type": "module",
   "devDependencies": {
-    "@types/node": "^20.8.7",
+    "@types/node": "^20.9.0",
     "remark": "^15.0.1",
-    "typedoc": "^0.25.2",
+    "typedoc": "^0.25.3",
     "typescript": "^5.2.2"
   }
 }
