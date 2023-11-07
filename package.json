@@ -7,8 +7,9 @@
     "server"
   ],
   "scripts": {
-    "build": "npm run -ws build",
-    "lint": "eslint .",
+    "build": "npm run -ws build --if-present",
+    "lint": "npm run -ws lint --if-present",
+    "test": "npm run -ws test --if-present",
     "update_readme": "npm run -w versatiles update_readme"
   },
   "type": "module",

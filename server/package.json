@@ -8,9 +8,7 @@
     "versatiles-server": "node index.js"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "node index.js",
-    "test": "jest"
+    "start": "node index.js"
   },
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",

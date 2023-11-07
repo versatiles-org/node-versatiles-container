@@ -1,14 +1,23 @@
 {
   "name": "@versatiles/container",
   "version": "1.0.0",
-  "description": "A client library for VersaTiles",
+  "description": "A client library for reading VersaTiles containers",
   "scripts": {
     "check": "npm run lint && npm run build && npm run test",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
     "lint": "eslint .",
     "test": "jest"
   },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/versatiles-org/node-versatiles.git"
+  },
+  "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/container/README.md",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",

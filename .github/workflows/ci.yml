@@ -33,11 +33,14 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Check vulnerabilities
+        run: npm audit
+
       - name: Lint
         run: npm run lint
 
-      - name: Check vulnerabilities
-        run: npm audit
+      - name: Run tests
+        run: npm run test
 
 #      - name: Run tests
 #        run: npm run test-node

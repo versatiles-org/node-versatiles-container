@@ -2,8 +2,6 @@
   "private": true,
   "name": "tsdoc2readme",
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
     "update_readme": "npx tsx src/index.ts"
   },
   "main": "dist/index.js",
