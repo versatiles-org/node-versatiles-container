@@ -1,5 +1,3 @@
-// decompress.test.ts
-
 import { decompress } from './decompress.js'; // Adjust the import path to where your module is
 import { brotliCompressSync, gzipSync } from 'zlib';
 
