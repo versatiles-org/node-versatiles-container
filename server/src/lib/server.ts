@@ -8,7 +8,7 @@ import { StaticContent } from './static_content.js';
 import type { Compression, Reader } from '@versatiles/container';
 import { VersaTiles } from '@versatiles/container';
 
-const DIRNAME = new URL('../', import.meta.url).pathname;
+const DIRNAME = new URL('../../', import.meta.url).pathname;
 
 const MIMETYPES: Record<string, string> = {
 	'bin': 'application/octet-stream',
@@ -152,7 +152,7 @@ export class Server {
 			r();
 		}));
 
-		console.log(`listening on port ${port} `);
+		console.log(`listening on port ${port}`);
 	}
 
 	public async stop(): Promise<void> {
