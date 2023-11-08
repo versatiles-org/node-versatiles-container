@@ -2,11 +2,11 @@ import type { Server as httpServer } from 'node:http';
 import { createServer } from 'node:http';
 import { resolve as resolvePath } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import type { Compression, Reader } from '../../../container/dist/index.js';
-import { VersaTiles } from '../../../container/dist/index.js';
 import { generateStyle } from './style.js';
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
+import type { Compression, Reader } from '@versatiles/container';
+import { VersaTiles } from '@versatiles/container';
 
 const DIRNAME = new URL('../', import.meta.url).pathname;
 
@@ -70,7 +70,7 @@ export class Server {
 						await respondWithContent(...response); return;
 					}
 
-					const match = /^\/tiles\/(?[0-9]+)\/(?[0-9]+)\/(?[0-9]+).*/.exec(p);
+					const match = /^\/tiles\/([0-9]+)\/([0-9]+)\/([0-9]+).*/.exec(p);
 					if (match) {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const [_, z, x, y] = match;
@@ -167,7 +167,6 @@ export class Server {
 	}
 
 	async #prepareLayer(): Promise<Layer> {
-		// eslint-disable-next-line @typescript-eslint/init-declarations
 		let header;
 
 		if (this.layer.mime == null) {

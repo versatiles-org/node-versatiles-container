@@ -5,10 +5,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "versatiles-server": "node index.js"
+    "versatiles-server": "node dist/index.js"
   },
   "scripts": {
-    "start": "node index.js"
+    "check": "npm run lint && npm run build && npm run test",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
+    "lint": "eslint .",
+    "start": "tsx src/index.ts",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
@@ -42,11 +48,12 @@
     "tar-stream": "^3.1.6",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
+    "tsx": "^3.14.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "commander": "^11.1.0",
-    "@versatiles/server": "^1.0.0",
-    "@versatiles/style": "^3.4.1"
+    "@versatiles/container": "^1.0.0",
+    "@versatiles/style": "^3.4.1",
+    "commander": "^11.1.0"
   }
 }

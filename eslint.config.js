@@ -8,8 +8,6 @@ export default [
 	{
 		files: [
 			'**/src/**/*.ts',
-			'**/src/**/*.ts',
-			'**/src/**/*.ts',
 		],
 		languageOptions: {
 			ecmaVersion: 'latest',

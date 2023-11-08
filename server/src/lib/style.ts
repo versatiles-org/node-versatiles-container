@@ -1,6 +1,6 @@
 
-import type { VersaTiles } from '../../../container/dist/index.js';
-import { Colorful } from 'versatiles-styles';
+import type { VersaTiles } from '@versatiles/container';
+import { Colorful } from '@versatiles/style';
 
 export const SHORTBREAD_LAYERS = [
 	'place_labels',

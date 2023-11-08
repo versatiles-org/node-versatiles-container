@@ -1,7 +1,7 @@
 
+import type { Compression } from '@versatiles/container';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
-import type { Compression } from '../../../container/dist/index.js';
 
 export class StaticContent {
 	readonly #map: Map<string, StaticResponse>;
@@ -16,7 +16,6 @@ export class StaticContent {
 
 	// eslint-disable-next-line @typescript-eslint/max-params
 	public add(path: string, content: Buffer | object | string, mime: string, compression: Compression = null): void {
-		// eslint-disable-next-line @typescript-eslint/init-declarations
 		let buffer: Buffer;
 		if (Buffer.isBuffer(content)) {
 			buffer = content;
