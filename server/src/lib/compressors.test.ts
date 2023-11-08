@@ -1,4 +1,3 @@
-// compression.test.ts
 import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 
 describe('Compression Module', () => {

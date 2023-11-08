@@ -4,6 +4,7 @@
 			"ESNext"
 		],
 		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
 		"target": "ES2022",
 		"strict": true,
 		"esModuleInterop": true,
@@ -12,8 +13,6 @@
 		"allowJs": true,
 	},
 	"include": [
-		"tsdoc2readme/src/**/*.ts",
-		"versatiles/src/**/*.ts",
-		"versatiles-server/src/**/*.ts"
+		"**/src/**/*.ts",
 	]
 }

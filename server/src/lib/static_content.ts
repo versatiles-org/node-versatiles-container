@@ -3,6 +3,24 @@ import type { Compression } from '@versatiles/container';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 
+const mimeTypes = new Map([
+	['.avif', 'image/avif'],
+	['.bin', 'application/octet-stream'],
+	['.css', 'text/css'],
+	['.geojson', 'application/geo+json'],
+	['.htm', 'text/html'],
+	['.html', 'text/html'],
+	['.jpeg', 'image/jpeg'],
+	['.jpg', 'image/jpeg'],
+	['.js', 'text/javascript'],
+	['.json', 'application/json'],
+	['.pbf', 'application/x-protobuf'],
+	['.png', 'image/png'],
+	['.svg', 'image/svg+xml'],
+	['.topojson', 'application/topo+json'],
+	['.webp', 'image/webp'],
+]);
+
 export class StaticContent {
 	readonly #map: Map<string, StaticResponse>;
 
@@ -40,30 +58,14 @@ export class StaticContent {
 			if (statSync(subDir).isDirectory()) {
 				this.addFolder(subUrl, subDir);
 			} else {
-				let mime = 'application/octet-stream';
 				const ext = extname(subDir);
+				const mime = mimeTypes.get(ext.toLowerCase());
 
-				switch (ext.toLowerCase()) {
-					case '.avif': mime = 'image/avif'; break;
-					case '.bin': mime = 'application/octet-stream'; break;
-					case '.css': mime = 'text/css'; break;
-					case '.geojson': mime = 'application/geo+json'; break;
-					case '.htm': mime = 'text/html'; break;
-					case '.html': mime = 'text/html'; break;
-					case '.jpeg': mime = 'image/jpeg'; break;
-					case '.jpg': mime = 'image/jpeg'; break;
-					case '.js': mime = 'text/javascript'; break;
-					case '.json': mime = 'application/json'; break;
-					case '.pbf': mime = 'application/x-protobuf'; break;
-					case '.png': mime = 'image/png'; break;
-					case '.svg': mime = 'image/svg+xml'; break;
-					case '.topojson': mime = 'application/topo+json'; break;
-					case '.webp': mime = 'image/webp'; break;
-					default:
-						console.warn('unknown file extension: ' + ext);
+				if (mime == null) {
+					console.warn('unknown file extension: ' + ext);
 				}
 
-				this.add(subUrl, readFileSync(subDir), mime);
+				this.add(subUrl, readFileSync(subDir), mime ?? 'application/octet-stream');
 			}
 		});
 
@@ -74,6 +76,9 @@ export class StaticContent {
 		}
 	}
 
+	public getContentList(): Map<string, StaticResponse> {
+		return this.#map;
+	}
 }
 
 type StaticResponse = [Buffer, string, Compression];
