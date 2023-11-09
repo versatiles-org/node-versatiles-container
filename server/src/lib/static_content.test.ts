@@ -1,6 +1,6 @@
-import { basename, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { StaticContent } from './static_content.js';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 
 describe('StaticContent', () => {
 	let staticContent: StaticContent;
@@ -39,12 +39,18 @@ describe('StaticContent', () => {
 		it('should add files from a folder', () => {
 			const url = '/';
 			const dir = new URL('../../static', import.meta.url).pathname;
-			const files = (readdirSync(dir, { recursive: true }) as string[])
-				.filter(filename => !basename(filename).startsWith('.'));
+			const files = [
+				'index.html',
+				'assets/sprites/sprites.png',
+				'assets/sprites/sprites@2x.png',
+				'assets/sprites/sprites.json',
+				'assets/sprites/sprites@2x.json',
+			];
 
 			const mimeTypes = new Map([
-				['html', 'text/html'],
 				['css', 'text/css'],
+				['html', 'text/html'],
+				['json', 'application/json'],
 				['png', 'image/png'],
 			]);
 
