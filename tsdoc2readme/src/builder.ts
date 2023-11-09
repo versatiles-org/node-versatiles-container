@@ -143,7 +143,6 @@ function extractSummary(comment: Comment | undefined): string | undefined {
 function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield '';
 
-	// eslint-disable-next-line @typescript-eslint/init-declarations
 	let comment: Comment | undefined;
 	if (ref.comment) {
 		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
@@ -217,7 +216,6 @@ function generateSourceLink(ref: DeclarationReflection | SignatureReflection): s
 }
 
 function generateAnchor(ref: DeclarationReflection | Reflection): string {
-	// eslint-disable-next-line @typescript-eslint/init-declarations
 	let typeName;
 	switch (ref.kind) {
 		case ReflectionKind.Class: typeName = 'class'; break;

@@ -3,7 +3,6 @@ import http from 'http';
 import getHTTPReader from './reader_http.js';
 import type { Reader } from './interfaces.js';
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 describe('getHTTPReader', () => {
 	let server: http.Server;
 	let port: number;

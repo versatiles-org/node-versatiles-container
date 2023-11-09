@@ -129,7 +129,8 @@ describe('Server', () => {
 			sprite: 'http://localhost:8080/assets/sprites/sprites',
 			glyphs: 'http://localhost:8080/assets/fonts/{fontstack}/{range}.pbf',
 		});
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+		
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		expect(style.layers[0]).toMatchObject({
 			id: 'background',
 			paint: { 'background-color': '#f9f4ee' },
