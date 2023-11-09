@@ -1,13 +1,14 @@
-import type { Config } from 'jest';
+import type { JestConfigWithTsJest } from 'ts-jest';
 
-const config: Config = {
+const config: JestConfigWithTsJest = {
+	verbose: true,
 	testEnvironment: 'node',
 	transform: {
-		'^.+\\.ts$': ['ts-jest', { tsconfig: './tsconfig.json', useESM: true }]
+		'^.+\\.ts$': ['ts-jest', { useESM: true }]
 	},
 	testRegex: 'src/.*\\.test\\.ts',
-	//resolver: 'jest-ts-webcompat-resolver',
-	moduleNameMapper: { '^(\\.\\.?/.*)\\.js$': '$1' },
+	extensionsToTreatAsEsm: ['.ts'],
+	moduleNameMapper: { '^(\\.{1,2}/.*)\\.js$': '$1' },
 }
 
 export default config;

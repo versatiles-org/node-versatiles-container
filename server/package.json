@@ -10,8 +10,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
-    "start": "tsx src/index.ts",
-    "test": "jest"
+    "start": "tsx src/index.ts"
   },
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",

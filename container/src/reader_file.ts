@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import type { Reader } from './interfaces.js';
 
 /**
@@ -20,6 +20,7 @@ import type { Reader } from './interfaces.js';
  */
 export default function getFileReader(filename: string): Reader {
 	const fd = fs.openSync(filename, 'r');
+	const { size } = fs.statSync(filename);
 
 	/**
 	 * Reads a chunk of data from the file at the specified position and length.
@@ -40,6 +41,10 @@ export default function getFileReader(filename: string): Reader {
 	 *                            promise will be rejected with an error.
 	 */
 	return async function read(position: number, length: number): Promise<Buffer> {
+		if (position < 0) throw Error('position < 0');
+		if (length < 0) throw Error('length < 0');
+		if (position + length > size) throw Error('position + length > size');
+
 		return new Promise((resolve, reject) => {
 			fs.read(fd, {
 				buffer: Buffer.alloc(length),

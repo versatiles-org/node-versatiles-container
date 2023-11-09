@@ -13,8 +13,8 @@
     "check": "npm run lint && npm run test && npm run build",
     "build": "npm run -ws build --if-present",
     "lint": "eslint .",
-    "test": "jest",
-    "test-coverage": "jest --coverage",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "update": "npx npm-check-updates -u -ws && npm update -ws"
   },
   "type": "module",

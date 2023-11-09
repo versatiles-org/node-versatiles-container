@@ -38,7 +38,7 @@ describe('StaticContent', () => {
 	describe('addFolder method', () => {
 		it('should add files from a folder', () => {
 			const url = '/';
-			const dir = './static';
+			const dir = new URL('../../static', import.meta.url).pathname;
 			const files = (readdirSync(dir, { recursive: true }) as string[])
 				.filter(filename => !basename(filename).startsWith('.'));
 
