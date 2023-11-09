@@ -29,6 +29,7 @@ export interface Options {
 	glyphsUrl?: string;
 	spriteUrl?: string;
 	tilesUrl?: string;
+	host?: string;
 	port?: number;
 	tms?: boolean;
 }
@@ -37,6 +38,7 @@ export class Server {
 	private readonly options: Options = {
 		compress: true,
 		port: 8080,
+		host: '0.0.0.0',
 	};
 
 	private readonly layer: Layer;
@@ -149,9 +151,9 @@ export class Server {
 
 		this.server = server;
 
-		const { port } = this.options;
+		const { host, port } = this.options;
 
-		await new Promise<void>(r => server.listen(port, () => {
+		await new Promise<void>(r => server.listen(port, host, () => {
 			r();
 		}));
 
