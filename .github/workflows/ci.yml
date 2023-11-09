@@ -42,15 +42,16 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Run tests
+      - name: Tests
         run: npm run test
 
-      - name: Run tests
+      - name: Test build
         run: npm run build
-#      - name: Generate test coverage
-#        run: npm run test-coverage
-#
-#      - name: Upload coverage
-#        uses: codecov/codecov-action@v3
-#        env:
-#          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Generate test coverage
+        run: npm run test-coverage
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
