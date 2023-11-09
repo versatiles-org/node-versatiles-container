@@ -3,12 +3,10 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>versatiles</title>
+	<title>VersaTiles</title>
 	<meta name="viewport" content="width=device-width">
-	<script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/acalcutt/maplibre-gl-inspect@v1.4.3/dist/maplibre-gl-inspect.min.js"></script>
-	<link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet">
-	<link href="https://cdn.jsdelivr.net/gh/acalcutt/maplibre-gl-inspect@v1.4.3/dist/maplibre-gl-inspect.css" rel="stylesheet">
+	<script src="/assets/maplibre/maplibre-gl.js"></script>
+	<link href="/assets/maplibre/maplibre-gl.css" rel="stylesheet">
 	<style>
 		body {
 			margin: 0;
@@ -30,13 +28,10 @@
 				style: await (await fetch('tiles/style.json')).json(),
 				hash: true,
 			});
-
+			
 			map.dragRotate.disable();
 			map.touchZoomRotate.disableRotation();
-
 			map.addControl(new maplibregl.NavigationControl());
-			//map.addControl(new MaplibreInspect({ showInspectMap: true, showMapPopup: false, showInspectMapPopup: false, showInspectButton: false }));
-
 		})()
 	</script>
 </body>
