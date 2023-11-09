@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A client library for reading VersaTiles containers",
   "scripts": {
-    "check": "npm run lint && npm run test && npm run build",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
     "test": "jest",

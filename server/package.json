@@ -8,7 +8,6 @@
     "versatiles-server": "node dist/index.js"
   },
   "scripts": {
-    "check": "npm run lint && npm run test && npm run build",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
     "start": "tsx src/index.ts",
