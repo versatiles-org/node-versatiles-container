@@ -9,7 +9,7 @@ const DIRNAME = new URL('../../../', import.meta.url).pathname;
 
 describe('Server', () => {
 	let server: Server;
-	const port = 8080; // Ensure this port is free on the machine running the test
+	const port = 56789; // Ensure this port is free on the machine running the test
 	const baseUrl = `http://localhost:${port}`;
 	const indexContent = readFileSync(resolve(DIRNAME, 'server/static/index.html'), 'utf8');
 
@@ -126,10 +126,10 @@ describe('Server', () => {
 		const style = await response.json();
 		expect(style).toMatchObject({
 			version: 8,
-			sprite: 'http://localhost:8080/assets/sprites/sprites',
-			glyphs: 'http://localhost:8080/assets/fonts/{fontstack}/{range}.pbf',
+			sprite: `http://localhost:${port}/assets/sprites/sprites`,
+			glyphs: `http://localhost:${port}/assets/fonts/{fontstack}/{range}.pbf`,
 		});
-		
+
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		expect(style.layers[0]).toMatchObject({
 			id: 'background',
