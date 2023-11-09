@@ -45,6 +45,13 @@ export default function getHTTPReader(url: string): Reader {
 	 *          the promise is rejected with an error.
 	 */
 	return async function read(position: number, length: number): Promise<Buffer> {
+		if (position < 0) {
+			throw new RangeError(`Invalid read position: ${position}. The read position must be a non-negative integer.`);
+		}
+		if (length < 0) {
+			throw new RangeError(`Invalid read length: ${length}. The read length must be a non-negative integer.`);
+		}
+
 		const headers = {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'user-agent': 'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
@@ -83,9 +90,26 @@ export default function getHTTPReader(url: string): Reader {
 				.end();
 		});
 
+		const contentRange = message.headers['content-range'];
+		if (contentRange == null) throw Error('The response header does not contain "content-range"');
+
+		const parts = /^bytes (\d+)\-(\d+)\/(\d+)/i.exec(contentRange);
+		if (parts == null) throw Error('"content-range" in response header is malformed');
+
+		if (position !== parseInt(parts[1], 10)) throw Error(`requestet position (${position}) and returned offset (${parts[1]}) must be equal`);
+
+		if (position + length > parseInt(parts[3], 10)) {
+			throw new RangeError(`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${parts[3]} bytes.`);
+		}
+
+		const returnedLength = parseInt(parts[2], 10) + 1 - position;
+		if (length !== returnedLength) {
+			throw new Error(`Returned length (${returnedLength}) is not requested length (${length}).`);
+		}
+
 		if ((message.statusCode == null) || Math.floor(message.statusCode / 100) !== 2) {
 			message.destroy();
-			throw new Error(`Server responded with status code: ${message.statusCode}`);
+			throw new Error(`Server responded with status code: ${message.statusCode} `);
 		}
 
 		/**

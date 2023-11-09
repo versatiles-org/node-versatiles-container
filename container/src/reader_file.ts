@@ -41,9 +41,15 @@ export default function getFileReader(filename: string): Reader {
 	 *                            promise will be rejected with an error.
 	 */
 	return async function read(position: number, length: number): Promise<Buffer> {
-		if (position < 0) throw Error('position < 0');
-		if (length < 0) throw Error('length < 0');
-		if (position + length > size) throw Error('position + length > size');
+		if (position < 0) {
+			throw new RangeError(`Invalid read position: ${position}. The read position must be a non-negative integer.`);
+		}
+		if (length < 0) {
+			throw new RangeError(`Invalid read length: ${length}. The read length must be a non-negative integer.`);
+		}
+		if (position + length > size) {
+			throw new RangeError(`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${size} bytes.`);
+		}
 
 		return new Promise((resolve, reject) => {
 			fs.read(fd, {

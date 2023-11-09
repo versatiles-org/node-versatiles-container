@@ -23,12 +23,16 @@ export type Decompressor = (data: Buffer, compression: Compression) => Promise<B
 
 
 /**
- * Type definition for an asynchronous function to read a container's content.
+ * Type definition for an asynchronous function to read content from a VersaTiles container.
  * 
- * This can be useful for accessing data stored in various storage mediums.
+ * This can be useful for accessing a container data over any transport protocol.
+ * 
  * @param {number} position - The byte offset at which to start reading.
  * @param {number} length - The number of bytes to read.
- * @returns {Promise<Buffer>} - The read data.
+ * @returns {Promise<Buffer>} A promise that resolves with the data read as a Buffer.
+ * @throws {RangeError} If `position` is less than 0 or if `length` is less than 0.
+ * @throws {RangeError} If the sum of `position` and `length` exceeds the size of the content (filesize).
+ * @throws {Error} If there is any filesystem or network error such as the content not being accessible or readable.
  */
 export type Reader = (position: number, length: number) => Promise<Buffer>;
 
