@@ -35,11 +35,7 @@ export interface Options {
 }
 
 export class Server {
-	private readonly options: Options = {
-		compress: true,
-		port: 8080,
-		host: '0.0.0.0',
-	};
+	private readonly options: Options = {};
 
 	private readonly layer: Layer;
 
@@ -48,13 +44,18 @@ export class Server {
 	public constructor(source: Reader | string, options: Options) {
 		Object.assign(this.options, options);
 
+		this.options.compress ??= true;
+		this.options.port ??= 8080;
+		this.options.host ??= '0.0.0.0';
+		this.options.baseUrl ??= `http://localhost:${this.options.port}/`;
+
 		this.layer = {
 			container: new VersaTiles(source, { tms: options.tms ?? false }),
 		};
 	}
 
 	public getUrl(): string {
-		return `http://${this.options.host}:${this.options.port}/`;
+		return this.options.baseUrl ?? `http://localhost:${this.options.port}/`;
 	}
 
 	public async start(): Promise<void> {
