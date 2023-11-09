@@ -30,6 +30,7 @@ export interface Options {
 	spriteUrl?: string;
 	tilesUrl?: string;
 	port?: number;
+	tms?: boolean;
 }
 
 export class Server {
@@ -45,7 +46,9 @@ export class Server {
 	public constructor(source: Reader | string, options: Options) {
 		Object.assign(this.options, options);
 
-		this.layer = { container: new VersaTiles(source) };
+		this.layer = {
+			container: new VersaTiles(source, { tms: options.tms ?? false }),
+		};
 	}
 
 	public async start(): Promise<void> {
