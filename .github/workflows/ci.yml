@@ -42,9 +42,9 @@ jobs:
       - name: Run tests
         run: npm run test
 
-#      - name: Run tests
-#        run: npm run test-node
-#
+      - name: Run tests
+        run: npm run build
+
 #      - name: Generate test coverage
 #        run: npm run test-coverage
 #

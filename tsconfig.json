@@ -11,6 +11,7 @@
 		"skipLibCheck": true,
 		"declaration": true,
 		"allowJs": true,
+		"noEmit": true,
 	},
 	"include": [
 		"**/src/**/*.ts",

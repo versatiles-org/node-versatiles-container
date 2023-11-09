@@ -119,14 +119,14 @@ describe('Server', () => {
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const style = await response.json();
 		expect(style).toMatchObject({
 			version: 8,
 			sprite: 'http://localhost:8080/assets/sprites/sprites',
 			glyphs: 'http://localhost:8080/assets/fonts/{fontstack}/{range}.pbf',
 		});
-		// @ts-expect-error Unsure about the format
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 		expect(style.layers[0]).toMatchObject({
 			id: 'background',
 			paint: { 'background-color': '#f9f4ee' },

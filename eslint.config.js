@@ -20,7 +20,8 @@ export default [
 			parser,
 			parserOptions: {
 				sourceType: 'module',
-				project: './tsconfig.json'
+				project: './tsconfig.json',
+				//tsconfigRootDir: './',
 			},
 		},
 		plugins: {

@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "A client library for reading VersaTiles containers",
   "scripts": {
-    "check": "npm run lint && npm run build && npm run test",
+    "check": "npm run lint && npm run test && npm run build",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
-    "lint": "eslint .",
-    "test": "jest"
+    "test": "jest",
+    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "files": [
     "dist/**/*.js",
@@ -43,10 +43,5 @@
     "tileserver",
     "vectortiles",
     "versatiles"
-  ],
-  "devDependencies": {
-    "@types/node": "^20.9.0",
-    "jest": "^29.7.0",
-    "typescript": "^5.2.2"
-  }
+  ]
 }

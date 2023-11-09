@@ -2,9 +2,12 @@
 import { createHash } from 'node:crypto';
 import type { Block } from './index.js';
 import { VersaTiles } from './index.js';
+import { resolve } from 'node:path';
+
+const DIRNAME = new URL('../../../', import.meta.url).pathname;
 
 describe('VersaTiles', () => {
-	const versatiles = new VersaTiles('../test/island.versatiles');
+	const versatiles = new VersaTiles(resolve(DIRNAME, 'test/island.versatiles'));
 
 	describe('getHeader', () => {
 		it('should return the header', async () => {
