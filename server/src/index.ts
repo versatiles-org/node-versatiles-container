@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-'use strict';
 
 import { Command } from 'commander';
 import { Server } from './lib/server.js';
@@ -17,30 +16,36 @@ program
 	.showHelpAfterError()
 	.name('versatiles-server')
 	.description('Simple VersaTiles server')
-	.option('-b, --base-url <http://baseurl/>', 'default is: "http://localhost:<port>/"')
-	.option('-c, --compress', 'compress data if needed. Slower, but reduces traffic.', true)
-	.option('-i, --host <hostname|ip>', 'hostname or ip', '0.0.0.0')
-	.option('-o, --open', 'open map in web browser', false)
-	.option('-p, --port <port>', 'port', '8080')
-	.option('-t, --tms', 'use TMS tile order (flip y axis)', false)
-	.argument('<source>', 'VersaTiles container, can be an url or filename of a "*.versatiles" file');
+	.option('-b, --base-url <url>', 'Base URL for the server', 'http://localhost:<port>/')
+	.option('-c, --compress', 'Compress data if needed. Slower, but reduces traffic.', true)
+	.option('-i, --host <hostname|ip>', 'Hostname or IP to bind the server to', '0.0.0.0')
+	.option('-o, --open', 'Open map in web browser', false)
+	.option('-p, --port <port>', 'Port to bind the server to', parseInt, 8080)
+	.option('-t, --tms', 'Use TMS tile order (flip y axis)', false)
+	.argument('<source>', 'VersaTiles container, can be a URL or filename of a "*.versatiles" file');
+
 
 program.parse();
 
-const commandOptions = program.opts();
+const cmdOptions = program.opts();
 
-const serverOptions: Options = {
-	baseUrl: commandOptions.baseUrl as string | undefined,
-	compress: commandOptions.compress as boolean | undefined,
-	host: commandOptions.host as string | undefined,
-	port: commandOptions.port as number | undefined,
-	tms: commandOptions.tms as boolean | undefined,
+const srvOptions: Options = {
+	baseUrl: cmdOptions.baseUrl as string | undefined,
+	compress: cmdOptions.compress as boolean | undefined,
+	host: cmdOptions.host as string | undefined,
+	port: cmdOptions.port as number | undefined,
+	tms: cmdOptions.tms as boolean | undefined,
 };
 
-const server = new Server(program.args[0], serverOptions);
+try {
+	const server = new Server(program.args[0], srvOptions);
+	await server.start();
 
-await server.start();
-
-if (Boolean(commandOptions.open)) {
-	await open(server.getUrl());
+	if (Boolean(cmdOptions.open)) {
+		await open(server.getUrl());
+	}
+} catch (error: unknown) {
+	const errorMessage = String((typeof error == 'object' && error != null && 'message' in error) ? error.message : error);
+	console.error(`Error starting the server: ${errorMessage}`);
+	process.exit(1);
 }
