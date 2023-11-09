@@ -15,10 +15,18 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "check": "cd ..; npm run check",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
+    "lint": "cd ..; npm run lint",
     "prepublish": "npm run build",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "test": "cd ..; npm run test"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/versatiles-org/node-versatiles.git"
+  },
+  "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/server/README.md",
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",

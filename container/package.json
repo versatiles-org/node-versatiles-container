@@ -4,7 +4,10 @@
   "description": "A client library for reading VersaTiles containers",
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
-    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'"
+    "check": "cd ..; npm run check",
+    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
+    "lint": "cd ..; npm run lint",
+    "test": "cd ..; npm run test"
   },
   "files": [
     "dist/**/*.js",
