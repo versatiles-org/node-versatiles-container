@@ -1,7 +1,9 @@
-
 import type { VersaTiles } from '@versatiles/container';
 import { Colorful } from '@versatiles/style';
 
+/** 
+ * Constant array representing the layers in the Shortbread styling.
+ */
 export const SHORTBREAD_LAYERS = [
 	'place_labels',
 	'addresses',
@@ -31,6 +33,13 @@ export const SHORTBREAD_LAYERS = [
 	'water_polygons',
 ];
 
+/**
+ * Asynchronously generates a style string based on the given container and options.
+ * 
+ * @param {VersaTiles} container - An instance of the VersaTiles container.
+ * @param {Record<string, any>} options - An object containing options for style generation.
+ * @returns {Promise<string>} A promise that resolves to a style string.
+ */
 export async function generateStyle(container: VersaTiles, options: Record<string, boolean | number | string | null>): Promise<string> {
 	const tileFormat = await container.getTileFormat();
 
@@ -75,6 +84,12 @@ export async function generateStyle(container: VersaTiles, options: Record<strin
 	}
 }
 
+/**
+ * Resolves a complete URL from given path segments.
+ * 
+ * @param {...string[]} paths - An array of path segments to be resolved into a URL.
+ * @returns {string} The fully resolved URL.
+ */
 export function resolveUrl(...paths: string[]): string {
 	paths = paths.map(path => path.replace(/[\{\}]/g, c => '%' + c.charCodeAt(0).toString(16)));
 	let baseUrl = new URL(paths.shift() ?? '');
@@ -82,6 +97,12 @@ export function resolveUrl(...paths: string[]): string {
 	return baseUrl.href.replace(/\%7b/g, '{').replace(/\%7d/g, '}');
 }
 
+/**
+ * Determines if the provided metadata qualifies as 'Shortbread' based on predefined layer names.
+ * 
+ * @param {Buffer | object | string | null} meta - The metadata to check against Shortbread criteria.
+ * @returns {boolean} True if the metadata matches Shortbread, false otherwise.
+ */
 export function isShortbread(meta: Buffer | object | string | null): boolean {
 	if (meta == null) return false;
 

@@ -6,6 +6,11 @@ import { Server } from './lib/server.js';
 import type { Options } from './lib/server.js';
 import open from 'open';
 
+/**
+ * Entry script for the VersaTiles server command-line application.
+ * Utilizes the commander.js library to parse command-line arguments and options,
+ * sets up the server based on these options, and optionally opens the server URL in a web browser.
+ */
 const program = new Command();
 
 program
