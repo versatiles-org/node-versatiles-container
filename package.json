@@ -11,11 +11,12 @@
   },
   "scripts": {
     "check": "npm run lint && npm run test && npm run build",
-    "build": "npm run -ws build --if-present",
-    "lint": "eslint --print-config server/src/lib/server.ts; eslint . --report-unused-disable-directives --debug --color",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules && npm i"
+    "build": "npm run build -ws --if-present",
+    "build-deps": "npm run build -w @versatiles/container",
+    "lint": "npm run build-deps && eslint . --report-unused-disable-directives --color",
+    "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root"
   },
   "type": "module",
   "devDependencies": {

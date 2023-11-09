@@ -40,5 +40,10 @@
     "tileserver",
     "vectortiles",
     "versatiles"
-  ]
+  ],
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.2"
+  }
 }

@@ -31,10 +31,10 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+        run: npm ci -ws --include-workspace-root
 
       - name: Check vulnerabilities
-        run: npm audit
+        run: npm audit -ws --include-workspace-root
 
       - name: Lint
         run: npm run lint
