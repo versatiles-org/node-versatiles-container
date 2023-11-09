@@ -69,6 +69,7 @@ export class StaticContent {
 	// eslint-disable-next-line @typescript-eslint/max-params
 	public add(path: string, content: Buffer | object | string, mime: string, compression: Compression = null): void {
 		let buffer: Buffer;
+
 		if (Buffer.isBuffer(content)) {
 			buffer = content;
 		} else if (typeof content === 'string') {
@@ -76,6 +77,7 @@ export class StaticContent {
 		} else {
 			buffer = Buffer.from(JSON.stringify(content));
 		}
+		
 		if (this.#map.has(path)) throw Error();
 		this.#map.set(path, [buffer, mime, compression]);
 	}
@@ -92,19 +94,32 @@ export class StaticContent {
 			if (name.startsWith('.')) return;
 
 			const subDir = resolve(dir, name);
-			const subUrl = StaticContent.urlResolve(url, name);
+			let subUrl = StaticContent.urlResolve(url, name);
 
 			if (statSync(subDir).isDirectory()) {
 				this.addFolder(subUrl, subDir);
 			} else {
-				const ext = extname(subDir);
+				let compression: Compression = null;
+				let ext = extname(subDir);
+
+				if (name.endsWith('.br')) {
+					compression = 'br';
+				} else if (name.endsWith('.gz')) {
+					compression = 'gzip';
+				}
+
+				if (compression) {
+					ext = extname(name.replace(/\.[^.]+$/, ''));
+					subUrl = subUrl.replace(/\.[^.]+$/, '');
+				}
+
 				const mime = mimeTypes.get(ext.toLowerCase());
 
 				if (mime == null) {
 					console.warn('unknown file extension: ' + ext);
 				}
 
-				this.add(subUrl, readFileSync(subDir), mime ?? 'application/octet-stream');
+				this.add(subUrl, readFileSync(subDir), mime ?? 'application/octet-stream', compression);
 			}
 		});
 	}
