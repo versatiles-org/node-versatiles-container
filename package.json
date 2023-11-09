@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "update": "npx npm-check-updates -u -ws && npm update -ws"
+    "update": "npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules && npm i -ws && npm update -ws && npm prune -ws"
   },
   "type": "module",
   "devDependencies": {
