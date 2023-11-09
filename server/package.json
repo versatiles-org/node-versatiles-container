@@ -1,15 +1,22 @@
 {
   "name": "@versatiles/server",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A server for VersaTiles",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "versatiles-server": "node dist/index.js"
+    "versatiles-server": "./dist/index.js"
   },
+  "prefix": "./",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "static"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
+    "prepublish": "npm run build",
     "start": "tsx src/index.ts"
   },
   "type": "module",

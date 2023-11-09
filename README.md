@@ -1,16 +1,18 @@
-# VersaTiles
+# Node.js VersaTiles
 
-A Node.js implementation of [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec).
+Node.js libraries for VersaTiles.
 
-This repository contains:
+## `@versatiles/container`
 
-## [`versatiles`](https://github.com/versatiles-org/node-versatiles/tree/main/versatiles)
+Use it if you want to read [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec) in Node.js.
 
-A Node.js package for reading VersaTiles containers.
+For more information see [container/README.md](container/README.md)
 
-## [`versatiles-server`](https://github.com/versatiles-org/node-versatiles/tree/main/versatiles-server)
+## `@versatiles/server`
 
-A Node.js implementation for serving tiles from a VersaTiles containers.
+Tiny Node.js server for serving map tiles from a VersaTiles container.
+
+For more information see [server/README.md](server/README.md)
 
 ## License
 

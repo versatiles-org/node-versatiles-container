@@ -4,12 +4,14 @@ A Node.js server for [VersaTiles containers](https://github.com/versatiles-org/v
 
 ## Install globally
 
-`npm i -g versatiles-server`
+```bash
+npm i -g @versatiles/server
+```
 
 ## Run
 
 ```bash
-versatiles-server --help
+versatiles-server -h
 ```
 
 This will show you how to use the server with all options and arguments.
