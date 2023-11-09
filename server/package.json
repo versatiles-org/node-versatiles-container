@@ -1,0 +1,49 @@
+{
+  "name": "@versatiles/server",
+  "version": "1.0.0",
+  "description": "A server for VersaTiles",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "versatiles-server": "node dist/index.js"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
+    "start": "tsx src/index.ts"
+  },
+  "type": "module",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">= 18"
+  },
+  "keywords": [
+    "cloudtiles",
+    "geo",
+    "gis",
+    "map",
+    "maps",
+    "mapserver",
+    "maptiles",
+    "mvt",
+    "opencloudtiles",
+    "osm",
+    "pbf",
+    "tile",
+    "tiles",
+    "tileserver",
+    "vectortiles",
+    "versatiles"
+  ],
+  "dependencies": {
+    "@versatiles/container": "^1.0.0",
+    "@versatiles/style": "^3.4.1",
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.2"
+  }
+}

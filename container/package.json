@@ -1,0 +1,49 @@
+{
+  "name": "@versatiles/container",
+  "version": "1.0.0",
+  "description": "A client library for reading VersaTiles containers",
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/versatiles-org/node-versatiles.git"
+  },
+  "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/container/README.md",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">= 18"
+  },
+  "keywords": [
+    "cloudtiles",
+    "geo",
+    "gis",
+    "map",
+    "maps",
+    "mapserver",
+    "maptiles",
+    "mvt",
+    "opencloudtiles",
+    "osm",
+    "pbf",
+    "tile",
+    "tiles",
+    "tileserver",
+    "vectortiles",
+    "versatiles"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.2"
+  }
+}

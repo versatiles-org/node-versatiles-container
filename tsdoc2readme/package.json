@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "name": "tsdoc2readme",
+  "scripts": {
+    "update_readme": "npx tsx src/index.ts"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
+  "license": "Unlicense",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "remark": "^15.0.1",
+    "typedoc": "^0.25.3",
+    "typescript": "^5.2.2"
+  }
+}

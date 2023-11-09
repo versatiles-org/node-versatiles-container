@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "!**" # Don't run twice on commits with tags
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FORCE_COLOR: "1"
+
+jobs:
+  release:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache Node Modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci -ws --include-workspace-root
+
+      - name: Check vulnerabilities
+        run: npm audit -ws --include-workspace-root
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm run test
+
+      - name: Test build
+        run: npm run build
+
+      - name: Generate test coverage
+        run: npm run test-coverage
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

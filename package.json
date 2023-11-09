@@ -1,32 +1,35 @@
 {
-  "name": "versatiles",
-  "version": "0.3.1",
-  "description": "A client library for VersaTiles",
-  "main": "versatiles.js",
-  "bin": {
-    "versatiles-server": "./versatiles.js"
+  "name": "node-versatiles",
+  "private": true,
+  "workspaces": [
+    "tsdoc2readme",
+    "container",
+    "server"
+  ],
+  "eslintConfig": {
+    "root": true
   },
-  "author": "yetzt <node@yetzt.me>",
-  "license": "Unlicense",
-  "engines": {
-    "node": ">= 10"
+  "scripts": {
+    "check": "npm run lint && npm run test && npm run build",
+    "build": "npm run build -ws --if-present",
+    "build-deps": "npm run build -w @versatiles/container",
+    "lint": "npm run build-deps && eslint . --report-unused-disable-directives --color",
+    "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
+    "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root"
   },
-  "keywords": [
-    "map",
-    "tiles",
-    "tile",
-    "maptiles",
-    "versatiles",
-    "cloudtiles",
-    "opencloudtiles",
-    "geo",
-    "gis",
-    "maps",
-    "mapserver",
-    "tileserver",
-    "vectortiles",
-    "mvt",
-    "pbf",
-    "osm"
-  ]
+  "type": "module",
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "eslint": "^8.53.0",
+    "jest": "^29.7.0",
+    "npm-check-updates": "^16.14.6",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "tsx": "^4.0.0",
+    "typescript": "^5.2.2"
+  }
 }
