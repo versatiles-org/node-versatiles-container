@@ -53,6 +53,10 @@ export class Server {
 		};
 	}
 
+	public getUrl(): string {
+		return `http://${this.options.host}:${this.options.port}/`;
+	}
+
 	public async start(): Promise<void> {
 		const layer = await this.#prepareLayer();
 		const compress = this.options.compress ?? false;
