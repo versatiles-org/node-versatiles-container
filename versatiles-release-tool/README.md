@@ -18,17 +18,14 @@ Usage: vrt [options] [command]
 versatiles release and documentaion tool
 
 Options:
-  -h, --help                     display help for command
+  -h, --help                              display help for command
 
 Commands:
-  ts2md <typescript> <tsconfig>  documents a TypeScript file and outputs it to
-                                 stdout
-  cmd2md <command>               documents a runnable command and outputs it to
-                                 stdout
-  insertmd <readme> [heading]    takes Markdown from stdin and insert it into a
-                                 Markdown file
-  inserttoc <readme> [heading]   updates the TOC in a Markdown file
-  help [command]                 display help for command
+  ts2md <typescript> <tsconfig>           documents a TypeScript file and outputs it to stdout
+  cmd2md <command>                        documents a runnable command and outputs it to stdout
+  insertmd <readme> [heading] [foldable]  takes Markdown from stdin and insert it into a Markdown file
+  inserttoc <readme> [heading]            updates the TOC in a Markdown file
+  help [command]                          display help for command
 ```
 
 ## Subcommand: `vrt ts2md`
@@ -66,13 +63,14 @@ Options:
 
 ```console
 $ vrt insertmd
-Usage: vrt insertmd [options] <readme> [heading]
+Usage: vrt insertmd [options] <readme> [heading] [foldable]
 
 takes Markdown from stdin and insert it into a Markdown file
 
 Arguments:
   readme      Markdown file, like a readme.md
   heading     Heading in the Markdown file (default: "# API")
+  foldable    Make content foldable (default: false)
 
 Options:
   -h, --help  display help for command
