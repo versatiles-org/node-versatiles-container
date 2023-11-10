@@ -25,7 +25,8 @@ fs.writeFileSync('tile.' + header.tile_format, tile);
 The `VersaTiles` class is a wrapper around a `.versatiles` container file. It provides methods\
 to access tile data, metadata, and other properties within the container. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/abcf0f1/versatiles-container/src/index.ts#L27">\[src]</a></sup>
 
-### Constructor: `new VersaTiles(source, options)`
+<details>
+<summary><h3>Constructor: <code>new VersaTiles(source, options)</code></h3></summary>
 
 Constructs a new instance of the VersaTiles class. <sup><a href="https://github.com/versatiles-org/node-versatiles/blob/abcf0f1/versatiles-container/src/index.ts#L50">\[src]</a></sup>
 
@@ -39,6 +40,7 @@ Constructs a new instance of the VersaTiles class. <sup><a href="https://github.
 
 **Returns:** [`VersaTiles`](#class_versatiles)
 **Methods**
+</details>
 
 ### Method: `getHeader()`
 
