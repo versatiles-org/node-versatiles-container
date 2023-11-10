@@ -104,7 +104,7 @@ function* renderMethod(declaration: DeclarationReflection, isConstructor = false
 
 	if (returnType) {
 		yield '';
-		yield `**Returns:** ${formatType(returnType)}`;
+		yield `**Returns:** <code>${formatType(returnType)}</code>`;
 	}
 }
 
