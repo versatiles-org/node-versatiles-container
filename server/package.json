@@ -16,7 +16,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
     "check": "cd ..; npm run check",
-    "doc": "npm run -w vrdt update_readme container/src/index.ts '# API'",
+    "doc": "npx vrt cmd2md versatiles-server | npx vrt insertmd README.md '## Options'",
     "lint": "cd ..; npm run lint",
     "prepublish": "npm run build",
     "start": "tsx src/index.ts",
