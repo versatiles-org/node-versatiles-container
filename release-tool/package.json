@@ -2,7 +2,12 @@
   "private": true,
   "name": "@versatiles/release-tool",
   "description": "VersaTiles release and documentation tools, for internal use",
-  "bin": "tsx src/index.ts",
+  "bin": {
+    "vrt": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js"
+  },
   "version": "1.0.0",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
@@ -10,6 +15,7 @@
   "devDependencies": {
     "@types/node": "^20.9.0",
     "remark": "^15.0.1",
+    "tsx": "^4.1.0",
     "typedoc": "^0.25.3",
     "typescript": "^5.2.2"
   },

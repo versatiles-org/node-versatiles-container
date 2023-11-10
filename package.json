@@ -6,9 +6,6 @@
     "container",
     "server"
   ],
-  "bin": {
-    "vrt": "tsx release-tool/src/index.ts"
-  },
   "eslintConfig": {
     "root": true
   },
