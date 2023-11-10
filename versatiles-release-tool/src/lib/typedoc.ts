@@ -85,7 +85,9 @@ function* renderMethod(declaration: DeclarationReflection, isConstructor = false
 	const parameters = formatMethodParameters(signature.parameters ?? []);
 	const returnType = signature.type;
 
-	yield `'## ${isConstructor ? 'constructor: ' : ''}\`${functionName}(${parameters})\``;
+	const prefix = isConstructor ? 'Constructor' : 'Method';
+
+	yield `## ${prefix}: \`${functionName}(${parameters})\``;
 
 	yield '';
 	yield* renderSummaryBlock(signature);
@@ -149,11 +151,11 @@ function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): 
 		}
 	}
 
-	yield generateSourceLink(ref);
+	yield generateSourceLink(ref) + '\n';
 	return;
 
 	function formatComment(comment: Comment): string {
-		return (extractSummary(comment) + ' ' + generateSourceLink(ref)).replace(/\n/m, '  \n');
+		return (extractSummary(comment) + ' ' + generateSourceLink(ref)).replace(/\n/m, '  \n') + '\n';
 	}
 }
 
