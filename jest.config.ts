@@ -9,6 +9,9 @@ const config: JestConfigWithTsJest = {
 	testRegex: 'src/.*\\.test\\.ts',
 	extensionsToTreatAsEsm: ['.ts'],
 	moduleNameMapper: { '^(\\.{1,2}/.*)\\.js$': '$1' },
+	coveragePathIgnorePatterns: [
+		'/dist/'
+	],
 }
 
 export default config;
