@@ -3,7 +3,8 @@ import type { Heading, Root, RootContent } from 'mdast';
 import { remark } from 'remark';
 
 
-export function injectMarkdown(document: string, segment: string, heading: string): string {
+// eslint-disable-next-line @typescript-eslint/max-params
+export function injectMarkdown(document: string, segment: string, heading: string, foldable?: boolean): string {
 	const documentAst = remark().parse(document);
 	const segmentAst = remark().parse(segment);
 	const headingAst = remark().parse(heading);
@@ -19,6 +20,8 @@ export function injectMarkdown(document: string, segment: string, heading: strin
 	const depth = getHeadingDepth(documentAst, startIndex);
 	const endIndex = findNextHeading(documentAst, startIndex + 1, depth);
 	indentChapter(segmentAst, depth);
+	if (foldable ?? false) makeFoldable(segmentAst);
+
 	spliceAst(documentAst, segmentAst, startIndex + 1, endIndex);
 
 	return remark().stringify(documentAst);
@@ -138,4 +141,71 @@ function getMDAnchor(node: Heading): string {
 		.replace(/^\-+|\-+$/g, '');
 
 	return text;
+}
+
+function makeFoldable(ast: Root): void {
+	console.dir(ast, { depth: 3 });
+
+	const openDetails: number[] = [];
+	const children: RootContent[] = [];
+
+	ast.children.forEach((c: RootContent) => {
+		switch (c.type) {
+			case 'html':
+			case 'list':
+			case 'paragraph':
+				children.push(c);
+				break;
+			case 'heading':
+				closeDetails(c.depth);
+
+				children.push({ type: 'html', value: '<details>' });
+				children.push({ type: 'html', value: `<summary>${lineToHtml(c)}</summary>` });
+				openDetails.unshift(c.depth);
+
+				break;
+			default:
+				throw Error(`unknown type "${c.type}"`);
+		}
+	});
+
+	closeDetails(0);
+
+	ast.children = children;
+
+	function closeDetails(depth: number): void {
+		while ((openDetails.length > 0) && (openDetails[0] >= depth)) {
+			children.push({ type: 'html', value: '</details>' });
+			openDetails.shift();
+		}
+	}
+}
+
+function lineToHtml(child: Heading): string {
+	const html = child.children.map(c => {
+		switch (c.type) {
+			case 'html': return c.value;
+			case 'text': return c.value;
+			case 'inlineCode': return `<code>${textToHtml(c.value)}</code>`;
+			//case "break": { throw new Error('Not implemented yet: "break" case') }
+			//case "delete": { throw new Error('Not implemented yet: "delete" case') }
+			//case "emphasis": { throw new Error('Not implemented yet: "emphasis" case') }
+			//case "footnoteReference": { throw new Error('Not implemented yet: "footnoteReference" case') }
+			//case "image": { throw new Error('Not implemented yet: "image" case') }
+			//case "imageReference": { throw new Error('Not implemented yet: "imageReference" case') }
+			//case "inlineCode": { throw new Error('Not implemented yet: "inlineCode" case') }
+			//case "link": { throw new Error('Not implemented yet: "link" case') }
+			//case "linkReference": { throw new Error('Not implemented yet: "linkReference" case') }
+			//case "strong": { throw new Error('Not implemented yet: "strong" case') }
+			//case "text": { throw new Error('Not implemented yet: "text" case') }
+			default:
+				console.log(c);
+				throw Error(`unknown type "${c.type}"`);
+		}
+	});
+	return `<h${child.depth}>${html.join('')}</h${child.depth}>`;
+}
+
+function textToHtml(text: string): string {
+	return text.replace(/[^a-z0-9 ,.-:_?@äöüß]/gi, c => `&#${c.charCodeAt(0)};`);
 }

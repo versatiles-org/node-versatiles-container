@@ -36,13 +36,14 @@ program.command('insertmd')
 	.description('takes Markdown from stdin and insert it into a Markdown file')
 	.argument('<readme>', 'Markdown file, like a readme.md', checkFilename)
 	.argument('[heading]', 'Heading in the Markdown file', '# API')
-	.action(async (mdFilename: string, heading: string) => {
+	.argument('[foldable]', 'Make content foldable', false)
+	.action(async (mdFilename: string, heading: string, foldable: boolean) => {
 		const buffers = [];
 		for await (const data of process.stdin) buffers.push(data);
 		const mdContent = '<!--- This chapter is generated automatically --->\n' + Buffer.concat(buffers).toString();
 
 		let mdFile = readFileSync(mdFilename, 'utf8');
-		mdFile = injectMarkdown(mdFile, mdContent, heading);
+		mdFile = injectMarkdown(mdFile, mdContent, heading, foldable);
 		writeFileSync(mdFilename, mdFile);
 	});
 
