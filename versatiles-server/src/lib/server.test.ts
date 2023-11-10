@@ -5,17 +5,17 @@ import { jest } from '@jest/globals';
 import { createHash } from 'node:crypto';
 import { resolve } from 'path';
 
-const DIRNAME = new URL('../../../', import.meta.url).pathname;
+const DIRNAME = new URL('../../', import.meta.url).pathname;
 
 describe('Server', () => {
 	let server: Server;
 	const port = 56789; // Ensure this port is free on the machine running the test
 	const baseUrl = `http://localhost:${port}`;
-	const indexContent = readFileSync(resolve(DIRNAME, 'server/static/index.html'), 'utf8');
+	const indexContent = readFileSync(resolve(DIRNAME, 'static/index.html'), 'utf8');
 
 	beforeAll(async () => {
 		const log = jest.spyOn(console, 'log').mockReturnValue();
-		server = new Server(resolve(DIRNAME, 'test/island.versatiles'), { port, compress: true });
+		server = new Server(resolve(DIRNAME, '../test/island.versatiles'), { port, compress: true });
 		await server.start();
 		expect(log).toHaveBeenCalledWith('listening on port ' + port);
 	});
