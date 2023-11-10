@@ -2,9 +2,9 @@
   "name": "node-versatiles",
   "private": true,
   "workspaces": [
-    "release-tool",
-    "container",
-    "server"
+    "versatiles-release-tool",
+    "versatiles-container",
+    "versatiles-server"
   ],
   "eslintConfig": {
     "root": true
