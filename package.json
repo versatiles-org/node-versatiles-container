@@ -2,12 +2,12 @@
   "name": "node-versatiles",
   "private": true,
   "workspaces": [
-    "vrdt",
+    "release-tool",
     "container",
     "server"
   ],
   "bin": {
-    "vrdt": "tsx vrdt/src/index.ts"
+    "vrt": "tsx release-tool/src/index.ts"
   },
   "eslintConfig": {
     "root": true
@@ -19,8 +19,7 @@
     "lint": "npm run build-deps && eslint . --report-unused-disable-directives --color",
     "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root",
-    "vrdt": "npx tsx vrdt/src/index.ts"
+    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root"
   },
   "type": "module",
   "devDependencies": {
