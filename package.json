@@ -16,7 +16,8 @@
     "lint": "npm run build-deps && eslint . --report-unused-disable-directives --color",
     "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root"
+    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root",
+    "vrdt": "npx tsx tsdoc2readme/src/index.ts"
   },
   "type": "module",
   "devDependencies": {

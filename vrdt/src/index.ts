@@ -1,9 +1,39 @@
+#!/usr/bin/env node
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { generateMarkdownDocumentation } from './builder.js';
-import { injectMarkdown, updateTOC } from './markdown.js';
+import { generateMarkdownDocumentation } from './lib/typedoc.js';
+import { injectMarkdown, updateTOC } from './lib/markdown.js';
+import { Command, InvalidArgumentError } from 'commander';
+import { cwd } from 'node:process';
 
+
+const program = new Command();
+
+program
+	.name('vrdt')
+	.description('versatiles release and documentaion tool');
+
+program.command('ts2md')
+	.description('convert TypeScript to Markdown')
+	.argument('<index.ts>', 'TypeScript file', checkFilename)
+	.argument('<tsconfig.json>', 'tsconfig file', checkFilename)
+	.action(async (tsFile: string, tsConfig: string) => {
+		const mdDocumentation = await generateMarkdownDocumentation([tsFile], tsConfig);
+		process.stdout.write(mdDocumentation);
+	});
+
+
+program.command('insertmd')
+	.description('takes Markdown from stdin and insert it into a Markdown file')
+	.argument('<string>', 'Markdown file, like a readme.md', checkFilename)
+	.argument('<string>', 'Heading in the Markdown file, e.g. "# API"');
+
+
+program.parse();
+
+
+/*
 // ### Argument 1
 // eslint-disable-next-line @typescript-eslint/prefer-destructuring
 const filenameTypeScript = process.argv[2];
@@ -53,3 +83,14 @@ function getTSConfig(startFilename: string): string {
 	if (!existsSync(filename)) throw Error('tsconfig file is missing: ' + filename);
 	return filename;
 }
+*/
+
+
+function checkFilename(filename: string): string {
+	const fullname = resolve(cwd(), filename);
+	if (existsSync(fullname)) {
+		throw new InvalidArgumentError('file not found');
+	}
+	return fullname;
+}
+

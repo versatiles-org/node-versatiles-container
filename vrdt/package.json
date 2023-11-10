@@ -1,8 +1,11 @@
 {
   "private": true,
   "name": "tsdoc2readme",
-  "scripts": {
-    "update_readme": "npx tsx src/index.ts"
+  "bin": {
+    "vrdt": "npx tsx src/index.ts"
+  },
+  "script": {
+    "vrdt": "npx tsx src/index.ts"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,5 +17,8 @@
     "remark": "^15.0.1",
     "typedoc": "^0.25.3",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "commander": "^11.1.0"
   }
 }
