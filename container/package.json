@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "check": "cd ..; npm run check",
-    "doc": "npm run -w tsdoc2readme update_readme src/index.ts '# API'",
+    "doc": "npm run -w vrdt update_readme src/index.ts '# API'",
     "lint": "cd ..; npm run lint",
     "test": "cd ..; npm run test"
   },

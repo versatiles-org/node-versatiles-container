@@ -1,14 +1,8 @@
 {
   "private": true,
-  "name": "tsdoc2readme",
-  "bin": {
-    "vrdt": "npx tsx src/index.ts"
-  },
-  "script": {
-    "vrdt": "npx tsx src/index.ts"
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "name": "vrdt",
+  "description": "VersaTiles release and documentation tools, for internal use",
+  "bin": "npx tsx src/index.ts",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
   "type": "module",

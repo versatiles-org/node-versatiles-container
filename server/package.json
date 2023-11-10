@@ -16,7 +16,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "check": "cd ..; npm run check",
-    "doc": "npm run -w tsdoc2readme update_readme container/src/index.ts '# API'",
+    "doc": "npm run -w vrdt update_readme container/src/index.ts '# API'",
     "lint": "cd ..; npm run lint",
     "prepublish": "npm run build",
     "start": "tsx src/index.ts",
