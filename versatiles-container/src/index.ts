@@ -3,7 +3,7 @@ import HttpReader from './reader_http.js';
 import FileReader from './reader_file.js';
 import { decompress } from './decompress.js';
 import type { Block, Compression, Decompressor, Format, Header, Options, Reader, TileIndex } from './interfaces.js';
-export type { Block, Compression, Format, Header, Options, Reader, TileIndex } from './interfaces.js';
+export type {  Compression, Format, Header, Options, Reader } from './interfaces.js';
 
 
 
@@ -67,7 +67,6 @@ export class VersaTiles {
 
 	/**
 	 * Asynchronously retrieves the header information from the `.versatiles` container.
-	 * This method is primarily for internal use.
 	 * 
 	 * @returns A promise that resolves with the header object.
 	 * @throws Will throw an error if the container does not start with expected magic bytes indicating a valid format.
@@ -76,7 +75,7 @@ export class VersaTiles {
 		// deliver if known
 		if (this.#header) return this.#header;
 
-		const data = await this.#read(0, 66);
+		const data = await this.read(0, 66);
 
 		// check magic bytes
 		if (!/^versatiles_v0[12]$/.test(data.toString('utf8', 0, 14))) {
@@ -138,7 +137,7 @@ export class VersaTiles {
 		if (header.metaLength === 0) {
 			this.#metadata = null;
 		} else {
-			let buffer: Buffer = await this.#read(header.metaOffset, header.metaLength);
+			let buffer: Buffer = await this.read(header.metaOffset, header.metaLength);
 			buffer = await this.#decompress(buffer, header.tileCompression);
 			this.#metadata = JSON.parse(buffer.toString()) as object;
 		}
@@ -146,29 +145,85 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Asynchronously determines the tile format, such as "png" or "pbf", based on the header information.
+	 * Asynchronously retrieves a specific tile's data as a Buffer. If the tile data is compressed as
+	 * defined in the container header, the returned Buffer will contain the compressed data.
+	 * To obtain uncompressed data, use the `getTileUncompressed` method.
+	 * If the specified tile does not exist, the method returns `null`.
 	 * 
-	 * @returns A promise that resolves with the tile format string, or null if the format is undefined.
+	 * @param z - The zoom level of the tile.
+	 * @param x - The x coordinate of the tile within its zoom level.
+	 * @param y - The y coordinate of the tile within its zoom level.
+	 * @returns A promise that resolves with the tile data as a Buffer, or null if the tile cannot be found.
 	 */
-	public async getTileFormat(): Promise<Format | null> {
-		return (await this.getHeader()).tileFormat;
+	public async getTile(z: number, x: number, y: number): Promise<Buffer | null> {
+		// when y index is inverted
+		if (this.#options.tms) y = Math.pow(2, z) - y - 1;
+
+		// ensure block index is loaded
+		const blockIndex = await this.getBlockIndex();
+
+		// block xy
+		const bx = x >> 8;
+		const by = y >> 8;
+
+		// tile xy (within block)
+		const tx = x & 0xFF;
+		const ty = y & 0xFF;
+
+		// check if block containing tile is within bounds
+		const blockKey = `${z},${bx},${by}`;
+		const block = blockIndex.get(blockKey);
+		if (!block) return null;
+
+		// check if block contains tile
+		if (tx < block.colMin || tx > block.colMax) return null;
+		if (ty < block.rowMin || ty > block.rowMax) return null;
+
+		// calculate sequential tile number
+		const j = (ty - block.rowMin) * (block.colMax - block.colMin + 1) + (tx - block.colMin);
+
+		// get tile index
+		const tileIndex = await this.getTileIndex(block);
+		const offset = tileIndex.offsets[j];
+		const length = tileIndex.lengths[j];
+
+		if (length === 0) return null;
+
+		return this.read(offset, length);
 	}
 
+	/**
+	 * Asynchronously retrieves a specific tile's uncompressed data as a Buffer. This method first
+	 * retrieves the compressed tile data using `getTile` and then decompresses it based on the
+	 * compression setting in the container header.
+	 * If the specified tile does not exist, the method returns `null`.
+	 * 
+	 * @param z - The zoom level of the tile.
+	 * @param x - The x coordinate of the tile within its zoom level.
+	 * @param y - The y coordinate of the tile within its zoom level.
+	 * @returns A promise that resolves with the uncompressed tile data as a Buffer, or null if the tile cannot be found.
+	 */
+	public async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer | null> {
+		const tile = await this.getTile(z, x, y);
+		if (!tile) return null;
+		const header = await this.getHeader();
+		return this.#decompress(tile, header.tileCompression);
+	}
 
 	/**
 	 * Asynchronously retrieves a mapping of tile block indices. The map's keys are formatted as "{z},{x},{y}".
 	 * This method is for internal use to manage tile lookup within the container.
 	 * 
 	 * @returns A promise that resolves with the block index map.
-	 * @internal
+	 * @protected
 	 */
-	public async getBlockIndex(): Promise<Map<string, Block>> {
+	protected async getBlockIndex(): Promise<Map<string, Block>> {
 		if (this.#blockIndex) return this.#blockIndex;
 
 		const header = await this.getHeader();
 
 		// read block_index buffer
-		let data = await this.#read(header.blockIndexOffset, header.blockIndexLength);
+		let data = await this.read(header.blockIndexOffset, header.blockIndexLength);
 		data = await this.#decompress(data, 'br');
 
 		// read index from buffer
@@ -239,12 +294,12 @@ export class VersaTiles {
 	 * 
 	 * @param block - The block for which to retrieve the tile index.
 	 * @returns A promise that resolves with the tile index.
-	 * @internal
+	 * @protected
 	 */
-	public async getTileIndex(block: Block): Promise<TileIndex> {
+	protected async getTileIndex(block: Block): Promise<TileIndex> {
 		if (block.tileIndex) return block.tileIndex;
 
-		let buffer = await this.#read(block.tileIndexOffset, block.tileIndexLength);
+		let buffer = await this.read(block.tileIndexOffset, block.tileIndexLength);
 		buffer = await this.#decompress(buffer, 'br');
 
 		const offsets = new Float64Array(block.tileCount);
@@ -261,80 +316,14 @@ export class VersaTiles {
 	}
 
 	/**
-	 * Asynchronously retrieves a specific tile's data as a Buffer. If the tile data is compressed as
-	 * defined in the container header, the returned Buffer will contain the compressed data.
-	 * To obtain uncompressed data, use the `getTileUncompressed` method.
-	 * If the specified tile does not exist, the method returns `null`.
-	 * 
-	 * @param z - The zoom level of the tile.
-	 * @param x - The x coordinate of the tile within its zoom level.
-	 * @param y - The y coordinate of the tile within its zoom level.
-	 * @returns A promise that resolves with the tile data as a Buffer, or null if the tile cannot be found.
-	 */
-	public async getTile(z: number, x: number, y: number): Promise<Buffer | null> {
-		// when y index is inverted
-		if (this.#options.tms) y = Math.pow(2, z) - y - 1;
-
-		// ensure block index is loaded
-		const blockIndex = await this.getBlockIndex();
-
-		// block xy
-		const bx = x >> 8;
-		const by = y >> 8;
-
-		// tile xy (within block)
-		const tx = x & 0xFF;
-		const ty = y & 0xFF;
-
-		// check if block containing tile is within bounds
-		const blockKey = `${z},${bx},${by}`;
-		const block = blockIndex.get(blockKey);
-		if (!block) return null;
-
-		// check if block contains tile
-		if (tx < block.colMin || tx > block.colMax) return null;
-		if (ty < block.rowMin || ty > block.rowMax) return null;
-
-		// calculate sequential tile number
-		const j = (ty - block.rowMin) * (block.colMax - block.colMin + 1) + (tx - block.colMin);
-
-		// get tile index
-		const tileIndex = await this.getTileIndex(block);
-		const offset = tileIndex.offsets[j];
-		const length = tileIndex.lengths[j];
-
-		if (length === 0) return null;
-
-		return this.#read(offset, length);
-	}
-
-	/**
-	 * Asynchronously retrieves a specific tile's uncompressed data as a Buffer. This method first
-	 * retrieves the compressed tile data using `getTile` and then decompresses it based on the
-	 * compression setting in the container header.
-	 * If the specified tile does not exist, the method returns `null`.
-	 * 
-	 * @param z - The zoom level of the tile.
-	 * @param x - The x coordinate of the tile within its zoom level.
-	 * @param y - The y coordinate of the tile within its zoom level.
-	 * @returns A promise that resolves with the uncompressed tile data as a Buffer, or null if the tile cannot be found.
-	 */
-	public async getTileUncompressed(z: number, x: number, y: number): Promise<Buffer | null> {
-		const tile = await this.getTile(z, x, y);
-		if (!tile) return null;
-		const header = await this.getHeader();
-		return this.#decompress(tile, header.tileCompression);
-	}
-
-	/**
-	 * A private method to read a chunk of data from the source based on the specified offset and length.
+	 * A protected method to read a chunk of data from the source based on the specified offset and length.
 	 * 
 	 * @param offset - The offset from the start of the source data to begin reading.
 	 * @param length - The number of bytes to read from the source.
 	 * @returns A promise that resolves with the read data as a Buffer.
-	 * @private
+	 * @protected
 	 */
-	async #read(offset: number, length: number): Promise<Buffer> {
+	protected async read(offset: number, length: number): Promise<Buffer> {
 		if (length === 0) return Buffer.allocUnsafe(0);
 		return this.#reader(offset, length);
 	}

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { createHash } from 'node:crypto';
-import type { Block } from './index.js';
 import { VersaTiles } from './index.js';
 
 const TESTFILE = new URL('../../test/island.versatiles', import.meta.url).pathname;
@@ -62,12 +61,7 @@ describe('VersaTiles', () => {
 		});
 	});
 
-	describe('getTileFormat', () => {
-		it('should return tile format', async () => {
-			expect(await versatiles.getTileFormat()).toEqual('pbf');
-		});
-	});
-
+	/*
 	describe('getBlockIndex', () => {
 		it('should return correct block and tiles index', async () => {
 			const blockIndex = new Map([
@@ -104,6 +98,7 @@ describe('VersaTiles', () => {
 			expect(await versatiles.getTileIndex(blockIndex.get('11,1,2') as Block)).toEqual(tileIndex);
 		});
 	});
+	*/
 
 	describe('getTile', () => {
 		it('should the correct tile as Buffer 1/3', async () => {

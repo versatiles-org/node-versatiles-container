@@ -23,9 +23,9 @@ export type Decompressor = (data: Buffer, compression: Compression) => Promise<B
 
 
 /**
- * Type definition for an asynchronous function to read content from a VersaTiles container.
+ * Type definition for reading content from a VersaTiles container.
  * 
- * This can be useful for accessing a container data over any transport protocol.
+ * This is useful for implementing new container readers, e.g. reading over other network protocols.
  * 
  * @param {number} position - The byte offset at which to start reading.
  * @param {number} length - The number of bytes to read.

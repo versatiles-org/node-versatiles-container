@@ -41,7 +41,7 @@ export const SHORTBREAD_LAYERS = [
  * @returns {Promise<string>} A promise that resolves to a style string.
  */
 export async function generateStyle(container: VersaTiles, options: Record<string, boolean | number | string | null>): Promise<string> {
-	const tileFormat = await container.getTileFormat();
+	const { tileFormat } = await container.getHeader();
 
 	switch (tileFormat) {
 		case 'pbf':
