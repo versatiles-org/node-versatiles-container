@@ -14,7 +14,7 @@
     "static"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
     "check": "cd ..; npm run check",
     "doc": "npm run -w vrdt update_readme container/src/index.ts '# API'",
     "lint": "cd ..; npm run lint",
