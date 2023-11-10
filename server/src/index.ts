@@ -16,7 +16,7 @@ program
 	.showHelpAfterError()
 	.name('versatiles-server')
 	.description('Simple VersaTiles server')
-	.option('-b, --base-url <url>', 'Base URL for the server', 'http://localhost:<port>/')
+	.option('-b, --base-url <url>', 'Base URL for the server (default: "http://localhost:<port>/")')
 	.option('-c, --compress', 'Compress data if needed. Slower, but reduces traffic.', true)
 	.option('-i, --host <hostname|ip>', 'Hostname or IP to bind the server to', '0.0.0.0')
 	.option('-o, --open', 'Open map in web browser', false)
