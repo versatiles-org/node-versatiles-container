@@ -12,8 +12,6 @@ import {
 	ReflectionKind,
 } from 'typedoc';
 
-const NEW_LINE = '\n';
-
 /**
  * Generate markdown documentation from TypeScript files.
  * @param entryPoints - Array of absolute TypeScript file paths.
@@ -27,7 +25,7 @@ export async function generateMarkdownDocumentation(entryPoints: string[], tscon
 		throw new Error('Failed to convert project.');
 	}
 
-	return Array.from(renderProjectDocumentation(project)).join(NEW_LINE);
+	return Array.from(renderProjectDocumentation(project)).join('\n');
 }
 
 function* renderProjectDocumentation(project: ProjectReflection): Generator<string> {
@@ -43,7 +41,7 @@ function* renderProjectDocumentation(project: ProjectReflection): Generator<stri
 }
 
 function* renderDeclaration(declaration: DeclarationReflection): Generator<string> {
-	const typeName = resolveTypeName(declaration.kind);
+	const typeName = formatTypeName(declaration.kind);
 	yield `# ${typeName}: \`${declaration.name}\`<a id="${generateAnchor(declaration)}"></a>`;
 	yield* renderSummaryBlock(declaration);
 
@@ -74,37 +72,20 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 	}
 
 	if (declaration.type) {
-		yield `${NEW_LINE}**Type:** ${resolveType(declaration.type)}`;
-	}
-}
-
-// Helper Functions
-function resolveTypeName(kind: ReflectionKind): string {
-	switch (kind) {
-		case ReflectionKind.Class: return 'Class';
-		case ReflectionKind.Interface: return 'Interface';
-		case ReflectionKind.TypeAlias: return 'Type';
-		default: throw new Error(`Unknown reflection kind: ${kind}`);
+		yield `\n**Type:** ${formatType(declaration.type)}`;
 	}
 }
 
 function* renderMethod(declaration: DeclarationReflection, isConstructor = false): Generator<string> {
-	const signature = declaration.signatures?.[0];
+	if (declaration.signatures?.length !== 1) throw Error('should be 1');
 
-	if (!signature) throw new Error('Method signature not found');
+	const [signature] = declaration.signatures;
 
-	let heading = '## ';
-	if (isConstructor) heading += 'constructor: ';
-	let functionName = signature.name;
-	let returnType = signature.type;
-	if ((returnType?.type === 'reference') && (returnType.name === 'Promise')) {
-		// is an async function
-		if (!returnType.typeArguments) throw Error();
-		[returnType] = returnType.typeArguments;
-		functionName = 'async ' + functionName;
-	}
-	heading += `\`${functionName}(${formatMethodParameters(signature.parameters ?? [])})\``;
-	yield heading;
+	const functionName = signature.name;
+	const parameters = formatMethodParameters(signature.parameters ?? []);
+	const returnType = signature.type;
+
+	yield `'## ${isConstructor ? 'constructor: ' : ''}\`${functionName}(${parameters})\``;
 
 	yield '';
 	yield* renderSummaryBlock(signature);
@@ -119,7 +100,7 @@ function* renderMethod(declaration: DeclarationReflection, isConstructor = false
 
 	if (returnType) {
 		yield '';
-		yield `**Returns:** ${resolveType(returnType)}`;
+		yield `**Returns:** ${formatType(returnType)}`;
 	}
 }
 
@@ -127,57 +108,71 @@ function formatMethodParameters(parameters: ParameterReflection[]): string {
 	return parameters.map(param => param.name).join(', ');
 }
 
+// Helper Functions
+function formatTypeName(kind: ReflectionKind): string {
+	switch (kind) {
+		case ReflectionKind.Class: return 'Class';
+		case ReflectionKind.Interface: return 'Interface';
+		case ReflectionKind.TypeAlias: return 'Type';
+		default: throw new Error(`Unknown reflection kind: ${kind}`);
+	}
+}
+
 function formatParameter(ref: DeclarationReflection | ParameterReflection): string {
 	let line = `  - \`${ref.name}\`${resolveTypeDeclaration(ref.type)}`.replace(/``/g, '');
 	if (ref.flags.isOptional) line += ' (optional)';
 	const summary = extractSummary(ref.comment);
-	if (summary ?? '') line += `  ${NEW_LINE}    ` + summary;
+	if (summary) line += '  \n    ' + summary;
 	return line;
 }
 
-function extractSummary(comment: Comment | undefined): string | undefined {
-	if (!comment) return;
+function extractSummary(comment: Comment | undefined): string {
+	if (!comment) return '';
 	return comment.summary.map(line => line.text).join('');
 }
 
 function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield '';
 
-	let comment: Comment | undefined;
 	if (ref.comment) {
-		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
-		comment = ref.comment;
-	} else {
-		if (ref.type) {
-			// @ts-expect-error I dont think I can handle this
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			comment = ref.type.declaration?.signatures?.[0]?.comment as Comment | undefined;
-		}
-	}
-
-	if (!comment) {
-		yield generateSourceLink(ref);
+		yield formatComment(ref.comment);
 		return;
 	}
 
-	const summary = comment.summary.map(line => line.text).join('') + ' ' + generateSourceLink(ref);
-	yield summary.replace(/\n/m, `  ${NEW_LINE}`);
+	const { type } = ref;
+	if (type?.type === 'reflection') {
+		if (type.declaration.signatures?.length !== 1) throw Error();
+		const [signature] = type.declaration.signatures;
+		if (signature.comment) {
+			yield formatComment(signature.comment);
+			return;
+		}
+	}
+
+	yield generateSourceLink(ref);
+	return;
+
+	function formatComment(comment: Comment): string {
+		return (extractSummary(comment) + ' ' + generateSourceLink(ref)).replace(/\n/m, '  \n');
+	}
 }
 
 function resolveTypeDeclaration(someType: SomeType | undefined): string {
 	if (!someType) return '';
-	return `\`: \`${resolveType(someType)}`.replace(/``/g, '');
+	return `\`: \`${formatType(someType)}`.replace(/``/g, '');
 }
 
-function resolveType(someType: SomeType): string {
+function formatType(someType: SomeType): string {
 	return getTypeRec(someType).replace(/``/g, '');
 
 	function getTypeRec(some: SomeType): string {
 		switch (some.type) {
 			case 'intrinsic':
 				return `\`${some.name}\``;
+
 			case 'literal':
 				return `\`${JSON.stringify(some.value)}\``;
+
 			case 'reference':
 				let result = `\`${some.name}\``;
 				if (some.reflection) result = `[${result}](#${generateAnchor(some.reflection)})`;
@@ -186,6 +181,7 @@ function resolveType(someType: SomeType): string {
 						.map(getTypeRec).join('\`,\`')
 					+ '`>`';
 				return result;
+
 			case 'reflection':
 				if (!some.declaration.signatures) throw Error();
 				if (some.declaration.signatures.length !== 1) throw Error();
@@ -196,10 +192,13 @@ function resolveType(someType: SomeType): string {
 						return `\`${p.name}\`${p.type ? '`: `' + getTypeRec(p.type) : ''}`;
 					}).join('`, `');
 				return `\`(\`${parameters}\`) => \`${type}`;
+
 			case 'tuple':
 				return `\`[\`${some.elements.map(getTypeRec).join('`, `')}\`]\``;
+
 			case 'union':
 				return some.types.map(getTypeRec).join('\` | \`');
+
 			default:
 				console.log(some);
 				throw Error();
@@ -215,7 +214,7 @@ function generateSourceLink(ref: DeclarationReflection | SignatureReflection): s
 	return `<sup><a href="${source.url}">[src]</a></sup>`;
 }
 
-function generateAnchor(ref: DeclarationReflection | Reflection): string {
+function generateAnchor(ref: Reflection): string {
 	let typeName;
 	switch (ref.kind) {
 		case ReflectionKind.Class: typeName = 'class'; break;

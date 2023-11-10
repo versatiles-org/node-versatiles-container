@@ -3,18 +3,25 @@ import type { Heading, Root, RootContent } from 'mdast';
 import { remark } from 'remark';
 
 
-export function injectMarkdown(main: string, segment: string, heading: string): string {
-	const mainAst = remark().parse(main);
+export function injectMarkdown(document: string, segment: string, heading: string): string {
+	const documentAst = remark().parse(document);
 	const segmentAst = remark().parse(segment);
 	const headingAst = remark().parse(heading);
+	
+	let startIndex;
+	try {
+		startIndex = findSegmentStart(documentAst, headingAst);
+	} catch (error) {
+		console.error(`While searching for segment "${heading}" …`);
+		throw error;
+	}
 
-	const startIndex = findSegmentStart(mainAst, headingAst);
-	const depth = getHeadingDepth(mainAst, startIndex);
-	const endIndex = findNextHeading(mainAst, startIndex + 1, depth);
+	const depth = getHeadingDepth(documentAst, startIndex);
+	const endIndex = findNextHeading(documentAst, startIndex + 1, depth);
 	indentChapter(segmentAst, depth);
-	spliceAst(mainAst, segmentAst, startIndex + 1, endIndex);
+	spliceAst(documentAst, segmentAst, startIndex + 1, endIndex);
 
-	return remark().stringify(mainAst);
+	return remark().stringify(documentAst);
 }
 
 export function updateTOC(main: string, heading: string): string {
@@ -33,11 +40,11 @@ export function updateTOC(main: string, heading: string): string {
 	return injectMarkdown(main, toc, heading);
 }
 
-function findSegmentStart(mainAst: Root, sectionAst: Root): number {
-	if (sectionAst.children.length !== 1) throw Error();
-	if (sectionAst.children[0].type !== 'heading') throw Error();
-	const sectionDepth = sectionAst.children[0].depth;
-	const sectionText = getMDText(sectionAst);
+function findSegmentStart(mainAst: Root, headingAst: Root): number {
+	if (headingAst.children.length !== 1) throw Error();
+	if (headingAst.children[0].type !== 'heading') throw Error();
+	const sectionDepth = headingAst.children[0].depth;
+	const sectionText = getMDText(headingAst);
 
 	const index = mainAst.children.findIndex(
 		c => (c.type === 'heading') && (c.depth === sectionDepth) && (getMDText(c) === sectionText),
