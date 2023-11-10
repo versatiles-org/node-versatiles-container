@@ -1,8 +1,9 @@
 {
   "private": true,
-  "name": "vrdt",
+  "name": "@versatiles/release-tool",
   "description": "VersaTiles release and documentation tools, for internal use",
-  "bin": "npx tsx src/index.ts",
+  "bin": "tsx src/index.ts",
+  "version": "1.0.0",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
   "type": "module",

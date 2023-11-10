@@ -1,6 +1,4 @@
 .DS_Store
 **/coverage/
 **/dist/
-node_modules
-versatiles-server/static/assets/
-versatiles/doc/
+/node_modules
