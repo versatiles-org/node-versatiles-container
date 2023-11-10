@@ -30,7 +30,7 @@ export async function generateMarkdownDocumentation(entryPoints: string[], tscon
 
 function* renderProjectDocumentation(project: ProjectReflection): Generator<string> {
 	if (!project.groups) {
-		throw new Error('No reflection groups found.');
+		throw new Error('No code to document found! Is this a lib?');
 	}
 
 	for (const group of project.groups) {

@@ -7,7 +7,7 @@ export function injectMarkdown(document: string, segment: string, heading: strin
 	const documentAst = remark().parse(document);
 	const segmentAst = remark().parse(segment);
 	const headingAst = remark().parse(heading);
-	
+
 	let startIndex;
 	try {
 		startIndex = findSegmentStart(documentAst, headingAst);
@@ -74,10 +74,12 @@ function getHeadingDepth(mainAst: Root, index: number): number {
 function indentChapter(segmentAst: Root, depth: number): void {
 	segmentAst.children.forEach(node => {
 		switch (node.type) {
-			case 'text':
+			case 'code':
+			case 'html':
 			case 'list':
 			case 'listItem':
 			case 'paragraph':
+			case 'text':
 				return;
 			case 'heading':
 				return node.depth += depth;

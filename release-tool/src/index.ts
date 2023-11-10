@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --enable-source-maps
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -6,6 +6,7 @@ import { generateMarkdownDocumentation } from './lib/typedoc.js';
 import { injectMarkdown, updateTOC } from './lib/markdown.js';
 import { Command, InvalidArgumentError } from 'commander';
 import { cwd } from 'node:process';
+import { generateCommandDocumentation } from './lib/command.js';
 
 
 const program = new Command();
@@ -16,21 +17,29 @@ program
 
 program.command('ts2md')
 	.description('documents a TypeScript file and outputs it to stdout')
-	.argument('<index.ts>', 'TypeScript file', checkFilename)
-	.argument('<tsconfig.json>', 'tsconfig file', checkFilename)
+	.argument('<typescript>', 'Filename of the TypeScript file', checkFilename)
+	.argument('<tsconfig>', 'Filename of tsconfig.json', checkFilename)
 	.action(async (tsFilename: string, tsConfig: string) => {
 		const mdDocumentation = await generateMarkdownDocumentation([tsFilename], tsConfig);
 		process.stdout.write(mdDocumentation);
 	});
 
+program.command('cmd2md')
+	.description('documents a runnable command and outputs it to stdout')
+	.argument('<command>', 'command to run')
+	.action((command: string) => {
+		const mdDocumentation = generateCommandDocumentation(command);
+		process.stdout.write(mdDocumentation);
+	});
+
 program.command('insertmd')
 	.description('takes Markdown from stdin and insert it into a Markdown file')
-	.argument('<string>', 'Markdown file, like a readme.md', checkFilename)
-	.argument('[string]', 'Heading in the Markdown file', '# API')
+	.argument('<readme>', 'Markdown file, like a readme.md', checkFilename)
+	.argument('[heading]', 'Heading in the Markdown file', '# API')
 	.action(async (mdFilename: string, heading: string) => {
 		const buffers = [];
 		for await (const data of process.stdin) buffers.push(data);
-		const mdContent = Buffer.concat(buffers).toString();
+		const mdContent = '<!--- This chapter is generated automatically --->\n' + Buffer.concat(buffers).toString();
 
 		let mdFile = readFileSync(mdFilename, 'utf8');
 		mdFile = injectMarkdown(mdFile, mdContent, heading);
@@ -39,8 +48,8 @@ program.command('insertmd')
 
 program.command('inserttoc')
 	.description('updates the TOC in a Markdown file')
-	.argument('<string>', 'Markdown file, like a readme.md', checkFilename)
-	.argument('[string]', 'Heading in the Markdown file', '# Table of Content')
+	.argument('<readme>', 'Markdown file, like a readme.md', checkFilename)
+	.argument('[heading]', 'Heading in the Markdown file', '# Table of Content')
 	.action((mdFilename: string, heading: string) => {
 		let mdFile = readFileSync(mdFilename, 'utf8');
 		mdFile = updateTOC(mdFile, heading);
@@ -51,7 +60,7 @@ program.parse();
 
 function checkFilename(filename: string): string {
 	const fullname = resolve(cwd(), filename);
-	if (existsSync(fullname)) {
+	if (!existsSync(fullname)) {
 		throw new InvalidArgumentError('file not found');
 	}
 	return fullname;
