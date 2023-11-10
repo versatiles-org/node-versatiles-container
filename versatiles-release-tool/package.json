@@ -6,8 +6,9 @@
     "vrt": "./dist/index.js"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
     "doc": "npx vrt cmd2md vrt | npx vrt insertmd README.md '# Command'",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js"
+    "prepublish": "npm run build && npm run doc"
   },
   "version": "1.0.0",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",

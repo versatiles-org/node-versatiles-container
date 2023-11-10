@@ -18,7 +18,7 @@
     "check": "cd ..; npm run check",
     "doc": "npx vrt cmd2md versatiles-server | npx vrt insertmd README.md '## Options'",
     "lint": "cd ..; npm run lint",
-    "prepublish": "npm run build",
+    "prepublish": "npm run build && npm run doc",
     "start": "tsx src/index.ts",
     "test": "cd ..; npm run test"
   },

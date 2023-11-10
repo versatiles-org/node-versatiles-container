@@ -5,8 +5,9 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "check": "cd ..; npm run check",
-    "doc": "npm run -w vrdt update_readme src/index.ts '# API'",
+    "doc": "npx vrt ts2md src/index.ts tsconfig.build.json | npx vrt insertmd README.md '# API'",
     "lint": "cd ..; npm run lint",
+    "prepublish": "npm run build && npm run doc",
     "test": "cd ..; npm run test"
   },
   "files": [
