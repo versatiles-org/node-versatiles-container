@@ -16,7 +16,7 @@
     "lint": "npm run build-deps && eslint . --report-unused-disable-directives --color",
     "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules && npm i -ws --include-workspace-root"
+    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules; npm i -ws --include-workspace-root"
   },
   "type": "module",
   "devDependencies": {
@@ -29,7 +29,7 @@
     "npm-check-updates": "^16.14.6",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
-    "tsx": "^4.0.0",
+    "tsx": "^4.1.0",
     "typescript": "^5.2.2"
   }
 }
