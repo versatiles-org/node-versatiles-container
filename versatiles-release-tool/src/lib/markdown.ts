@@ -144,8 +144,6 @@ function getMDAnchor(node: Heading): string {
 }
 
 function makeFoldable(ast: Root): void {
-	console.dir(ast, { depth: 3 });
-
 	const openDetails: number[] = [];
 	const children: RootContent[] = [];
 

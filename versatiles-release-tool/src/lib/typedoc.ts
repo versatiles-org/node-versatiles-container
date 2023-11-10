@@ -46,7 +46,7 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 	yield* renderSummaryBlock(declaration);
 
 	for (const group of declaration.groups ?? []) {
-		const publicMembers = group.children.filter(member => !member.flags.isPrivate);
+		const publicMembers = group.children.filter(member => !member.flags.isPrivate && !member.flags.isProtected);
 		if (publicMembers.length === 0) continue;
 
 		// Sort by order in code
@@ -58,11 +58,13 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 				yield* renderMethod(publicMembers[0], true);
 				continue;
 			case 'Properties':
-				yield '**Properties**';
+				//yield '';
+				//yield '**Properties**';
 				for (const member of publicMembers) yield formatParameter(member);
 				continue;
 			case 'Methods':
-				yield '**Methods**';
+				//yield '';
+				//yield '**Methods**';
 				for (const member of publicMembers) yield* renderMethod(member);
 				continue;
 			default:
@@ -72,7 +74,7 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 	}
 
 	if (declaration.type) {
-		yield `\n**Type:** ${formatType(declaration.type)}`;
+		yield `\n**Type:** <code>${formatType(declaration.type)}</code>`;
 	}
 }
 
@@ -121,7 +123,7 @@ function formatTypeName(kind: ReflectionKind): string {
 }
 
 function formatParameter(ref: DeclarationReflection | ParameterReflection): string {
-	let line = `  - \`${ref.name}\`${resolveTypeDeclaration(ref.type)}`.replace(/``/g, '');
+	let line = `  - <code>${ref.name}${resolveTypeDeclaration(ref.type)}</code>`;
 	if (ref.flags.isOptional) line += ' (optional)';
 	const summary = extractSummary(ref.comment);
 	if (summary) line += '  \n    ' + summary;
@@ -161,27 +163,27 @@ function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): 
 
 function resolveTypeDeclaration(someType: SomeType | undefined): string {
 	if (!someType) return '';
-	return `\`: \`${formatType(someType)}`.replace(/``/g, '');
+	return `: ${formatType(someType)}`;
 }
 
 function formatType(someType: SomeType): string {
-	return getTypeRec(someType).replace(/``/g, '');
+	return getTypeRec(someType);
 
 	function getTypeRec(some: SomeType): string {
 		switch (some.type) {
 			case 'intrinsic':
-				return `\`${some.name}\``;
+				return some.name;
 
 			case 'literal':
-				return `\`${JSON.stringify(some.value)}\``;
+				return JSON.stringify(some.value);
 
 			case 'reference':
-				let result = `\`${some.name}\``;
+				let result = some.name;
 				if (some.reflection) result = `[${result}](#${generateAnchor(some.reflection)})`;
-				if (some.typeArguments?.length ?? 0) result += '`<`'
+				if (some.typeArguments?.length ?? 0) result += '<'
 					+ (some.typeArguments ?? [])
-						.map(getTypeRec).join('\`,\`')
-					+ '`>`';
+						.map(getTypeRec).join(',')
+					+ '>';
 				return result;
 
 			case 'reflection':
@@ -191,15 +193,15 @@ function formatType(someType: SomeType): string {
 				const type = signature.type ? getTypeRec(signature.type) : 'void';
 				const parameters = (signature.parameters ?? [])
 					.map(p => {
-						return `\`${p.name}\`${p.type ? '`: `' + getTypeRec(p.type) : ''}`;
-					}).join('`, `');
-				return `\`(\`${parameters}\`) => \`${type}`;
+						return p.name + (p.type ? ': ' + getTypeRec(p.type) : '');
+					}).join(', ');
+				return `(${parameters}) => ${type}`;
 
 			case 'tuple':
-				return `\`[\`${some.elements.map(getTypeRec).join('`, `')}\`]\``;
+				return `[${some.elements.map(getTypeRec).join(', ')}]`;
 
 			case 'union':
-				return some.types.map(getTypeRec).join('\` | \`');
+				return some.types.map(getTypeRec).join(' | ');
 
 			default:
 				console.log(some);
