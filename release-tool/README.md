@@ -1,11 +1,11 @@
 # VersaTiles Release Tools
 
-… helps you to:
+Tools used internally for:
 
-* creates Markdown documentation TypeScript libraries: [`vrt ts2md`](#vrt-ts2md)
-* creates Markdown documentation for executables: [`vrt cmd2md`](#vrt-cmd2md)
-* insert Markdown into documents: [`vrt insertmd`](#vrt-insertmd)
-* update "Table of Content" in Markdown files: [`vrt inserttoc`](#vrt-inserttoc)
+* creating Markdown documentation of TypeScript libraries: [`vrt ts2md`](#subcommand-vrt-ts2md)
+* creating Markdown documentation of executables: [`vrt cmd2md`](#subcommand-vrt-cmd2md)
+* inserting Markdown into documents: [`vrt insertmd`](#subcommand-vrt-insertmd)
+* updating "Table of Content" in Markdown files: [`vrt inserttoc`](#subcommand-vrt-inserttoc)
 
 # Command `vrt`
 

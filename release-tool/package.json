@@ -6,6 +6,7 @@
     "vrt": "./dist/index.js"
   },
   "scripts": {
+    "doc": "npx vrt cmd2md vrt | npx vrt insertmd README.md '# Command'",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js"
   },
   "version": "1.0.0",

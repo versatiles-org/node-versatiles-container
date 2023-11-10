@@ -46,13 +46,17 @@ function findSegmentStart(mainAst: Root, headingAst: Root): number {
 	const sectionDepth = headingAst.children[0].depth;
 	const sectionText = getMDText(headingAst);
 
-	const index = mainAst.children.findIndex(
-		c => (c.type === 'heading') && (c.depth === sectionDepth) && (getMDText(c) === sectionText),
-	);
+	const indexes: number[] = mainAst.children.flatMap((c, index) => {
+		if ((c.type === 'heading') && (c.depth === sectionDepth) && getMDText(c).startsWith(sectionText)) {
+			return [index];
+		}
+		return [];
+	});
 
-	if (index < 0) throw Error('section not found');
+	if (indexes.length < 1) throw Error('section not found');
+	if (indexes.length > 1) throw Error('too many sections found');
 
-	return index;
+	return indexes[0];
 }
 
 function findNextHeading(mainAst: Root, startIndex: number, depth: number): number {
