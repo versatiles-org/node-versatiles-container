@@ -3,10 +3,11 @@ import { createServer } from 'node:http';
 import { resolve as resolvePath } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { generateStyle } from './style.js';
-import { gzip, ungzip, brotli, unbrotli } from './compressors.js';
 import { StaticContent } from './static_content.js';
 import type { Compression, Reader } from '@versatiles/container';
 import { VersaTiles } from '@versatiles/container';
+import { respondWithContent, respondWithError } from './response.js';
+import type { ResponseConfig } from './types.js';
 
 const DIRNAME = new URL('../../', import.meta.url).pathname;
 
@@ -60,7 +61,7 @@ export class Server {
 
 	public async start(): Promise<void> {
 		const layer = await this.#prepareLayer();
-		const compress = this.options.compress ?? false;
+		const recompress = this.options.compress ?? false;
 
 		const staticContent = await this.#buildStaticContent(layer);
 
@@ -68,88 +69,54 @@ export class Server {
 			void (async (): Promise<void> => {
 				try {
 					if (req.method !== 'GET') {
-						respondWithError('Method not allowed', 405); return;
+						respondWithError(res, 'Method not allowed', 405); return;
 					}
+
 					if (!(req.url ?? '')) {
-						respondWithError('URL not found', 404); return;
-					}
-					const p = new URL(req.url ?? '', 'resolve://').pathname;
-
-					const response = staticContent.get(p);
-					if (response) {
-						await respondWithContent(...response); return;
+						respondWithError(res, 'URL not found', 404); return;
 					}
 
-					const match = /^\/tiles\/([0-9]+)\/([0-9]+)\/([0-9]+).*/.exec(p);
+					// check request
+
+					const acceptedEncoding = req.headers['accept-encoding'] ?? '';
+					const responseConfig: ResponseConfig = {
+						acceptBr: acceptedEncoding.includes('br'),
+						acceptGzip: acceptedEncoding.includes('gzip'),
+						recompress,
+					};
+
+					const path = new URL(req.url ?? '', 'resolve://').pathname;
+
+					// check if tile request
+
+					const match = /^\/tiles\/([0-9]+)\/([0-9]+)\/([0-9]+).*/.exec(path);
 					if (match) {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const [_, z, x, y] = match;
-						const tile = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
-						if (!tile) {
-							respondWithError('tile not found: ' + p, 404); return;
+						const buffer = await layer.container.getTile(parseInt(z, 10), parseInt(x, 10), parseInt(y, 10));
+						if (!buffer) {
+							respondWithError(res, 'tile not found: ' + path, 404); return;
 						}
-						await respondWithContent(tile, layer.mime, layer.compression); return;
+						await respondWithContent(res,
+							{ buffer, mime: layer.mime, compression: layer.compression },
+							responseConfig);
+						return;
 					}
 
-					respondWithError('file not found: ' + p, 404); return;
+					// check if request for static content
+
+					const responseContent = staticContent.get(path);
+
+					if (responseContent) {
+						await respondWithContent(res, responseContent, responseConfig); return;
+					}
+
+					// error 404
+
+					respondWithError(res, 'file not found: ' + path, 404); return;
 
 				} catch (err) {
-					respondWithError(err, 500); return;
-				}
-
-				async function respondWithContent(data: Buffer | string, mime?: string, compression?: Compression): Promise<void> {
-					mime ??= 'application/octet-stream';
-					compression ??= null;
-
-					const acceptedEncoding = req.headers['accept-encoding'] ?? '';
-					const acceptGzip = acceptedEncoding.includes('gzip');
-					const acceptBr = acceptedEncoding.includes('br');
-
-					if (typeof data === 'string') data = Buffer.from(data);
-
-					switch (compression) {
-						case 'br':
-							if (acceptBr) break;
-							if (compress && acceptGzip) {
-								data = await gzip(await unbrotli(data));
-								compression = 'gzip';
-								break;
-							}
-							data = await unbrotli(data);
-							compression = null;
-							break;
-						case 'gzip':
-							if (acceptGzip) break;
-							data = await ungzip(data);
-							compression = null;
-							break;
-						default:
-							if (compress && acceptBr) {
-								data = await brotli(data);
-								compression = 'br';
-								break;
-							}
-							if (compress && acceptGzip) {
-								data = await gzip(data);
-								compression = 'gzip';
-								break;
-							}
-							compression = null;
-							break;
-					}
-
-					if (compression) res.setHeader('content-encoding', compression);
-
-					res.statusCode = 200;
-					res.setHeader('content-type', mime);
-					res.end(data);
-				}
-
-				function respondWithError(err: unknown, code = 500): void {
-					console.error(err);
-					res.statusCode = code;
-					res.setHeader('content-type', 'text/plain');
-					res.end(String(err));
+					respondWithError(res, err, 500); return;
 				}
 			})();
 		});

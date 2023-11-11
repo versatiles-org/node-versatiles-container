@@ -1,6 +1,7 @@
 import type { Compression } from '@versatiles/container';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
+import type { ContentResponse } from './types.js';
 
 const mimeTypes = new Map([
 	['.avif', 'image/avif'],
@@ -27,7 +28,7 @@ const mimeTypes = new Map([
  * and optional compression. This class is useful for serving static files in a web server context.
  */
 export class StaticContent {
-	readonly #map: Map<string, StaticResponse>;
+	readonly #map: Map<string, ContentResponse>;
 
 	/**
 	 * Constructs a new instance of the StaticContent class.
@@ -54,7 +55,7 @@ export class StaticContent {
 	 * @param path - The path to retrieve the static response for.
 	 * @returns The static response or undefined if not found.
 	 */
-	public get(path: string): StaticResponse | undefined {
+	public get(path: string): ContentResponse | undefined {
 		return this.#map.get(path);
 	}
 
@@ -77,9 +78,9 @@ export class StaticContent {
 		} else {
 			buffer = Buffer.from(JSON.stringify(content));
 		}
-		
+
 		if (this.#map.has(path)) throw Error();
-		this.#map.set(path, [buffer, mime, compression]);
+		this.#map.set(path, { buffer, mime, compression });
 	}
 
 	/**
@@ -128,9 +129,7 @@ export class StaticContent {
 	 * Gets a list of all content currently stored in the map.
 	 * @returns A map of paths to their corresponding static responses.
 	 */
-	public getContentList(): Map<string, StaticResponse> {
+	public getContentList(): Map<string, ContentResponse> {
 		return this.#map;
 	}
 }
-
-type StaticResponse = [Buffer, string, Compression];
