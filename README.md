@@ -7,15 +7,15 @@ Node.js implementations for VersaTiles.
 
 ## `@versatiles/container`
 
-Library for reading [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec) in Node.js. For more information see [versatiles-container/README.md](container/README.md)
+Library for reading [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec). See [readme.md](versatiles-container/README.md)
 
 ## `@versatiles/server`
 
-Tiny Node.js server for serving map tiles from a VersaTiles container. For more information see [versatiles-server/README.md](server/README.md)
+Tiny server for serving map tiles. See [readme.md](versatiles-server/README.md)
 
-## ## `@versatiles/release-tool`
+## `@versatiles/release-tool`
 
-Tool for generating and updating markdown documentation. For more information see [versatiles-release-tool/README.md](server/README.md)
+Tool for generating and updating markdown documentation. See [readme.md](versatiles-release-tool/README.md)
 
 ## License
 
