@@ -35,7 +35,7 @@ export class VersaTiles {
 
 	#header?: Header;
 
-	#metadata?: object | null;
+	#metadata?: unknown;
 
 	#blockIndex?: Map<string, Block>;
 
@@ -127,9 +127,9 @@ export class VersaTiles {
 	 * Metadata typically includes information about `vector_layers` for vector tiles.
 	 * If the container does not include metadata, this method returns `null`.
 	 * 
-	 * @returns A promise that resolves with an object representing the metadata, or null if no metadata is present.
+	 * @returns A promise that resolves with an object representing the metadata.
 	 */
-	public async getMetadata(): Promise<object | null> {
+	public async getMetadata(): Promise<unknown> {
 		if (this.#metadata !== undefined) return this.#metadata;
 
 		const header = await this.getHeader();
@@ -139,7 +139,7 @@ export class VersaTiles {
 		} else {
 			let buffer: Buffer = await this.read(header.metaOffset, header.metaLength);
 			buffer = await this.#decompress(buffer, header.tileCompression);
-			this.#metadata = JSON.parse(buffer.toString()) as object;
+			this.#metadata = JSON.parse(buffer.toString());
 		}
 		return this.#metadata;
 	}
