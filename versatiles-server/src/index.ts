@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import { Server } from './lib/server.js';
-import type { Options } from './lib/server.js';
+import type { ServerOptions } from './lib/types.js';
 import open from 'open';
 
 /**
@@ -29,7 +29,7 @@ program.parse();
 
 const cmdOptions = program.opts();
 
-const srvOptions: Options = {
+const srvOptions: ServerOptions = {
 	baseUrl: cmdOptions.baseUrl as string | undefined,
 	compress: cmdOptions.compress as boolean | undefined,
 	host: cmdOptions.host as string | undefined,

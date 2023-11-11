@@ -2,8 +2,8 @@
 import HttpReader from './reader_http.js';
 import FileReader from './reader_file.js';
 import { decompress } from './decompress.js';
-import type { Block, Compression, Decompressor, Format, Header, Options, Reader, TileIndex } from './interfaces.js';
-export type {  Compression, Format, Header, Options, Reader } from './interfaces.js';
+import type { Block, Compression, Decompressor, Format, Header, OpenOptions, Reader, TileIndex } from './interfaces.js';
+export type {  Compression, Format, Header, OpenOptions, Reader } from './interfaces.js';
 
 
 
@@ -25,7 +25,7 @@ const COMPRESSIONS: Compression[] = [null, 'gzip', 'br'];
  * to access tile data, metadata, and other properties within the container.
  */
 export class VersaTiles {
-	readonly #options: Options = {
+	readonly #options: OpenOptions = {
 		tms: false,
 	};
 
@@ -47,7 +47,7 @@ export class VersaTiles {
 	 * @param options - Optional settings that configure tile handling.
 	 * @throws Will throw an error if the provided source is neither a string nor a Reader function.
 	 */
-	public constructor(source: Reader | string, options?: Options) {
+	public constructor(source: Reader | string, options?: OpenOptions) {
 		if (options) Object.assign(this.#options, options);
 
 		if (typeof source === 'string') {

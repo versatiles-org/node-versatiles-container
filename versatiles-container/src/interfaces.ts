@@ -120,6 +120,6 @@ export interface TileIndex {
  * Interface for defining the options available for reading a container.
  * @property {boolean} tms - If set to true, uses the [TMS (Tile Map Service) tile ordering](https://wiki.openstreetmap.org/wiki/TMS) where y=0 is the southernmost point.
  */
-export interface Options {
+export interface OpenOptions {
 	tms: boolean;
 }

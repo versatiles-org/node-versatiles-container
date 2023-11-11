@@ -1,25 +1,9 @@
 import type { Compression } from '@versatiles/container';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { extname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import type { ContentResponse } from './types.js';
+import { getMimeByFilename } from './mime_types.js';
 
-const mimeTypes = new Map([
-	['.avif', 'image/avif'],
-	['.bin', 'application/octet-stream'],
-	['.css', 'text/css'],
-	['.geojson', 'application/geo+json'],
-	['.htm', 'text/html'],
-	['.html', 'text/html'],
-	['.jpeg', 'image/jpeg'],
-	['.jpg', 'image/jpeg'],
-	['.js', 'text/javascript'],
-	['.json', 'application/json'],
-	['.pbf', 'application/x-protobuf'],
-	['.png', 'image/png'],
-	['.svg', 'image/svg+xml'],
-	['.topojson', 'application/topo+json'],
-	['.webp', 'image/webp'],
-]);
 
 /**
  * The `StaticContent` class provides a way to store and retrieve static content.
@@ -101,7 +85,6 @@ export class StaticContent {
 				this.addFolder(subUrl, subDir);
 			} else {
 				let compression: Compression = null;
-				let ext = extname(subDir);
 
 				if (name.endsWith('.br')) {
 					compression = 'br';
@@ -110,17 +93,12 @@ export class StaticContent {
 				}
 
 				if (compression) {
-					ext = extname(name.replace(/\.[^.]+$/, ''));
+					// remove last extension
+					name = name.replace(/\.[^.]+$/, '');
 					subUrl = subUrl.replace(/\.[^.]+$/, '');
 				}
 
-				const mime = mimeTypes.get(ext.toLowerCase());
-
-				if (mime == null) {
-					console.warn('unknown file extension: ' + ext);
-				}
-
-				this.add(subUrl, readFileSync(subDir), mime ?? 'application/octet-stream', compression);
+				this.add(subUrl, readFileSync(subDir), getMimeByFilename(name, true), compression);
 			}
 		});
 	}

@@ -1,5 +1,5 @@
-import type { VersaTiles } from '@versatiles/container';
 import { Colorful } from '@versatiles/style';
+import type { ContainerInfo, ServerOptions } from './types.js';
 
 /** 
  * Constant array representing the layers in the Shortbread styling.
@@ -40,8 +40,8 @@ export const SHORTBREAD_LAYERS = [
  * @param {Record<string, any>} options - An object containing options for style generation.
  * @returns {Promise<string>} A promise that resolves to a style string.
  */
-export async function generateStyle(container: VersaTiles, options: Record<string, boolean | number | string | null>): Promise<string> {
-	const { tileFormat } = await container.getHeader();
+export function generateStyle(containerInfo: ContainerInfo, options: ServerOptions): string {
+	const { tileFormat } = containerInfo.header;
 
 	switch (tileFormat) {
 		case 'pbf':
@@ -55,9 +55,8 @@ export async function generateStyle(container: VersaTiles, options: Record<strin
 			throw new Error(`can not generate style for tile format "${tileFormat}"`);
 	}
 
-	async function generatePBFStyle(): Promise<string> {
-		const meta = await container.getMetadata();
-		if (isShortbread(meta)) return generateShortbreadStyle();
+	function generatePBFStyle(): string {
+		if (isShortbread(containerInfo.metadata)) return generateShortbreadStyle();
 		throw new Error('not implemented yet');
 	}
 
