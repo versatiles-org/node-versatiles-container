@@ -17,7 +17,7 @@
     "lint": "npm run build-deps && eslint . --color",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
-    "update": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules; npm i -ws --include-workspace-root"
+    "upgrade": "npx npm-check-updates -u && npx npm-check-updates -u -ws && rm -f package-lock.json && rm -rf node_modules */node_modules; npm i -ws --include-workspace-root"
   },
   "type": "module",
   "devDependencies": {
@@ -30,7 +30,7 @@
     "npm-check-updates": "^16.14.6",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
-    "tsx": "^4.1.0",
+    "tsx": "^4.1.1",
     "typescript": "^5.2.2"
   }
 }
