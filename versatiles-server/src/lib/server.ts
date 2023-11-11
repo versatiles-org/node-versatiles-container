@@ -1,13 +1,12 @@
-import type { Server as httpServer } from 'node:http';
 import { createServer } from 'node:http';
-import { resolve as resolvePath } from 'node:path';
-import { generateStyle } from './style.js';
-import { StaticContent } from './static_content.js';
-import type { Reader } from '@versatiles/container';
-import { respondWithContent, respondWithError } from './response.js';
-import type { ContainerInfo, ResponseConfig, ServerOptions } from './types.js';
 import { Layer } from './layer.js';
 import { readFileSync } from 'node:fs';
+import { resolve as resolvePath } from 'node:path';
+import { respondWithContent, respondWithError } from './response.js';
+import { StaticContent } from './static_content.js';
+import type { Reader } from '@versatiles/container';
+import type { ResponseConfig, ServerOptions } from './types.js';
+import type { Server as httpServer } from 'node:http';
 
 const DIRNAME = new URL('../../', import.meta.url).pathname;
 
@@ -39,7 +38,7 @@ export class Server {
 
 		const recompress = this.#options.compress ?? false;
 
-		const staticContent = this.#buildStaticContent(await this.#layer.getInfo());
+		const staticContent = await this.#buildStaticContent();
 
 		const server = createServer((req, res) => {
 			void (async (): Promise<void> => {
@@ -116,7 +115,7 @@ export class Server {
 		this.#server = undefined;
 	}
 
-	#buildStaticContent(containerInfo: ContainerInfo): StaticContent {
+	async #buildStaticContent(): Promise<StaticContent> {
 		const staticContent = new StaticContent();
 
 		const html = readFileSync(resolvePath(DIRNAME, 'static/index.html'));
@@ -125,24 +124,15 @@ export class Server {
 
 		staticContent.add(
 			'/tiles/style.json',
-			generateStyle(containerInfo, this.#options),
+			await this.#layer.getStyle(this.#options),
 			'application/json; charset=utf-8',
 		);
 
 		staticContent.add(
 			'/tiles/tile.json',
-			containerInfo.metadata ?? {},
+			await this.#layer.getMetadata() ?? {},
 			'application/json; charset=utf-8',
 		);
-
-		staticContent.add('/tiles/header.json', {
-			bbox: containerInfo.header.bbox,
-			tileCompression: containerInfo.header.tileCompression,
-			tileFormat: containerInfo.header.tileFormat,
-			version: containerInfo.header.version,
-			zoomMax: containerInfo.header.zoomMax,
-			zoomMin: containerInfo.header.zoomMin,
-		}, 'application/json; charset=utf-8');
 
 		staticContent.addFolder('/assets', resolvePath(DIRNAME, 'static/assets'));
 
