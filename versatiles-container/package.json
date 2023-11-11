@@ -6,7 +6,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "check": "cd ..; npm run check",
     "doc": "npx vrt ts2md src/index.ts tsconfig.build.json | npx vrt insertmd README.md '# API' true",
-    "lint": "cd ..; npm run lint",
+    "lint": "eslint . --color",
     "prepublish": "npm run build && npm run doc",
     "test": "cd ..; npm run test"
   },

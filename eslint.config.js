@@ -24,11 +24,14 @@ export default [
 			parserOptions: {
 				sourceType: 'module',
 				project: './tsconfig.json',
-				//tsconfigRootDir: './',
+				tsconfigRootDir: new URL('./', import.meta.url).pathname,
 			},
 		},
 		plugins: {
-			'@typescript-eslint': eslint_plugin
+			'@typescript-eslint': eslint_plugin,
+		},
+		linterOptions: {
+			reportUnusedDisableDirectives: true,
 		},
 		rules: {
 			// https://github.com/typescript-eslint/typescript-eslint/blob/29c2e688afa7d9b8873d97c3961b65805d87cf2a/packages/eslint-plugin/src/configs/eslint-recommended.ts
