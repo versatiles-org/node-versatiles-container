@@ -9,7 +9,8 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
     "doc": "npx vrt cmd2md vrt | npx vrt insertmd README.md '# Command'",
     "lint": "eslint . --color",
-    "prepublish": "npm run build && npm run doc"
+    "prepublish": "npm run build && npm run doc",
+    "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-release-tool"
   },
   "version": "1.0.0",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",

@@ -20,7 +20,7 @@
     "lint": "eslint . --color",
     "prepublish": "npm run build && npm run doc",
     "start": "tsx src/index.ts",
-    "test": "cd ..; npm run test"
+    "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-server"
   },
   "repository": {
     "type": "git",
