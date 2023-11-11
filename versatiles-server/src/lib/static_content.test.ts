@@ -16,12 +16,12 @@ describe('StaticContent', () => {
 	});
 
 	describe('add method', () => {
-		it('should add a text content', () => {
+		it('should add text content', () => {
 			const path = '/text';
 			const content = 'Hello World';
 			const mime = 'text/plain';
 			staticContent.add(path, content, mime);
-			expect(staticContent.get(path)).toEqual([Buffer.from(content), mime, null]);
+			expect(staticContent.get(path)).toEqual({ buffer: Buffer.from(content), mime, compression: null });
 		});
 
 		it('should throw an error if path already exists', () => {
@@ -58,11 +58,11 @@ describe('StaticContent', () => {
 
 			files.forEach((file: string) => {
 				const expectedPath = url + file;
-				expect(staticContent.get(expectedPath)).toEqual([
-					readFileSync(resolve(dir, file)),
-					mimeTypes.get(file.replace(/.*\./, '')),
-					null,
-				]);
+				expect(staticContent.get(expectedPath)).toEqual({
+					buffer: readFileSync(resolve(dir, file)),
+					mime: mimeTypes.get(file.replace(/.*\./, '')),
+					compression: null,
+				});
 			});
 		});
 	});
