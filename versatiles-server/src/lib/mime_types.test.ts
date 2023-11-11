@@ -46,7 +46,7 @@ describe('MIME Type Tests', () => {
 		});
 
 		it('should return default MIME type for filenames with invalid extensions', () => {
-			const consoleSpy = jest.spyOn(console, 'warn');
+			const consoleSpy = jest.spyOn(console, 'warn').mockReturnValue();
 			expect(getMimeByFilename('file.unknown', true)).toBe('application/octet-stream');
 			expect(consoleSpy).toHaveBeenCalledWith('can not guess MIME for file: file.unknown');
 			consoleSpy.mockRestore();
