@@ -25,5 +25,5 @@ export interface ServerOptions {
 
 export interface ContainerInfo {
 	header: Header;
-	metadata: object | null;
+	metadata: unknown;
 }

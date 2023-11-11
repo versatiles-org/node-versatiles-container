@@ -23,14 +23,6 @@ describe('Styles Module', () => {
 			expect(isShortbread(shortbreadSource)).toBeTruthy();
 		});
 
-		it('should return true for valid shortbread metadata as string', () => {
-			expect(isShortbread(JSON.stringify(shortbreadSource))).toBeTruthy();
-		});
-
-		it('should return true for valid shortbread metadata as buffer', () => {
-			expect(isShortbread(Buffer.from(JSON.stringify(shortbreadSource)))).toBeTruthy();
-		});
-
 		it('should return false for invalid metadata', () => {
 			const meta = { vector_layers: [{ id: 'invalid_layer' }] };
 			expect(isShortbread(meta)).toBeFalsy();

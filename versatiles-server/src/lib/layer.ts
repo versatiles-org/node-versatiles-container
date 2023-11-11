@@ -14,8 +14,8 @@ export class Layer {
 
 	#compression?: Compression;
 
-	public constructor(source: Reader | string, options: ServerOptions) {
-		this.#container = new VersaTiles(source, { tms: options.tms ?? false });
+	public constructor(source: Reader | string, options?: ServerOptions) {
+		this.#container = new VersaTiles(source, { tms: options?.tms ?? false });
 	}
 
 	public async init(): Promise<void> {
@@ -58,7 +58,7 @@ export class Layer {
 		return generateStyle(this.#info, options);
 	}
 
-	public async getMetadata(): Promise<object | null> {
+	public async getMetadata(): Promise<unknown> {
 		await this.init();
 		if (!this.#info) throw Error();
 		return this.#info.metadata;

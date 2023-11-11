@@ -41,6 +41,8 @@ export const SHORTBREAD_LAYERS = [
  * @returns {Promise<string>} A promise that resolves to a style string.
  */
 export function generateStyle(containerInfo: ContainerInfo, options: ServerOptions): string {
+	if (typeof options.port !== 'number') throw Error('generateStyle: port must be defined');
+
 	const { tileFormat } = containerInfo.header;
 
 	switch (tileFormat) {
@@ -91,7 +93,15 @@ export function generateStyle(containerInfo: ContainerInfo, options: ServerOptio
  */
 export function resolveUrl(...paths: string[]): string {
 	paths = paths.map(path => path.replace(/[\{\}]/g, c => '%' + c.charCodeAt(0).toString(16)));
-	let baseUrl = new URL(paths.shift() ?? '');
+
+	const pathStart = paths.shift();
+	let baseUrl: URL;
+	try {
+		baseUrl = new URL(pathStart ?? '', 'https://tiles.versatiles.org/');
+	} catch (error) {
+		throw Error(`Invalid URL. pathStart = "${pathStart}"`);
+	}
+
 	paths.forEach(path => baseUrl = new URL(path, baseUrl));
 	return baseUrl.href.replace(/\%7b/g, '{').replace(/\%7d/g, '}');
 }
@@ -102,14 +112,12 @@ export function resolveUrl(...paths: string[]): string {
  * @param {Buffer | object | string | null} meta - The metadata to check against Shortbread criteria.
  * @returns {boolean} True if the metadata matches Shortbread, false otherwise.
  */
-export function isShortbread(meta: Buffer | object | string | null): boolean {
-	if (meta == null) return false;
-
+export function isShortbread(meta: unknown): boolean {
 	try {
-		if (Buffer.isBuffer(meta)) meta = meta.toString();
-		if (typeof meta === 'string') meta = JSON.parse(meta) as object;
-
+		if (meta == null) return false;
+		if (typeof meta !== 'object') return false;
 		if (!('vector_layers' in meta)) return false;
+
 		const vectorLayers = meta.vector_layers;
 		if (!Array.isArray(vectorLayers)) return false;
 
