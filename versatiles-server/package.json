@@ -2,10 +2,8 @@
   "name": "@versatiles/server",
   "version": "1.1.2",
   "description": "A server for VersaTiles",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": {
-    "versatiles-server": "./dist/index.js"
+    "versatiles-server": "./dist/server.js"
   },
   "prefix": "./",
   "files": [
@@ -14,12 +12,12 @@
     "static"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/server.js",
     "check": "npm run lint && npm run test && npm run build",
     "doc": "npx vrt cmd2md versatiles-server | npx vrt insertmd README.md '## Options'",
     "lint": "eslint . --color",
     "prepublish": "npm run build && npm run doc",
-    "start": "tsx src/index.ts",
+    "start-server": "tsx src/server.ts",
     "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-server"
   },
   "repository": {
