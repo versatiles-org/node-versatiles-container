@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  FORCE_COLOR: "1"
+  FORCE_COLOR: 1
 
 jobs:
   release:
