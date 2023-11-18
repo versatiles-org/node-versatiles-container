@@ -24,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/versatiles-org/node-versatiles.git"
   },
-  "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/server/README.md",
+  "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-server/README.md",
   "type": "module",
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",

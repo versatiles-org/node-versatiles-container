@@ -1,4 +1,4 @@
-# VersaTiles
+# VersaTiles - Server
 
 A Node.js server for [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec).
 

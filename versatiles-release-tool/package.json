@@ -17,6 +17,11 @@
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
   "license": "Unlicense",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/versatiles-org/node-versatiles.git"
+  },
+  "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-release-tool/README.md",
   "devDependencies": {
     "@types/node": "^20.9.1",
     "remark": "^15.0.1",
