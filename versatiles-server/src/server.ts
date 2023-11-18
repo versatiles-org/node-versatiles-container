@@ -33,7 +33,7 @@ program
 		};
 
 		try {
-			const server = new Server(program.args[0], srvOptions);
+			const server = new Server(source, srvOptions);
 			await server.start();
 
 			if (Boolean(cmdOptions.open)) {
