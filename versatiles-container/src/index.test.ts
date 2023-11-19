@@ -61,45 +61,6 @@ describe('VersaTiles', () => {
 		});
 	});
 
-	/*
-	describe('getBlockIndex', () => {
-		it('should return correct block and tiles index', async () => {
-			const blockIndex = new Map([
-				['8,0,0', { blockOffset: 694, colMax: 61, colMin: 55, column: 0, level: 8, row: 0, rowMax: 73, rowMin: 67, tileCount: 49, tileIndexLength: 237, tileIndexOffset: 183692 }],
-				['9,0,0', { blockOffset: 183929, colMax: 119, colMin: 113, column: 0, level: 9, row: 0, rowMax: 143, rowMin: 137, tileCount: 49, tileIndexLength: 244, tileIndexOffset: 274153 }],
-				['10,0,1', { blockOffset: 274397, colMax: 236, colMin: 230, column: 0, level: 10, row: 1, rowMax: 28, rowMin: 22, tileCount: 49, tileIndexLength: 212, tileIndexOffset: 308349 }],
-				['11,1,2', { blockOffset: 308561, colMax: 214, colMin: 208, column: 1, level: 11, row: 2, rowMax: 54, rowMin: 48, tileCount: 49, tileIndexLength: 208, tileIndexOffset: 324614 }],
-				['12,3,4', { blockOffset: 324822, colMax: 170, colMin: 164, column: 3, level: 12, row: 4, rowMax: 105, rowMin: 99, tileCount: 49, tileIndexLength: 226, tileIndexOffset: 336861 }],
-				['13,7,8', { blockOffset: 337087, colMax: 81, colMin: 75, column: 7, level: 13, row: 8, rowMax: 208, rowMin: 202, tileCount: 49, tileIndexLength: 231, tileIndexOffset: 349320 }],
-				['14,14,17', { blockOffset: 349551, colMax: 160, colMin: 154, column: 14, level: 14, row: 17, rowMax: 158, rowMin: 151, tileCount: 56, tileIndexLength: 274, tileIndexOffset: 373735 }],
-			]);
-			expect(await versatiles.getBlockIndex()).toEqual(blockIndex);
-
-			const tileIndex = {
-				offsets: new Float64Array([
-					308561, 308561, 317429, 319286, 320798, 308561, 308561,
-					308951, 312909, 317099, 318523, 319569, 308561, 308561,
-					308562, 313333, 315153, 318256, 321748, 308561, 308561,
-					309442, 312467, 316600, 308561, 321248, 322811, 308561,
-					311788, 308561, 315505, 318757, 320413, 323227, 324296,
-					310039, 313679, 316054, 308561, 320242, 308561, 323705,
-					310787, 314371, 308561, 317939, 319829, 322280, 308561,
-				]),
-				lengths: new Float64Array([
-					0, 0, 510, 283, 450, 1, 1,
-					491, 424, 330, 234, 260, 1, 1,
-					389, 346, 352, 267, 532, 1, 1,
-					597, 442, 499, 0, 500, 416, 1,
-					679, 0, 549, 529, 385, 478, 318,
-					748, 692, 546, 0, 171, 0, 591,
-					1001, 782, 0, 317, 413, 531, 0,
-				]),
-			};
-			expect(await versatiles.getTileIndex(blockIndex.get('11,1,2') as Block)).toEqual(tileIndex);
-		});
-	});
-	*/
-
 	describe('getTile', () => {
 		it('should the correct tile as Buffer 1/3', async () => {
 			expect(hash(await versatiles.getTile(8, 55, 67)))
