@@ -52,7 +52,7 @@ export class StaticContent {
 	 * @throws Will throw an error if the path already exists in the map.
 	 */
 	// eslint-disable-next-line @typescript-eslint/max-params
-	public add(path: string, content: Buffer | object | string, mime: string, compression: Compression = null): void {
+	public add(path: string, content: Buffer | object | string, mime: string, compression: Compression = 'raw'): void {
 		let buffer: Buffer;
 
 		if (Buffer.isBuffer(content)) {
@@ -84,7 +84,7 @@ export class StaticContent {
 			if (statSync(subDir).isDirectory()) {
 				this.addFolder(subUrl, subDir);
 			} else {
-				let compression: Compression = null;
+				let compression: Compression = 'raw';
 
 				if (name.endsWith('.br')) {
 					compression = 'br';
@@ -92,7 +92,7 @@ export class StaticContent {
 					compression = 'gzip';
 				}
 
-				if (compression) {
+				if (compression !== 'raw') {
 					// remove last extension
 					name = name.replace(/\.[^.]+$/, '');
 					subUrl = subUrl.replace(/\.[^.]+$/, '');

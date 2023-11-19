@@ -5,7 +5,7 @@ import type { ResponseConfig, ContentResponse } from './types.js';
 
 export async function respondWithContent(res: ServerResponse, content: ContentResponse, config: ResponseConfig): Promise<void> {
 	const mime: string = content.mime ?? 'application/octet-stream';
-	let compression: Compression = content.compression ?? null;
+	let compression: Compression = content.compression ?? 'raw';
 
 	const { acceptGzip, acceptBr, recompress } = config;
 
@@ -20,12 +20,12 @@ export async function respondWithContent(res: ServerResponse, content: ContentRe
 				break;
 			}
 			data = await unbrotli(data);
-			compression = null;
+			compression = 'raw';
 			break;
 		case 'gzip':
 			if (acceptGzip) break;
 			data = await ungzip(data);
-			compression = null;
+			compression = 'raw';
 			break;
 		default:
 			if (recompress && acceptBr) {
@@ -38,11 +38,11 @@ export async function respondWithContent(res: ServerResponse, content: ContentRe
 				compression = 'gzip';
 				break;
 			}
-			compression = null;
+			compression = 'raw';
 			break;
 	}
 
-	if (compression) res.setHeader('content-encoding', compression);
+	if (compression !== 'raw') res.setHeader('content-encoding', compression);
 
 	res.statusCode = 200;
 	res.setHeader('content-type', mime);

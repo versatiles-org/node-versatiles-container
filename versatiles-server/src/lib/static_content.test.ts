@@ -21,7 +21,7 @@ describe('StaticContent', () => {
 			const content = 'Hello World';
 			const mime = 'text/plain';
 			staticContent.add(path, content, mime);
-			expect(staticContent.get(path)).toEqual({ buffer: Buffer.from(content), mime, compression: null });
+			expect(staticContent.get(path)).toEqual({ buffer: Buffer.from(content), mime, compression: 'raw' });
 		});
 
 		it('should throw an error if path already exists', () => {
@@ -61,7 +61,7 @@ describe('StaticContent', () => {
 				expect(staticContent.get(expectedPath)).toEqual({
 					buffer: readFileSync(resolve(dir, file)),
 					mime: mimeTypes.get(file.replace(/.*\./, '')),
-					compression: null,
+					compression: 'raw',
 				});
 			});
 		});

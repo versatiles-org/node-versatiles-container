@@ -1,12 +1,11 @@
 import type { Compression, Reader } from '@versatiles/container';
-import { VersaTiles } from '@versatiles/container';
+import { Container } from '@versatiles/container';
 import type { ContainerInfo, ContentResponse, ServerOptions } from './types.js';
-import { getMimeByFormat } from './mime_types.js';
 import { generateStyle } from './style.js';
 
 
 export class Layer {
-	readonly #container: VersaTiles;
+	readonly #container: Container;
 
 	#info?: ContainerInfo;
 
@@ -15,7 +14,7 @@ export class Layer {
 	#compression?: Compression;
 
 	public constructor(source: Reader | string, options?: ServerOptions) {
-		this.#container = new VersaTiles(source, { tms: options?.tms ?? false });
+		this.#container = new Container(source, { tms: options?.tms ?? false });
 	}
 
 	public async init(): Promise<void> {
@@ -23,7 +22,7 @@ export class Layer {
 
 		const header = await this.#container.getHeader();
 		const metadata = await this.#container.getMetadata();
-		this.#mime = getMimeByFormat(header.tileFormat ?? '');
+		this.#mime = header.tileMime;
 		this.#compression = header.tileCompression;
 		this.#info = { header, metadata };
 	}
@@ -58,7 +57,7 @@ export class Layer {
 		return generateStyle(this.#info, options);
 	}
 
-	public async getMetadata(): Promise<unknown> {
+	public async getMetadata(): Promise<string | undefined> {
 		await this.init();
 		if (!this.#info) throw Error();
 		return this.#info.metadata;

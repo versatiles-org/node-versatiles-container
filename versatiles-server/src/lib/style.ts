@@ -114,6 +114,7 @@ export function resolveUrl(...paths: string[]): string {
  */
 export function isShortbread(meta: unknown): boolean {
 	try {
+		if (typeof meta === 'string') meta = JSON.parse(meta);
 		if (meta == null) return false;
 		if (typeof meta !== 'object') return false;
 		if (!('vector_layers' in meta)) return false;
