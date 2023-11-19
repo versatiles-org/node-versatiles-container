@@ -3,7 +3,7 @@ import HttpReader from './reader_http.js';
 import FileReader from './reader_file.js';
 import { decompress } from './decompress.js';
 import type { Block, Compression, Decompressor, Format, Header, OpenOptions, Reader, TileIndex } from './interfaces.js';
-export type {  Compression, Format, Header, OpenOptions, Reader } from './interfaces.js';
+export type { Compression, Format, Header, OpenOptions, Reader } from './interfaces.js';
 
 
 
@@ -34,7 +34,7 @@ export class VersaTiles {
 
 	#header?: Header;
 
-	#metadata?: unknown;
+	#metadata?: string;
 
 	#blockIndex?: Map<string, Block>;
 
@@ -128,18 +128,19 @@ export class VersaTiles {
 	 * 
 	 * @returns A promise that resolves with an object representing the metadata.
 	 */
-	public async getMetadata(): Promise<unknown> {
+	public async getMetadata(): Promise<string | undefined> {
 		if (this.#metadata !== undefined) return this.#metadata;
 
 		const header = await this.getHeader();
 
 		if (header.metaLength === 0) {
-			this.#metadata = null;
+			this.#metadata = undefined;
 		} else {
 			let buffer: Buffer = await this.read(header.metaOffset, header.metaLength);
 			buffer = await this.#decompress(buffer, header.tileCompression);
-			this.#metadata = JSON.parse(buffer.toString());
+			this.#metadata = buffer.toString();
 		}
+
 		return this.#metadata;
 	}
 
