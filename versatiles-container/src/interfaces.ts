@@ -2,7 +2,7 @@
  * Supported compression.
  * `null` signifies that the data is uncompressed.
  */
-export type Compression = 'br' | 'gzip' | null;
+export type Compression = 'br' | 'gzip' | 'raw';
 
 
 /**

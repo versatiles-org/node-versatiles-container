@@ -7,7 +7,7 @@ export type {  Compression, Format, Header, OpenOptions, Reader } from './interf
 
 
 
-const FORMATS: Record<string, Format[]> = {
+const FORMATS: Record<string, (Format | null)[]> = {
 	'c01': ['png', 'jpeg', 'webp', null, null, null, null, null, null, null, null, null, null, null, null, null, 'pbf'],
 	'v01': ['png', 'jpeg', 'webp', 'pbf'],
 	'v02': [
@@ -16,8 +16,7 @@ const FORMATS: Record<string, Format[]> = {
 		'pbf', 'geojson', 'topojson', 'json',
 	],
 };
-const COMPRESSIONS: Compression[] = [null, 'gzip', 'br'];
-
+const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br'];
 
 
 /**
