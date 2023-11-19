@@ -46,8 +46,8 @@
     "versatiles"
   ],
   "devDependencies": {
-    "@types/node": "^20.9.1",
-    "tsx": "^4.1.3",
+    "@types/node": "^20.9.2",
+    "tsx": "^4.1.4",
     "typescript": "^5.2.2",
     "@versatiles/release-tool": "^1.0.0"
   }

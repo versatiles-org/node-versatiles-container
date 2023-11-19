@@ -22,7 +22,7 @@
   "type": "module",
   "devDependencies": {
     "@types/jest": "^29.5.8",
-    "@types/node": "^20.9.1",
+    "@types/node": "^20.9.2",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
     "eslint": "^8.54.0",
@@ -30,7 +30,7 @@
     "npm-check-updates": "^16.14.6",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
-    "tsx": "^4.1.3",
+    "tsx": "^4.1.4",
     "typescript": "^5.2.2"
   }
 }
