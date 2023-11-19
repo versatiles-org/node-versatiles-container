@@ -13,6 +13,7 @@ describe('VersaTiles', () => {
 				magic: 'versatiles_v02',
 				version: 'v02',
 				tileFormat: 'pbf',
+				tileMime: 'application/x-protobuf',
 				tileCompression: 'br',
 				zoomMin: 8,
 				zoomMax: 14,
@@ -57,7 +58,7 @@ describe('VersaTiles', () => {
 					{ id: 'pois', minzoom: 14, maxzoom: 14, fields: { amenity: 'String', atm: 'Boolean', cuisine: 'String', denomination: 'String', emergency: 'String', highway: 'String', historic: 'String', information: 'String', leisure: 'String', man_made: 'String', name: 'String', name_de: 'String', name_en: 'String', 'recycling:clothes': 'Boolean', 'recycling:glass_bottles': 'Boolean', 'recycling:paper': 'Boolean', 'recycling:scrap_metal': 'Boolean', religion: 'String', shop: 'String', sport: 'String', tourism: 'String', 'tower:type': 'String', vending: 'String' } },
 				],
 			};
-			expect(await versatiles.getMetadata()).toEqual(metadata);
+			expect(JSON.parse(await versatiles.getMetadata() ?? '')).toEqual(metadata);
 		});
 	});
 
