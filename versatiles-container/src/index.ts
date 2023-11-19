@@ -17,6 +17,18 @@ const FORMATS: Record<string, (Format | null)[]> = {
 	],
 };
 const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br'];
+const MIMETYPES: Record<Format, string> = {
+	'avif': 'image/avif',
+	'bin': 'application/octet-stream',
+	'geojson': 'application/geo+json; charset=utf-8',
+	'jpeg': 'image/jpeg',
+	'json': 'application/json; charset=utf-8',
+	'pbf': 'application/x-protobuf',
+	'png': 'image/png',
+	'svg': 'image/svg+xml; charset=utf-8',
+	'topojson': 'application/topo+json; charset=utf-8',
+	'webp': 'image/webp',
+};
 
 
 /**
@@ -81,42 +93,31 @@ export class Container {
 			throw new Error('Invalid Container');
 		}
 
-		const version = data.toString('utf8', 11, 14);
+		const magic: string = data.toString('utf8', 0, 14);
+		const version: string = data.toString('utf8', 11, 14);
+		const tileFormat: Format = FORMATS[version][data.readUInt8(14)] ?? 'bin';
+		const tileMime: string = MIMETYPES[tileFormat];
+		const tileCompression: Compression = COMPRESSIONS[data.readUInt8(15)] ?? 'raw';
+		const zoomMin: number = data.readUInt8(16);
+		const zoomMax: number = data.readUInt8(17);
+		let bbox: [number, number, number, number];
+		const metaOffset = Number(data.readBigUInt64BE(34));
+		const metaLength = Number(data.readBigUInt64BE(42));
+		const blockIndexOffset = Number(data.readBigUInt64BE(50));
+		const blockIndexLength = Number(data.readBigUInt64BE(58));
 
 		switch (version) {
 			case 'v01':
-				this.#header = {
-					magic: data.toString('utf8', 0, 14),
-					version: version,
-					tileFormat: FORMATS[version][data.readUInt8(14)] ?? 'bin',
-					tileCompression: COMPRESSIONS[data.readUInt8(15)] ?? null,
-					zoomMin: data.readUInt8(16),
-					zoomMax: data.readUInt8(17),
-					bbox: [data.readFloatBE(18), data.readFloatBE(22), data.readFloatBE(26), data.readFloatBE(30)],
-					metaOffset: Number(data.readBigUInt64BE(34)),
-					metaLength: Number(data.readBigUInt64BE(42)),
-					blockIndexOffset: Number(data.readBigUInt64BE(50)),
-					blockIndexLength: Number(data.readBigUInt64BE(58)),
-				};
+				bbox = [data.readFloatBE(18), data.readFloatBE(22), data.readFloatBE(26), data.readFloatBE(30)];
 				break;
 			case 'v02':
-				this.#header = {
-					magic: data.toString('utf8', 0, 14),
-					version: version,
-					tileFormat: FORMATS[version][data.readUInt8(14)] ?? 'bin',
-					tileCompression: COMPRESSIONS[data.readUInt8(15)] ?? null,
-					zoomMin: data.readUInt8(16),
-					zoomMax: data.readUInt8(17),
-					bbox: [data.readInt32BE(18) / 1e7, data.readInt32BE(22) / 1e7, data.readInt32BE(26) / 1e7, data.readInt32BE(30) / 1e7],
-					metaOffset: Number(data.readBigUInt64BE(34)),
-					metaLength: Number(data.readBigUInt64BE(42)),
-					blockIndexOffset: Number(data.readBigUInt64BE(50)),
-					blockIndexLength: Number(data.readBigUInt64BE(58)),
-				};
+				bbox = [data.readInt32BE(18) / 1e7, data.readInt32BE(22) / 1e7, data.readInt32BE(26) / 1e7, data.readInt32BE(30) / 1e7];
 				break;
 			default:
 				throw new Error('Invalid Container');
 		}
+
+		this.#header = { magic, version, tileFormat, tileMime, tileCompression, zoomMin, zoomMax, bbox, metaOffset, metaLength, blockIndexOffset, blockIndexLength };
 
 		return this.#header;
 	}

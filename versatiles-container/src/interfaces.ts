@@ -8,7 +8,7 @@ export type Compression = 'br' | 'gzip' | 'raw';
 /**
  * Supported tile formats.
  */
-export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp' | null;
+export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
 
 
 /**
@@ -57,6 +57,7 @@ export interface Header {
 	magic: string;
 	version: string;
 	tileFormat: Format;
+	tileMime: string;
 	tileCompression: Compression;
 	zoomMin: number;
 	zoomMax: number;
