@@ -44,6 +44,7 @@ export type Reader = (position: number, length: number) => Promise<Buffer>;
  * @property {string} magic - Identifier for the container format, usually "versatiles_v02".
  * @property {string} version - Version of the container format, typically "v02".
  * @property {Format} tileFormat - The format used for storing tiles.
+ * @property {string} tileMime - The MIME type of the tiles.
  * @property {Compression} tileCompression - The type of compression applied to tiles.
  * @property {number} zoomMin - The minimum zoom level.
  * @property {number} zoomMax - The maximum zoom level.
