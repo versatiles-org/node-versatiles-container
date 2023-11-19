@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { createHash } from 'node:crypto';
-import { VersaTiles } from './index.js';
+import { Container } from './index.js';
 
 const TESTFILE = new URL('../../test/island.versatiles', import.meta.url).pathname;
 
 describe('VersaTiles', () => {
-	const versatiles = new VersaTiles(TESTFILE);
+	const versatiles = new Container(TESTFILE);
 
 	describe('getHeader', () => {
 		it('should return the header', async () => {

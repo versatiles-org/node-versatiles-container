@@ -23,7 +23,7 @@ const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br'];
  * The `VersaTiles` class is a wrapper around a `.versatiles` container file. It provides methods
  * to access tile data, metadata, and other properties within the container.
  */
-export class VersaTiles {
+export class Container {
 	readonly #options: OpenOptions = {
 		tms: false,
 	};
