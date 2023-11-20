@@ -1,6 +1,6 @@
 {
   "name": "@versatiles/release-tool",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "VersaTiles release and documentation tools",
   "bin": {
     "vrt": "./dist/index.js"
@@ -27,12 +27,12 @@
   "homepage": "https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-release-tool/README.md",
   "devDependencies": {
     "@types/node": "^20.9.2",
-    "remark": "^15.0.1",
     "tsx": "^4.1.4",
-    "typedoc": "^0.25.3",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "remark": "^15.0.1",
+    "typedoc": "^0.25.3"
   }
 }
