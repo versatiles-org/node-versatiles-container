@@ -12,6 +12,7 @@
 		"declaration": true,
 		"allowJs": true,
 		"noEmit": true,
+		"forceConsistentCasingInFileNames": true,
 	},
 	"include": [
 		"**/src/**/*.ts",

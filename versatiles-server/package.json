@@ -51,14 +51,14 @@
   ],
   "dependencies": {
     "@versatiles/container": "^1.1.0",
-    "@versatiles/style": "^3.5.1",
+    "@versatiles/style": "^3.5.2",
     "commander": "^11.1.0",
     "open": "^9.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.9.2",
-    "tsx": "^4.1.4",
-    "typescript": "^5.2.2",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.4.0",
+    "typescript": "^5.3.2",
     "@versatiles/release-tool": "^1.0.0"
   }
 }
