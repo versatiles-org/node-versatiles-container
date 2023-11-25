@@ -27,8 +27,8 @@ program.command('ts2md')
 program.command('cmd2md')
 	.description('documents a runnable command and outputs it to stdout')
 	.argument('<command>', 'command to run')
-	.action((command: string) => {
-		const mdDocumentation = generateCommandDocumentation(command);
+	.action(async (command: string) => {
+		const mdDocumentation = await generateCommandDocumentation(command);
 		process.stdout.write(mdDocumentation);
 	});
 

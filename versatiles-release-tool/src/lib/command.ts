@@ -1,36 +1,45 @@
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { getErrorMessage } from './utils.js';
 
-export function generateCommandDocumentation(command: string): string {
-	const result = getCommandResults(command);
-	let { markdown } = result;
-	const { subcommands } = result;
+export async function generateCommandDocumentation(command: string): Promise<string> {
+	let { markdown, subcommands } = await getCommandResults(command);
 
-	for (const subcommand of subcommands) {
+	markdown += (await Promise.all(subcommands.map(async subcommand => {
 		const fullCommand = `${command} ${subcommand}`;
 		try {
-			const subResult = getCommandResults(fullCommand);
-			markdown += `\n# Subcommand: \`${fullCommand}\`\n\n${subResult.markdown}`;
+			const { markdown } = await getCommandResults(fullCommand);
+			return `\n# Subcommand: \`${fullCommand}\`\n\n${markdown}`;
 		} catch (error) {
 			throw new Error(`Error generating documentation for subcommand '${fullCommand}': ${getErrorMessage(error)}`);
 		}
-	}
+	}))).join('');
+
 	return markdown;
 }
 
-function getCommandResults(command: string): { markdown: string; subcommands: string[] } {
-	const cp = spawnSync('npx', [...command.split(' '), '--help']);
+function getCommandResults(command: string): Promise<{ markdown: string; subcommands: string[] }> {
+	return new Promise((resolve, reject) => {
+		const childProcess = spawn('npx', [...command.split(' '), '--help']);
+		let output = '';
 
-	if (cp.error) throw new Error(cp.error.toString());
-	if (cp.status !== 0) throw new Error(`Command failed with exit code ${cp.status}`);
+		childProcess.stdout.on('data', data => output += data.toString());
+		childProcess.stderr.on('data', data => console.error(`stderr: ${data}`));
 
-	const result = cp.stdout.toString().trim();
-	console.log(`Command executed successfully: ${command}`);
+		childProcess.on('error', error => reject(new Error(`Failed to start subprocess: ${error.message}`)));
 
-	return {
-		markdown: formatResultAsMarkdown(command, result),
-		subcommands: extractSubcommands(result),
-	};
+		childProcess.on('close', (code) => {
+			if (code !== 0) {
+				reject(new Error(`Command failed with exit code ${code}`));
+				return;
+			}
+			console.log(`Command executed successfully: ${command}`);
+			const result = output.trim();
+			resolve({
+				markdown: `\`\`\`console\n$ ${command}\n${result}\`\`\`\n`,
+				subcommands: extractSubcommands(result),
+			});
+		});
+	});
 }
 
 function extractSubcommands(result: string): string[] {
@@ -46,8 +55,4 @@ function extractSubcommands(result: string): string[] {
 			if (subcommand === 'help') return [];
 			return [subcommand];
 		});
-}
-
-function formatResultAsMarkdown(command: string, result: string): string {
-	return `\`\`\`console\n$ ${command}\n${result}\`\`\`\n`;
 }
