@@ -54,7 +54,7 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 
 		switch (group.title) {
 			case 'Constructors':
-				if (publicMembers.length !== 1) throw Error();
+				if (publicMembers.length !== 1) throw Error('publicMembers.length !== 1');
 				yield* renderMethod(publicMembers[0], true);
 				continue;
 			case 'Properties':
@@ -145,7 +145,7 @@ function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): 
 
 	const { type } = ref;
 	if (type?.type === 'reflection') {
-		if (type.declaration.signatures?.length !== 1) throw Error();
+		if (type.declaration.signatures?.length !== 1) throw Error('type.declaration.signatures?.length !== 1');
 		const [signature] = type.declaration.signatures;
 		if (signature.comment) {
 			yield formatComment(signature.comment);
@@ -187,8 +187,8 @@ function formatType(someType: SomeType): string {
 				return result;
 
 			case 'reflection':
-				if (!some.declaration.signatures) throw Error();
-				if (some.declaration.signatures.length !== 1) throw Error();
+				if (!some.declaration.signatures) throw Error('!some.declaration.signatures');
+				if (some.declaration.signatures.length !== 1) throw Error('some.declaration.signatures.length !== 1');
 				const [signature] = some.declaration.signatures;
 				const type = signature.type ? getTypeRec(signature.type) : 'void';
 				const parameters = (signature.parameters ?? [])
@@ -205,7 +205,7 @@ function formatType(someType: SomeType): string {
 
 			default:
 				console.log(some);
-				throw Error();
+				throw Error(some.type);
 		}
 	}
 }
@@ -213,7 +213,7 @@ function formatType(someType: SomeType): string {
 function generateSourceLink(ref: DeclarationReflection | SignatureReflection): string {
 	if (!ref.sources || ref.sources.length < 1) return '';
 
-	if (ref.sources.length > 1) throw Error();
+	if (ref.sources.length > 1) throw Error('ref.sources.length > 1');
 	const [source] = ref.sources;
 	return `<sup><a href="${source.url}">[src]</a></sup>`;
 }

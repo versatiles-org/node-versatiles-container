@@ -44,8 +44,8 @@ export function updateTOC(main: string, heading: string): string {
 }
 
 function findSegmentStart(mainAst: Root, headingAst: Root): number {
-	if (headingAst.children.length !== 1) throw Error();
-	if (headingAst.children[0].type !== 'heading') throw Error();
+	if (headingAst.children.length !== 1) throw Error("headingAst.children.length !== 1");
+	if (headingAst.children[0].type !== 'heading') throw Error("headingAst.children[0].type !== 'heading'");
 	const sectionDepth = headingAst.children[0].depth;
 	const sectionText = getMDText(headingAst);
 
@@ -74,7 +74,7 @@ function findNextHeading(mainAst: Root, startIndex: number, depth: number): numb
 
 function getHeadingDepth(mainAst: Root, index: number): number {
 	const node = mainAst.children[index];
-	if (node.type !== 'heading') throw Error();
+	if (node.type !== 'heading') throw Error("node.type !== 'heading'");
 	return node.depth;
 }
 
