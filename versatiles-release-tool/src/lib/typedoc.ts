@@ -14,36 +14,36 @@ import {
 
 /**
  * Generate markdown documentation from TypeScript files.
- * @param entryPoints - Array of absolute TypeScript file paths.
- * @param tsconfig - Absolute file path of tsconfig.json.
+ * @param sourceFilePaths - Array of absolute TypeScript file paths.
+ * @param tsConfigPath - Absolute file path of tsconfig.json.
  */
-export async function generateMarkdownDocumentation(entryPoints: string[], tsconfig: string): Promise<string> {
-	const app = await Application.bootstrap({ entryPoints, tsconfig });
+export async function generateTsMarkdownDoc(sourceFilePaths: string[], tsConfigPath: string): Promise<string> {
+	const app = await Application.bootstrap({ entryPoints: sourceFilePaths, tsconfig: tsConfigPath });
 	const project = await app.convert();
 
 	if (!project) {
-		throw new Error('Failed to convert project.');
+		throw new Error('Failed to convert TypeScript project.');
 	}
 
-	return Array.from(renderProjectDocumentation(project)).join('\n');
+	return Array.from(documentProject(project)).join('\n');
 }
 
-function* renderProjectDocumentation(project: ProjectReflection): Generator<string> {
+function* documentProject(project: ProjectReflection): Generator<string> {
 	if (!project.groups) {
-		throw new Error('No code to document found! Is this a lib?');
+		throw new Error('No TypeScript code to document found! Is this a lib?');
 	}
 
 	for (const group of project.groups) {
-		for (const declaration of group.children) {
-			yield* renderDeclaration(declaration);
+		for (const item of group.children) {
+			yield* documentDeclaration(item);
 		}
 	}
 }
 
-function* renderDeclaration(declaration: DeclarationReflection): Generator<string> {
-	const typeName = formatTypeName(declaration.kind);
-	yield `# ${typeName}: \`${declaration.name}\`<a id="${generateAnchor(declaration)}"></a>`;
-	yield* renderSummaryBlock(declaration);
+function* documentDeclaration(declaration: DeclarationReflection): Generator<string> {
+	const declarationType = getDeclarationTypeName(declaration.kind);
+	yield `# ${declarationType}: \`${declaration.name}\`<a id="${createAnchorId(declaration)}"></a>`;
+	yield* documentSummaryBlock(declaration);
 
 	for (const group of declaration.groups ?? []) {
 		const publicMembers = group.children.filter(member => !member.flags.isPrivate && !member.flags.isProtected);
@@ -55,17 +55,17 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 		switch (group.title) {
 			case 'Constructors':
 				if (publicMembers.length !== 1) throw Error('publicMembers.length !== 1');
-				yield* renderMethod(publicMembers[0], true);
+				yield* documentMethod(publicMembers[0], true);
 				continue;
 			case 'Properties':
 				//yield '';
 				//yield '**Properties**';
-				for (const member of publicMembers) yield formatParameter(member);
+				for (const member of publicMembers) yield documentProperty(member);
 				continue;
 			case 'Methods':
 				//yield '';
 				//yield '**Methods**';
-				for (const member of publicMembers) yield* renderMethod(member);
+				for (const member of publicMembers) yield* documentMethod(member);
 				continue;
 			default:
 				console.log(group);
@@ -74,37 +74,36 @@ function* renderDeclaration(declaration: DeclarationReflection): Generator<strin
 	}
 
 	if (declaration.type) {
-		yield `\n**Type:** <code>${formatType(declaration.type)}</code>`;
+		yield `\n**Type:** <code>${formatTypeDeclaration(declaration.type)}</code>`;
 	}
 }
 
-function* renderMethod(declaration: DeclarationReflection, isConstructor = false): Generator<string> {
-	if (declaration.signatures?.length !== 1) throw Error('should be 1');
+function* documentMethod(method: DeclarationReflection, isConstructor = false): Generator<string> {
+	if (method.signatures?.length !== 1) throw Error('should be 1');
 
-	const [signature] = declaration.signatures;
+	const [signature] = method.signatures;
 
-	const functionName = signature.name;
+	const methodName = signature.name;
 	const parameters = formatMethodParameters(signature.parameters ?? []);
 	const returnType = signature.type;
+	const methodType = isConstructor ? 'Constructor' : 'Method';
 
-	const prefix = isConstructor ? 'Constructor' : 'Method';
-
-	yield `## ${prefix}: \`${functionName}(${parameters})\``;
+	yield `## ${methodType}: \`${methodName}(${parameters})\``;
 
 	yield '';
-	yield* renderSummaryBlock(signature);
+	yield* documentSummaryBlock(signature);
 
 	if (signature.parameters && signature.parameters.length > 0) {
 		yield '';
 		yield '**Parameters:**';
 		for (const parameter of signature.parameters) {
-			yield formatParameter(parameter);
+			yield documentProperty(parameter);
 		}
 	}
 
 	if (returnType) {
 		yield '';
-		yield `**Returns:** <code>${formatType(returnType)}</code>`;
+		yield `**Returns:** <code>${formatTypeDeclaration(returnType)}</code>`;
 	}
 }
 
@@ -113,7 +112,7 @@ function formatMethodParameters(parameters: ParameterReflection[]): string {
 }
 
 // Helper Functions
-function formatTypeName(kind: ReflectionKind): string {
+function getDeclarationTypeName(kind: ReflectionKind): string {
 	switch (kind) {
 		case ReflectionKind.Class: return 'Class';
 		case ReflectionKind.Interface: return 'Interface';
@@ -122,7 +121,7 @@ function formatTypeName(kind: ReflectionKind): string {
 	}
 }
 
-function formatParameter(ref: DeclarationReflection | ParameterReflection): string {
+function documentProperty(ref: DeclarationReflection | ParameterReflection): string {
 	let line = `  - <code>${ref.name}${resolveTypeDeclaration(ref.type)}</code>`;
 	if (ref.flags.isOptional) line += ' (optional)';
 	const summary = extractSummary(ref.comment);
@@ -135,7 +134,7 @@ function extractSummary(comment: Comment | undefined): string {
 	return comment.summary.map(line => line.text).join('');
 }
 
-function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
+function* documentSummaryBlock(ref: DeclarationReflection | SignatureReflection): Generator<string> {
 	yield '';
 
 	if (ref.comment) {
@@ -153,20 +152,20 @@ function* renderSummaryBlock(ref: DeclarationReflection | SignatureReflection): 
 		}
 	}
 
-	yield generateSourceLink(ref) + '\n';
+	yield createSourceLink(ref) + '\n';
 	return;
 
 	function formatComment(comment: Comment): string {
-		return (extractSummary(comment) + ' ' + generateSourceLink(ref)).replace(/\n/m, '  \n') + '\n';
+		return (extractSummary(comment) + ' ' + createSourceLink(ref)).replace(/\n/m, '  \n') + '\n';
 	}
 }
 
 function resolveTypeDeclaration(someType: SomeType | undefined): string {
 	if (!someType) return '';
-	return `: ${formatType(someType)}`;
+	return `: ${formatTypeDeclaration(someType)}`;
 }
 
-function formatType(someType: SomeType): string {
+function formatTypeDeclaration(someType: SomeType): string {
 	return getTypeRec(someType);
 
 	function getTypeRec(some: SomeType): string {
@@ -179,7 +178,7 @@ function formatType(someType: SomeType): string {
 
 			case 'reference':
 				let result = some.name;
-				if (some.reflection) result = `[${result}](#${generateAnchor(some.reflection)})`;
+				if (some.reflection) result = `[${result}](#${createAnchorId(some.reflection)})`;
 				if (some.typeArguments?.length ?? 0) result += '<'
 					+ (some.typeArguments ?? [])
 						.map(getTypeRec).join(',')
@@ -210,23 +209,23 @@ function formatType(someType: SomeType): string {
 	}
 }
 
-function generateSourceLink(ref: DeclarationReflection | SignatureReflection): string {
-	if (!ref.sources || ref.sources.length < 1) return '';
+function createSourceLink(reference: DeclarationReflection | SignatureReflection): string {
+	if (!reference.sources || reference.sources.length < 1) return '';
 
-	if (ref.sources.length > 1) throw Error('ref.sources.length > 1');
-	const [source] = ref.sources;
+	if (reference.sources.length > 1) throw Error('ref.sources.length > 1');
+	const [source] = reference.sources;
 	return `<sup><a href="${source.url}">[src]</a></sup>`;
 }
 
-function generateAnchor(ref: Reflection): string {
+function createAnchorId(reference: Reflection): string {
 	let typeName;
-	switch (ref.kind) {
+	switch (reference.kind) {
 		case ReflectionKind.Class: typeName = 'class'; break;
 		case ReflectionKind.Interface: typeName = 'interface'; break;
 		case ReflectionKind.TypeAlias: typeName = 'type'; break;
 		default:
-			console.log(ref);
+			console.log(reference);
 			throw new Error('Unknown reflection kind');
 	}
-	return `${typeName}_${ref.name}`.toLowerCase();
+	return `${typeName}_${reference.name}`.toLowerCase();
 }
