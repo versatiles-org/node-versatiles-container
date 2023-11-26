@@ -11,6 +11,7 @@ import { getErrorMessage } from './utils.js';
  * @param foldable If true, makes the segment foldable.
  * @returns The modified Markdown document.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 export function injectMarkdown(document: string, segment: string, heading: string, foldable?: boolean): string {
 	// Parse the input strings into Abstract Syntax Trees (ASTs).
 	const documentAst = remark().parse(document);
@@ -35,7 +36,7 @@ export function injectMarkdown(document: string, segment: string, heading: strin
 	// Adjust the indentation of the segment to align with the specified depth.
 	indentSegmentToDepth(segmentAst, depth);
 	// Convert the segment to a foldable section if required.
-	if (foldable) convertToFoldable(segmentAst);
+	if (foldable === true) convertToFoldable(segmentAst);
 
 	// Merge the original document AST with the new segment AST.
 	mergeSegments(documentAst, segmentAst, startIndex + 1, endIndex);
@@ -84,8 +85,8 @@ export function updateTOC(main: string, heading: string): string {
  */
 function findSegmentStartIndex(mainAst: Root, headingAst: Root): number {
 	// Verify the structure of the headingAst.
-	if (headingAst.children.length !== 1) throw Error("headingAst.children.length !== 1");
-	if (headingAst.children[0].type !== 'heading') throw Error("headingAst.children[0].type !== 'heading'");
+	if (headingAst.children.length !== 1) throw Error('headingAst.children.length !== 1');
+	if (headingAst.children[0].type !== 'heading') throw Error('headingAst.children[0].type !== \'heading\'');
 	const sectionDepth = headingAst.children[0].depth;
 	const sectionText = extractTextFromMDAsHTML(headingAst);
 
@@ -130,7 +131,7 @@ function findNextHeadingIndex(mainAst: Root, startIndex: number, depth: number):
  */
 function getHeadingDepth(mainAst: Root, index: number): number {
 	const node = mainAst.children[index];
-	if (node.type !== 'heading') throw Error("node.type !== 'heading'");
+	if (node.type !== 'heading') throw Error('node.type !== \'heading\'');
 	return node.depth;
 }
 
@@ -165,6 +166,7 @@ function indentSegmentToDepth(segmentAst: Root, depth: number): void {
  * @param startIndex The start index in the main AST.
  * @param endIndex The end index in the main AST.
  */
+// eslint-disable-next-line @typescript-eslint/max-params
 function mergeSegments(mainAst: Root, segmentAst: Root, startIndex: number, endIndex: number): void {
 	mainAst.children.splice(startIndex, endIndex - startIndex, ...segmentAst.children);
 }
@@ -296,25 +298,27 @@ function nodeToHtml(node: PhrasingContent): string {
 			return `<img src="${getImageReferenceUrl(node)}" alt="${node.alt}" />`;
 		default:
 			console.log(node);
-			throw Error(`unknown type`);
+			throw Error('unknown type');
 	}
 
-	// Implement or modify these functions according to your needs.
-	function handleFootnoteReference(node: FootnoteReference): string {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	function handleFootnoteReference(_node: FootnoteReference): string {
 		throw new Error('Implement function: handleFootnoteReference.');
 	}
 
-	function getImageReferenceUrl(node: ImageReference): string {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	function getImageReferenceUrl(_node: ImageReference): string {
 		throw new Error('Implement function: getImageReferenceUrl.');
 	}
 
-	function getLinkReferenceUrl(node: LinkReference): string {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	function getLinkReferenceUrl(_node: LinkReference): string {
 		throw new Error('Implement function: getLinkReferenceUrl.');
 	}
 }
 
 function nodesToHtml(children: PhrasingContent[]): string {
-	return children.map(nodeToHtml).join('')
+	return children.map(nodeToHtml).join('');
 }
 
 function textToHtml(text: string): string {

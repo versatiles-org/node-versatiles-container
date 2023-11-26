@@ -6,10 +6,10 @@ describe('Markdown Injection', () => {
 			const result = injectMarkdown(
 				'# H 1\n\nC 1\n\n# H 2\n\nC 2\n\n# H 3\n\nC 3\n',
 				'Injected content',
-				'# H 2'
+				'# H 2',
 			);
 
-			expect(result).toBe('# H 1\n\nC 1\n\n# H 2\n\nInjected content\n\n# H 3\n\nC 3\n',);
+			expect(result).toBe('# H 1\n\nC 1\n\n# H 2\n\nInjected content\n\n# H 3\n\nC 3\n');
 		});
 
 		it('handles foldable segments', () => {
@@ -17,10 +17,10 @@ describe('Markdown Injection', () => {
 				'# H 1\n\nC 1\n\n# H 2\n\nC 2\n\n# H 3\n\nC 3\n',
 				'Foldable content',
 				'# H 2',
-				true
+				true,
 			);
 
-			expect(result).toBe('# H 1\n\nC 1\n\n# H 2\n\nFoldable content\n\n# H 3\n\nC 3\n',);
+			expect(result).toBe('# H 1\n\nC 1\n\n# H 2\n\nFoldable content\n\n# H 3\n\nC 3\n');
 		});
 	});
 
@@ -28,10 +28,10 @@ describe('Markdown Injection', () => {
 		it('updates the Table of Contents of a Markdown document', () => {
 			const result = updateTOC(
 				'# H 1\n\nC 1\n\n# H 2\n\nC 2\n\n# H 3\n\nC 3\n',
-				'# H 1'
+				'# H 1',
 			);
 
-			expect(result).toBe('# H 1\n\n* [H 2](#h-2)\n* [H 3](#h-3)\n\n# H 2\n\nC 2\n\n# H 3\n\nC 3\n')
+			expect(result).toBe('# H 1\n\n* [H 2](#h-2)\n* [H 3](#h-3)\n\n# H 2\n\nC 2\n\n# H 3\n\nC 3\n');
 		});
 	});
 });

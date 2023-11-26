@@ -1,6 +1,8 @@
-import cp, { ChildProcessWithoutNullStreams, ChildProcessByStdio, SpawnOptions } from 'child_process';
+import type { ChildProcessWithoutNullStreams, ChildProcessByStdio, SpawnOptions } from 'child_process';
+import cp from 'child_process';
 import { EventEmitter } from 'node:events';
-import { Readable, Writable } from 'node:stream';
+import type { Writable } from 'node:stream';
+import { Readable } from 'node:stream';
 import { generateCommandDocumentation } from './command.js';
 import { jest } from '@jest/globals';
 
@@ -11,8 +13,8 @@ describe('generateCommandDocumentation using mocked spawn', () => {
 	spawnSpy.mockImplementation((
 		command: string,
 		args: readonly string[],
-		options: SpawnOptions)
-		: ChildProcessWithoutNullStreams => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		options: SpawnOptions): ChildProcessWithoutNullStreams => {
 		const mockChildProcess = new EventEmitter() as ChildProcessByStdio<Writable, Readable, Readable>;
 		mockChildProcess.stdout = getReader('Example command output for ' + [command, ...args].join(' '));
 		mockChildProcess.stderr = getReader('');
@@ -23,7 +25,9 @@ describe('generateCommandDocumentation using mocked spawn', () => {
 
 		function getReader(text: string): Readable {
 			const r = new Readable();
-			r._read = () => { };
+			r._read = (): void => {
+				return;
+			};
 			r.push(text);
 			r.push(null);
 			return r;
@@ -61,11 +65,12 @@ describe('generateCommandDocumentation', () => {
 			find('Arguments:');
 			find('Options:');
 			find('```');
-		})
+		});
 
-		function find(text: string) {
+		function find(text: string): void {
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			while (true) {
-				let line = lines.shift();
+				const line = lines.shift();
 				if (line == null) throw new Error(`line not found: "${text}"`);
 				if (line.startsWith(text)) return;
 			}

@@ -1,6 +1,5 @@
 import { resolve } from 'path';
 import { generateTsMarkdownDoc } from './typedoc.js';
-import { readFileSync } from 'fs';
 
 const DIRNAME = new URL('.', import.meta.url).pathname;
 
@@ -8,7 +7,7 @@ describe('generateTsMarkdownDoc', () => {
 	it('generates markdown documentation from TypeScript file', async () => {
 		let markdownDoc = await generateTsMarkdownDoc(
 			[resolve(DIRNAME, 'typedoc.test.ts')],
-			resolve(DIRNAME, '../../tsconfig.test.json')
+			resolve(DIRNAME, '../../tsconfig.test.json'),
 		);
 
 		markdownDoc = markdownDoc.replace(/ href=".*?"/g, ' href=""');
@@ -39,16 +38,19 @@ describe('generateTsMarkdownDoc', () => {
 
 export type T = boolean;
 export interface I {
-	t: T
-};
+	t: T;
+}
 
-export const v: number = 12;
+export const v = 12;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function b(n: number, s: string): boolean {
 	return true;
 }
 
 export class C {
-	d: number = 1
-	constructor() { }
+	public d = 1;
+
+	// eslint-disable-next-line @typescript-eslint/no-useless-constructor, @typescript-eslint/no-empty-function
+	public constructor() { }
 }

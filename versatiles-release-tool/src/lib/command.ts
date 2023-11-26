@@ -8,6 +8,7 @@ import { getErrorMessage } from './utils.js';
  */
 export async function generateCommandDocumentation(command: string): Promise<string> {
 	// Get the base command's documentation and list of subcommands.
+	// eslint-disable-next-line prefer-const
 	let { markdown, subcommands } = await getCommandResults(command);
 
 	// Iterate over each subcommand to generate its documentation.
@@ -31,18 +32,22 @@ export async function generateCommandDocumentation(command: string): Promise<str
  * @param command The CLI command to execute.
  * @returns A Promise resolving to an object containing the Markdown documentation and a list of subcommands.
  */
-function getCommandResults(command: string): Promise<{ markdown: string; subcommands: string[] }> {
+async function getCommandResults(command: string): Promise<{ markdown: string; subcommands: string[] }> {
 	return new Promise((resolve, reject) => {
 		// Spawn a child process to run the command with the '--help' flag.
 		const childProcess = cp.spawn('npx', [...command.split(' '), '--help']);
 		let output = '';
 
 		// Collect output data from the process.
-		childProcess.stdout.on('data', data => output += data.toString());
-		childProcess.stderr.on('data', data => console.error(`stderr: ${data}`));
+		childProcess.stdout.on('data', data => output += String(data));
+		childProcess.stderr.on('data', data => {
+			console.error(`stderr: ${data}`);
+		});
 
 		// Handle process errors.
-		childProcess.on('error', error => reject(new Error(`Failed to start subprocess: ${error.message}`)));
+		childProcess.on('error', error => {
+			reject(new Error(`Failed to start subprocess: ${error.message}`));
+		});
 
 		// Handle process exit.
 		childProcess.on('close', (code) => {
