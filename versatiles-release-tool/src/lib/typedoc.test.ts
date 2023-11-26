@@ -27,7 +27,7 @@ describe('generateTsMarkdownDoc', () => {
 			'**Type:** <code>boolean</code>',
 			'# Variable: `v`<a id="variable_v"></a>', ,
 			'<sup><a href="">[src]</a></sup>', , ,
-			'**Type:** <code>number</code>',
+			'**Type:** <code>12</code>',
 			'# Function: `b`<a id="function_b"></a>', ,
 			'<sup><a href="">[src]</a></sup>', ,
 		].join('\n');
