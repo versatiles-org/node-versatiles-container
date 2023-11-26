@@ -14,7 +14,7 @@
     "check": "npm run lint && npm run test && npm run build",
     "doc": "npx vrt cmd2md vrt | npx vrt insertmd README.md '# Command'",
     "lint": "eslint . --color",
-    "prepublish": "npm run build && npm run doc",
+    "prepack": "npm run build && npm run doc",
     "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-release-tool"
   },
   "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
