@@ -1,5 +1,6 @@
-import type { Heading, Root, RootContent, FootnoteReference, ImageReference, LinkReference, PhrasingContent } from 'mdast';
+import type { Heading, Root, RootContent, PhrasingContent } from 'mdast';
 import { remark } from 'remark';
+import remarkGfm from 'remark-gfm';
 import { getErrorMessage } from './utils.js';
 
 /**
@@ -14,9 +15,9 @@ import { getErrorMessage } from './utils.js';
 // eslint-disable-next-line @typescript-eslint/max-params
 export function injectMarkdown(document: string, segment: string, heading: string, foldable?: boolean): string {
 	// Parse the input strings into Abstract Syntax Trees (ASTs).
-	const documentAst = remark().parse(document);
-	const segmentAst = remark().parse(segment);
-	const headingAst = remark().parse(heading);
+	const documentAst = parseMarkdown(document);
+	const segmentAst = parseMarkdown(segment);
+	const headingAst = parseMarkdown(heading);
 
 	// Initialize the start index of the injection.
 	let startIndex;
@@ -54,8 +55,8 @@ export function injectMarkdown(document: string, segment: string, heading: strin
  */
 export function updateTOC(main: string, heading: string): string {
 	// Parse the main document and the heading for the TOC.
-	const mainAst = remark().parse(main);
-	const headingText = extractTextFromMDAsHTML(remark().parse(heading));
+	const mainAst = parseMarkdown(main);
+	const headingText = extractTextFromMDAsHTML(parseMarkdown(heading));
 
 	// Build the TOC by iterating over each heading in the document.
 	const toc = mainAst.children
@@ -270,7 +271,7 @@ function lineToHtml(heading: Heading): string {
 	return `<h${heading.depth}>${nodesToHtml(heading.children)}</h${heading.depth}>`;
 }
 
-function nodeToHtml(node: PhrasingContent): string {
+export function nodeToHtml(node: PhrasingContent): string {
 	switch (node.type) {
 		case 'html':
 			return node.value;
@@ -287,33 +288,21 @@ function nodeToHtml(node: PhrasingContent): string {
 		case 'strong':
 			return `<strong>${nodesToHtml(node.children)}</strong>`;
 		case 'link':
-			return `<a href="${node.url}" title="${node.title}">${nodesToHtml(node.children)}</a>`;
+			return `<a href="${node.url}"${node.title == null ? '' : ` title="${node.title}"`}>${nodesToHtml(node.children)}</a>`;
 		case 'linkReference':
-			return `<a href="${getLinkReferenceUrl(node)}">${nodesToHtml(node.children)}</a>`;
+			throw new Error('"linkReference to html" not implemented');
 		case 'footnoteReference':
-			return handleFootnoteReference(node);
+			throw new Error('"footnoteReference to html" not implemented');
 		case 'image':
-			return `<img src="${node.url}" alt="${node.alt}" />`;
+			const attributes = [`src="${node.url}"`];
+			if (node.alt ?? '') attributes.push(`alt="${node.alt}"`);
+			if (node.title ?? '') attributes.push(`title="${node.title}"`);
+			return `<img ${attributes.join(' ')} />`;
 		case 'imageReference':
-			return `<img src="${getImageReferenceUrl(node)}" alt="${node.alt}" />`;
+			throw new Error('"imageReference to html" not implemented');
 		default:
 			console.log(node);
 			throw Error('unknown type');
-	}
-
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	function handleFootnoteReference(_node: FootnoteReference): string {
-		throw new Error('Implement function: handleFootnoteReference.');
-	}
-
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	function getImageReferenceUrl(_node: ImageReference): string {
-		throw new Error('Implement function: getImageReferenceUrl.');
-	}
-
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	function getLinkReferenceUrl(_node: LinkReference): string {
-		throw new Error('Implement function: getLinkReferenceUrl.');
 	}
 }
 
@@ -323,4 +312,8 @@ function nodesToHtml(children: PhrasingContent[]): string {
 
 function textToHtml(text: string): string {
 	return text.replace(/[^a-z0-9 ,.-:_?@äöüß]/gi, c => `&#${c.charCodeAt(0)};`);
+}
+
+export function parseMarkdown(document: string): Root {
+	return remark().use(remarkGfm).parse(document);
 }

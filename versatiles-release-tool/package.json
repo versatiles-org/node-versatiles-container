@@ -33,6 +33,7 @@
   "dependencies": {
     "commander": "^11.1.0",
     "remark": "^15.0.1",
+    "remark-gfm": "^4.0.0",
     "typedoc": "^0.25.3"
   }
 }
