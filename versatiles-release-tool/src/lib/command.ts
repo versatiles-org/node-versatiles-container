@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import cp from 'child_process';
 import { getErrorMessage } from './utils.js';
 
 /**
@@ -34,7 +34,7 @@ export async function generateCommandDocumentation(command: string): Promise<str
 function getCommandResults(command: string): Promise<{ markdown: string; subcommands: string[] }> {
 	return new Promise((resolve, reject) => {
 		// Spawn a child process to run the command with the '--help' flag.
-		const childProcess = spawn('npx', [...command.split(' '), '--help']);
+		const childProcess = cp.spawn('npx', [...command.split(' '), '--help']);
 		let output = '';
 
 		// Collect output data from the process.
@@ -50,11 +50,10 @@ function getCommandResults(command: string): Promise<{ markdown: string; subcomm
 				reject(new Error(`Command failed with exit code ${code}`));
 				return;
 			}
-			console.log(`Command executed successfully: ${command}`);
 			const result = output.trim();
 			// Resolve with the formatted output and a list of subcommands.
 			resolve({
-				markdown: `\`\`\`console\n$ ${command}\n${result}\`\`\`\n`,
+				markdown: `\`\`\`console\n$ ${command}\n${result}\n\`\`\`\n`,
 				subcommands: extractSubcommands(result),
 			});
 		});
