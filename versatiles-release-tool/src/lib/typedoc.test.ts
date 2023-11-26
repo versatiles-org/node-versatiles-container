@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-useless-constructor */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { resolve } from 'path';
 import { generateTsMarkdownDoc } from './typedoc.js';
 
@@ -37,13 +40,13 @@ describe('generateTsMarkdownDoc', () => {
 });
 
 export type T = boolean;
+export type K = (l: number) => string;
 export interface I {
 	t: T;
 }
 
 export const v = 12;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function b(n: number, s: string): boolean {
 	return true;
 }
@@ -51,6 +54,17 @@ export function b(n: number, s: string): boolean {
 export class C {
 	public d = 1;
 
-	// eslint-disable-next-line @typescript-eslint/no-useless-constructor, @typescript-eslint/no-empty-function
 	public constructor() { }
+
+	/**
+	 * Do stuff
+	 * @param f - input
+	 * @returns output
+	 */
+	public e(f: number | string): void {
+	}
+
+	public h(i: [boolean, I]): K {
+		return (l: number) => 'l';
+	}
 }
