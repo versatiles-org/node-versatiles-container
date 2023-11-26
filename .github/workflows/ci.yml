@@ -42,11 +42,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Tests
-        run: npm run test
-
       - name: Test build
         run: npm run build
+
+      - name: Tests
+        run: npm run test
 
       - name: Generate test coverage
         run: npm run test-coverage
