@@ -115,8 +115,10 @@ function formatMethodParameters(parameters: ParameterReflection[]): string {
 function getDeclarationTypeName(kind: ReflectionKind): string {
 	switch (kind) {
 		case ReflectionKind.Class: return 'Class';
+		case ReflectionKind.Function: return 'Function';
 		case ReflectionKind.Interface: return 'Interface';
 		case ReflectionKind.TypeAlias: return 'Type';
+		case ReflectionKind.Variable: return 'Variable';
 		default: throw new Error(`Unknown reflection kind: ${kind}`);
 	}
 }
@@ -218,14 +220,5 @@ function createSourceLink(reference: DeclarationReflection | SignatureReflection
 }
 
 function createAnchorId(reference: Reflection): string {
-	let typeName;
-	switch (reference.kind) {
-		case ReflectionKind.Class: typeName = 'class'; break;
-		case ReflectionKind.Interface: typeName = 'interface'; break;
-		case ReflectionKind.TypeAlias: typeName = 'type'; break;
-		default:
-			console.log(reference);
-			throw new Error('Unknown reflection kind');
-	}
-	return `${typeName}_${reference.name}`.toLowerCase();
+	return `${getDeclarationTypeName(reference.kind)}_${reference.name}`.toLowerCase();
 }
