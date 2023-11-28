@@ -226,10 +226,10 @@ function formatTypeDeclaration(someType: SomeType): string {
 			case 'reference':
 				let result = some.name;
 				if (some.reflection) result = `[${result}](#${createAnchorId(some.reflection)})`;
-				if (some.typeArguments?.length ?? 0) result += '<'
+				if (some.typeArguments?.length ?? 0) result += '&lt;'
 					+ (some.typeArguments ?? [])
 						.map(getTypeRec).join(',')
-					+ '>';
+					+ '&gt;';
 				return result;
 
 			case 'reflection':
