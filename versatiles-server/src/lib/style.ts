@@ -1,4 +1,4 @@
-import { Colorful } from '@versatiles/style';
+import { guessStyle } from '@versatiles/style';
 import type { ContainerInfo, ServerOptions } from './types.js';
 
 /** 
@@ -44,45 +44,33 @@ export function generateStyle(containerInfo: ContainerInfo, options: ServerOptio
 	if (typeof options.port !== 'number') throw Error('generateStyle: port must be defined');
 
 	const { tileFormat } = containerInfo.header;
-
+	let format: 'avif' | 'jpg' | 'pbf' | 'png' | 'webp';
 	switch (tileFormat) {
-		case 'pbf':
-			return generatePBFStyle();
-		case 'png':
-		case 'jpeg':
-		case 'webp':
+		case 'jpeg': format = 'jpg'; break;
 		case 'avif':
-			throw new Error('not implemented yet');
-		default:
-			throw new Error(`can not generate style for tile format "${tileFormat}"`);
+		case 'png':
+		case 'webp':
+		case 'pbf': format = tileFormat; break;
+		case 'bin':
+		case 'geojson':
+		case 'json':
+		case 'svg':
+		case 'topojson':
+			throw new Error('unknown tile format ' + tileFormat);
 	}
 
-	function generatePBFStyle(): string {
-		if (isShortbread(containerInfo.metadata)) return generateShortbreadStyle();
-		throw new Error('not implemented yet');
-	}
+	const baseUrl = options.baseUrl ?? `http://localhost:${options.port}/`;
+	const { metadata } = containerInfo;
 
-	function generateShortbreadStyle(): string {
-		const colorful = new Colorful();
+	const style = guessStyle({
+		format,
+		tiles: [options.tilesUrl ?? '/tiles/{z}/{x}/{y}'],
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+		vectorLayers: JSON.parse(metadata ?? '')?.vector_layers,
+		baseUrl,
+	});
 
-		const baseUrl: string = (typeof options.baseUrl === 'string')
-			? options.baseUrl
-			: `http://localhost:${options.port}/`;
-
-		colorful.glyphsUrl = (typeof options.glyphsUrl === 'string')
-			? options.glyphsUrl
-			: resolveUrl(baseUrl, '/assets/fonts/{fontstack}/{range}.pbf');
-
-		colorful.spriteUrl = (typeof options.spriteUrl === 'string')
-			? options.spriteUrl
-			: resolveUrl(baseUrl, '/assets/sprites/sprites');
-
-		colorful.tilesUrls = (typeof options.tilesUrl === 'string')
-			? [options.tilesUrl]
-			: [resolveUrl(baseUrl, '/tiles/{z}/{x}/{y}')];
-
-		return JSON.stringify(colorful.build());
-	}
+	return JSON.stringify(style);
 }
 
 /**
@@ -104,28 +92,4 @@ export function resolveUrl(...paths: string[]): string {
 
 	paths.forEach(path => baseUrl = new URL(path, baseUrl));
 	return baseUrl.href.replace(/\%7b/g, '{').replace(/\%7d/g, '}');
-}
-
-/**
- * Determines if the provided metadata qualifies as 'Shortbread' based on predefined layer names.
- * 
- * @param {Buffer | object | string | null} meta - The metadata to check against Shortbread criteria.
- * @returns {boolean} True if the metadata matches Shortbread, false otherwise.
- */
-export function isShortbread(meta: unknown): boolean {
-	try {
-		if (typeof meta === 'string') meta = JSON.parse(meta);
-		if (meta == null) return false;
-		if (typeof meta !== 'object') return false;
-		if (!('vector_layers' in meta)) return false;
-
-		const vectorLayers = meta.vector_layers;
-		if (!Array.isArray(vectorLayers)) return false;
-
-		const layerSet = new Set(vectorLayers.map((l: { id?: string }) => String(l.id)));
-		const count = SHORTBREAD_LAYERS.reduce((s, id) => layerSet.has(id) ? s + 1 : s, 0);
-		return count > 0.9 * SHORTBREAD_LAYERS.length;
-	} catch (e) {
-		return false;
-	}
 }
