@@ -39,13 +39,13 @@ Arguments:
 Options:
   -b, --base-url <url>      Base URL for the server (default:
                             "http://localhost:<port>/")
-  -c, --compress            Compress data if needed. Slower, but reduces
-                            traffic. (default: true)
+  -f, --fast                Only recompress data if it is really necessary.
+                            Faster response, but more traffic.
   -i, --host <hostname|ip>  Hostname or IP to bind the server to (default:
                             "0.0.0.0")
-  -o, --open                Open map in web browser (default: false)
+  -o, --open                Open map in web browser
   -p, --port <port>         Port to bind the server to (default: 8080)
-  -t, --tms                 Use TMS tile order (flip y axis) (default: false)
+  -t, --tms                 Use TMS tile order (flip y axis)
   -h, --help                display help for command
 ```
 

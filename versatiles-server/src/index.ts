@@ -17,19 +17,19 @@ program
 	.name('versatiles-server')
 	.description('Simple VersaTiles server')
 	.option('-b, --base-url <url>', 'Base URL for the server (default: "http://localhost:<port>/")')
-	.option('-c, --compress', 'Compress data if needed. Slower, but reduces traffic.', true)
+	.option('-f, --fast', 'Only recompress data if it is really necessary. Faster response, but more traffic.')
 	.option('-i, --host <hostname|ip>', 'Hostname or IP to bind the server to', '0.0.0.0')
-	.option('-o, --open', 'Open map in web browser', false)
+	.option('-o, --open', 'Open map in web browser')
 	.option('-p, --port <port>', 'Port to bind the server to', parseInt, 8080)
-	.option('-t, --tms', 'Use TMS tile order (flip y axis)', false)
+	.option('-t, --tms', 'Use TMS tile order (flip y axis)')
 	.argument('<source>', 'VersaTiles container, can be a URL or filename of a "*.versatiles" file')
 	.action(async (source: string, cmdOptions: Record<string, unknown>) => {
 		const srvOptions: ServerOptions = {
 			baseUrl: cmdOptions.baseUrl as string | undefined,
-			compress: cmdOptions.compress as boolean | undefined,
+			compress: !Boolean(cmdOptions.fast),
 			host: cmdOptions.host as string | undefined,
 			port: cmdOptions.port as number | undefined,
-			tms: cmdOptions.tms as boolean | undefined,
+			tms: Boolean(cmdOptions.tms),
 		};
 
 		try {
