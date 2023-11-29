@@ -131,11 +131,14 @@ export function startServer(opt: ServerOptions): void {
 						case 'style.json':
 							let style: MaplibreStyle;
 							const tiles = [`${baseUrl}${filename}?tile/{z}/{x}/{y}`];
-							switch (header.tileFormat) {
+							const format = header.tileFormat;
+							switch (format) {
 								case 'jpeg': style = guessStyle({ tiles, format: 'jpg' }); break;
-								case 'webp': style = guessStyle({ tiles, format: 'webp' }); break;
-								case 'png': style = guessStyle({ tiles, format: 'png' }); break;
-								case 'avif': style = guessStyle({ tiles, format: 'avif' }); break;
+								case 'webp':
+								case 'png':
+								case 'avif':
+									style = guessStyle({ tiles, format });
+									break;
 								case 'pbf':
 									if (metadata == null) {
 										sendError(500, 'metadata must be defined');
@@ -154,14 +157,14 @@ export function startServer(opt: ServerOptions): void {
 										sendError(500, 'metadata.vector_layers must be an array');
 										return;
 									}
-									style = guessStyle({ tiles, format: 'pbf', vector_layers });
+									style = guessStyle({ tiles, format, vector_layers });
 									break;
 								case 'bin':
 								case 'geojson':
 								case 'json':
 								case 'svg':
 								case 'topojson':
-									sendError(500, `tile format "${header.tileFormat}" is not supported`);
+									sendError(500, `tile format "${format}" is not supported`);
 									return;
 							}
 							respond(JSON.stringify(style), 'application/json', 'raw');
