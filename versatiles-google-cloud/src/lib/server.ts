@@ -13,18 +13,20 @@ import type { MaplibreStyle } from '@versatiles/style/dist/lib/types.js';
 
 
 export interface ServerOptions {
-	bucketName: string;
-	bucketPath?: string;
-	port: number;
-	fastRecompression: boolean;
 	baseUrl: string;
+	bucketName: string;
+	bucketPrefix: string;
+	fastRecompression: boolean;
+	port: number;
 }
 
 
 
 export function startServer(opt: ServerOptions): void {
-	const { bucketName, bucketPath, port, fastRecompression } = opt;
-	const prefix = (bucketPath == null) ? '' : bucketPath.replace(/^\/+|\/+$/g, '') + '/';
+	const { bucketName, bucketPrefix: bucketPath, port, fastRecompression } = opt;
+	let bucketPrefix = bucketPath.replace(/^\/+|\/+$/g, '');
+	if (bucketPrefix !== '') bucketPrefix += '/';
+
 	const baseUrl = new URL(opt.baseUrl).href;
 
 	const storage = new Storage();
@@ -59,7 +61,7 @@ export function startServer(opt: ServerOptions): void {
 					'cache-control': 'max-age=86400', // default: 1 day
 				};
 
-				const file = bucket.file(prefix + filename);
+				const file = bucket.file(bucketPrefix + filename);
 
 				const [exists] = await file.exists();
 				if (!exists) {
