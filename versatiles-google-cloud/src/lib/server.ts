@@ -41,7 +41,7 @@ export function startServer(opt: ServerOptions): void {
 	let requestNo = 0;
 
 	const app = express();
-	app.set('query parser', false);
+	app.set('query parser', (a: string): string => a);
 	app.disable('x-powered-by');
 
 	app.get('/healthcheck', (serverRequest, serverResponse) => {
@@ -78,9 +78,9 @@ export function startServer(opt: ServerOptions): void {
 				}
 
 				if (filename.endsWith('.versatiles')) {
-					void serveFile();
-				} else {
 					void serveVersatiles();
+				} else {
+					void serveFile();
 				}
 
 				async function serveFile(): Promise<void> {
@@ -148,13 +148,16 @@ export function startServer(opt: ServerOptions): void {
 					}
 
 					const query = String(serverRequest.query);
-					console.log(`  #${requestNo} query: ${query}`);
-					
+					if (verbose) console.log(`  #${requestNo} query: ${JSON.stringify(query)}`);
+
 					switch (query) {
 						case 'meta.json':
-							respond(await container.getMetadata() ?? '', 'application/json', 'raw');
-							break;
+							if (verbose) console.log(`  #${requestNo} respond with meta.json`);
+							respond(JSON.stringify(metadata), 'application/json', 'raw');
+							return;
 						case 'style.json':
+							if (verbose) console.log(`  #${requestNo} respond with style.json`);
+
 							let style: MaplibreStyle;
 							const tiles = [`${baseUrl}${filename}?tile/{z}/{x}/{y}`];
 							const format = header.tileFormat;
@@ -194,8 +197,9 @@ export function startServer(opt: ServerOptions): void {
 									return;
 							}
 							respond(JSON.stringify(style), 'application/json', 'raw');
-							break;
+							return;
 					}
+
 					const match = /tiles\/(?<z>\d+)\/(?<x>\d+)\/(?<y>\d+)/.exec(query);
 					if (match == null) {
 						sendError(400, 'get parameter must be "meta.json", "style.json", or "tile/{z}/{x}/{y}"');
@@ -203,14 +207,17 @@ export function startServer(opt: ServerOptions): void {
 					}
 
 					const { z, x, y } = match.groups as { x: string; y: string; z: string };
+					if (verbose) console.log(`  #${requestNo} fetch tile x:${x}, y:${y}, z:${z}`);
+
 					const tile = await container.getTile(
 						parseInt(z, 10),
 						parseInt(x, 10),
 						parseInt(y, 10),
 					);
 					if (tile == null) {
-						sendError(404, `map tile "${query}" not found`);
+						sendError(404, `map tile {x:${x}, y:${y}, z:${z}} not found`);
 					} else {
+						if (verbose) console.log(`  #${requestNo} return tile x:${x}, y:${y}, z:${z}`);
 						respond(tile, header.tileMime, header.tileCompression);
 					}
 
