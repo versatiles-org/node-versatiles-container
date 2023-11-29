@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import express from 'express';
-import { Storage } from '@google-cloud/storage';
 import type { EncodingType } from './recompress.js';
-import { recompress } from './recompress.js';
 import type { OutgoingHttpHeaders } from 'node:http';
 import type { Header as VersatilesHeader, Reader } from '@versatiles/container';
+import express from 'express';
+import { Storage } from '@google-cloud/storage';
+import { recompress } from './recompress.js';
 import { Container as VersatilesContainer } from '@versatiles/container';
+import { guessStyle } from '@versatiles/style';
+import type { MaplibreStyle } from '@versatiles/style/dist/lib/types.js';
 
 
 
@@ -15,6 +17,7 @@ export interface ServerOptions {
 	bucketPath?: string;
 	port: number;
 	fastRecompression: boolean;
+	baseUrl: string;
 }
 
 
@@ -22,10 +25,15 @@ export interface ServerOptions {
 export function startServer(opt: ServerOptions): void {
 	const { bucketName, bucketPath, port, fastRecompression } = opt;
 	const prefix = (bucketPath == null) ? '' : bucketPath.replace(/^\/+|\/+$/g, '') + '/';
+	const baseUrl = new URL(opt.baseUrl).href;
 
 	const storage = new Storage();
 	const bucket = storage.bucket(bucketName);
-	const containerCache = new Map<string, { container: VersatilesContainer; header: VersatilesHeader }>();
+	const containerCache = new Map<string, {
+		container: VersatilesContainer;
+		header: VersatilesHeader;
+		metadata: unknown;
+	}>();
 
 	const app = express();
 	app.set('query parser', false);
@@ -41,7 +49,7 @@ export function startServer(opt: ServerOptions): void {
 	app.get(/.*/, (serverRequest, serverResponse): void => {
 		void (async (): Promise<void> => {
 			try {
-				const filename = decodeURI(String(serverRequest.path).trim().replace(/^\/+/, ''));
+				const filename = decodeURI(String(serverRequest.path)).trim().replace(/^\/+/, '');
 
 				if (filename === '') {
 					sendError(404, `file "${filename}" not found`); return;
@@ -86,7 +94,10 @@ export function startServer(opt: ServerOptions): void {
 				}
 
 				async function serveVersatiles(): Promise<void> {
-					let container: VersatilesContainer, header: VersatilesHeader;
+					let container: VersatilesContainer;
+					let header: VersatilesHeader;
+					let metadata: unknown = {};
+
 					const cache = containerCache.get(filename);
 					if (cache == null) {
 						const reader: Reader = async (position: number, length: number): Promise<Buffer> => {
@@ -104,9 +115,12 @@ export function startServer(opt: ServerOptions): void {
 						};
 						container = new VersatilesContainer(reader);
 						header = await container.getHeader();
-						containerCache.set(filename, { container, header });
+						try {
+							metadata = JSON.parse(await container.getMetadata() ?? '');
+						} catch (e) { }
+						containerCache.set(filename, { container, header, metadata });
 					} else {
-						({ container, header } = cache);
+						({ container, header, metadata } = cache);
 					}
 
 					const query = String(serverRequest.query);
@@ -115,7 +129,42 @@ export function startServer(opt: ServerOptions): void {
 							respond(await container.getMetadata() ?? '', 'application/json', 'raw');
 							break;
 						case 'style.json':
-							respond(await guessStyle(container), 'application/json', 'raw');
+							let style: MaplibreStyle;
+							const tiles = [`${baseUrl}${filename}?tile/{z}/{x}/{y}`];
+							switch (header.tileFormat) {
+								case 'jpeg': style = guessStyle({ tiles, format: 'jpg' }); break;
+								case 'webp': style = guessStyle({ tiles, format: 'webp' }); break;
+								case 'png': style = guessStyle({ tiles, format: 'png' }); break;
+								case 'avif': style = guessStyle({ tiles, format: 'avif' }); break;
+								case 'pbf':
+									if (metadata == null) {
+										sendError(500, 'metadata must be defined');
+										return;
+									}
+									if (typeof metadata !== 'object') {
+										sendError(500, 'metadata must be an object');
+										return;
+									}
+									if (!('vector_layers' in metadata)) {
+										sendError(500, 'metadata must contain property vector_layers');
+										return;
+									}
+									const { vector_layers } = metadata;
+									if (!Array.isArray(vector_layers)) {
+										sendError(500, 'metadata.vector_layers must be an array');
+										return;
+									}
+									style = guessStyle({ tiles, format: 'pbf', vector_layers });
+									break;
+								case 'bin':
+								case 'geojson':
+								case 'json':
+								case 'svg':
+								case 'topojson':
+									sendError(500, `tile format "${header.tileFormat}" is not supported`);
+									return;
+							}
+							respond(JSON.stringify(style), 'application/json', 'raw');
 							break;
 					}
 					const match = /tiles\/(?<z>\d+)\/(?<x>\d+)\/(?<y>\d+)/.exec(query);

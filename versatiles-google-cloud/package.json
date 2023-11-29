@@ -51,7 +51,7 @@
   "dependencies": {
     "@google-cloud/storage": "^7.6.0",
     "@versatiles/container": "^1.1.0",
-    "@versatiles/style": "^3.5.2",
+    "@versatiles/style": "^3.6.1",
     "commander": "^11.1.0",
     "express": "^4.18.2",
     "through2": "^4.0.2"
