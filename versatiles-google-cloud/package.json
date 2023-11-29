@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A server for VersaTiles in Google Cloud Run",
   "bin": {
-    "versatiles-google-cloud": "./dist/server.js"
+    "versatiles-google-cloud": "./dist/index.js"
   },
   "prefix": "./",
   "files": [
@@ -11,12 +11,12 @@
     "dist/**/*.d.ts"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/server.js",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
     "check": "npm run lint && npm run test && npm run build",
     "doc": "npx vrt cmd2md versatiles-google-cloud | npx vrt insertmd README.md '## Options'",
     "lint": "eslint . --color",
-    "prepublish": "npm run build && npm run doc",
-    "start-server": "tsx src/server.ts",
+    "prepack": "npm run build && npm run doc",
+    "start": "tsx src/index.ts",
     "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-google-cloud"
   },
   "repository": {

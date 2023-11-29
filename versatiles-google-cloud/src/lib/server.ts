@@ -219,5 +219,6 @@ export function startServer(opt: ServerOptions): void {
 
 	app.listen(port, () => {
 		console.log(`listening on port ${port}`);
+		console.log(`you can find me at ${baseUrl}`);
 	});
 }
