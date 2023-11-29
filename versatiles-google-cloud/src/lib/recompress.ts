@@ -8,7 +8,7 @@ import type { Response } from 'express';
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http';
 
 export type EncodingType = 'br' | 'deflate' | 'gzip' | 'raw';
-interface EncodingTools {
+export interface EncodingTools {
 	name: EncodingType;
 	compressStream: (fast: boolean, size?: number) => Transform | null;
 	decompressStream: () => Transform | null;
@@ -18,7 +18,7 @@ interface EncodingTools {
 }
 
 const MB = 1024 * 1024;
-const ENCODINGS: Record<EncodingType, EncodingTools> = {
+export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 	'br': ((): EncodingTools => {
 		function getOptions(fast: boolean, size?: number): BrotliOptions {
 			const params = { [zlib.constants.BROTLI_PARAM_QUALITY]: fast ? 3 : 11 };
@@ -177,7 +177,7 @@ export async function recompress(headersRequest: IncomingHttpHeaders, headersRes
 
 
 
-function detectEncoding(text?: string, ignoreBrotli = false): EncodingTools {
+export function detectEncoding(text?: string, ignoreBrotli = false): EncodingTools {
 	if (text == null) return ENCODINGS.raw;
 
 	text = String(text).toLowerCase();
@@ -189,8 +189,7 @@ function detectEncoding(text?: string, ignoreBrotli = false): EncodingTools {
 }
 
 
-
-function bufferStream(maxSize: number, handleBuffer: (buffer: Buffer) => Promise<void>, handleStream: (stream: Transform) => void): Transform {
+export function bufferStream(maxSize: number, handleBuffer: (buffer: Buffer) => Promise<void>, handleStream: (stream: Transform) => void): Transform {
 	const buffers: Buffer[] = [];
 	let size = 0;
 	let bufferMode = true;
