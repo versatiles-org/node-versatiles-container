@@ -18,6 +18,7 @@ program
 	.option('-d, --directory <directory>', 'bucket directory/prefix, e.g. "/public/"')
 	.option('-c, --fast-recompress', 'Don\'t force Brotli compression, so the server respond faster', Boolean, false)
 	.option('-p, --port <port>', 'Port to bind the server to', parseInt, 8080)
+	.option('-v, --verbose', 'Tell me what you\'re doing')
 	.argument('<bucket name>', 'Name of the Google bucket')
 	.action((bucketName: string, cmdOptions: Record<string, unknown>) => {
 
@@ -25,6 +26,7 @@ program
 		const fastRecompression = Boolean(cmdOptions.fastRecompression ?? false);
 		const baseUrl = String(cmdOptions.baseUrl ?? `http://localhost:${port}/`);
 		const bucketPrefix = String(cmdOptions.directory ?? '');
+		const verbose = Boolean(cmdOptions.verbose ?? false);
 
 		try {
 			startServer({
@@ -33,6 +35,7 @@ program
 				bucketPrefix,
 				fastRecompression,
 				port,
+				verbose,
 			});
 		} catch (error: unknown) {
 			const errorMessage = String((typeof error == 'object' && error != null && 'message' in error) ? error.message : error);

@@ -18,13 +18,14 @@ export interface ServerOptions {
 	bucketPrefix: string;
 	fastRecompression: boolean;
 	port: number;
+	verbose: boolean;
 }
 
 
 
 export function startServer(opt: ServerOptions): void {
-	const { bucketName, bucketPrefix: bucketPath, port, fastRecompression } = opt;
-	let bucketPrefix = bucketPath.replace(/^\/+|\/+$/g, '');
+	const { bucketName, port, fastRecompression, verbose } = opt;
+	let bucketPrefix = opt.bucketPrefix.replace(/^\/+|\/+$/g, '');
 	if (bucketPrefix !== '') bucketPrefix += '/';
 
 	const baseUrl = new URL(opt.baseUrl).href;
@@ -36,6 +37,8 @@ export function startServer(opt: ServerOptions): void {
 		header: VersatilesHeader;
 		metadata: unknown;
 	}>();
+
+	let requestNo = 0;
 
 	const app = express();
 	app.set('query parser', false);
@@ -50,8 +53,12 @@ export function startServer(opt: ServerOptions): void {
 
 	app.get(/.*/, (serverRequest, serverResponse): void => {
 		void (async (): Promise<void> => {
+			requestNo++;
+			if (verbose) console.log('new request: #' + requestNo);
 			try {
 				const filename = decodeURI(String(serverRequest.path)).trim().replace(/^\/+/, '');
+
+				if (verbose) console.log(`  #${requestNo} public filename: ${filename}`);
 
 				if (filename === '') {
 					sendError(404, `file "${filename}" not found`); return;
@@ -61,11 +68,13 @@ export function startServer(opt: ServerOptions): void {
 					'cache-control': 'max-age=86400', // default: 1 day
 				};
 
+				if (verbose) console.log(`  #${requestNo} request filename: ${bucketPrefix + filename}`);
 				const file = bucket.file(bucketPrefix + filename);
 
 				const [exists] = await file.exists();
 				if (!exists) {
-					sendError(404, `file "${filename}" not found`); return;
+					sendError(404, `file "${filename}" not found`);
+					return;
 				}
 
 				if (filename.endsWith('.versatiles')) {
@@ -75,7 +84,10 @@ export function startServer(opt: ServerOptions): void {
 				}
 
 				async function serveFile(): Promise<void> {
+					if (verbose) console.log(`  #${requestNo} serve file`);
+
 					const [metadata] = await file.getMetadata();
+					if (verbose) console.log(`  #${requestNo} metadata: ${JSON.stringify(metadata)}`);
 
 					if (metadata.contentType != null) headers['content-type'] = metadata.contentType;
 					if (metadata.size != null) headers['content-length'] = String(metadata.size);
@@ -96,6 +108,8 @@ export function startServer(opt: ServerOptions): void {
 				}
 
 				async function serveVersatiles(): Promise<void> {
+					if (verbose) console.log(`  #${requestNo} serve versatiles`);
+
 					let container: VersatilesContainer;
 					let header: VersatilesHeader;
 					let metadata: unknown = {};
@@ -115,17 +129,27 @@ export function startServer(opt: ServerOptions): void {
 									});
 							});
 						};
+
 						container = new VersatilesContainer(reader);
 						header = await container.getHeader();
+
 						try {
 							metadata = JSON.parse(await container.getMetadata() ?? '');
 						} catch (e) { }
+
+						if (verbose) {
+							console.log(`  #${requestNo} header: ${JSON.stringify(header)}`);
+							console.log(`  #${requestNo} metadata: ${JSON.stringify(metadata)}`);
+						}
+
 						containerCache.set(filename, { container, header, metadata });
 					} else {
 						({ container, header, metadata } = cache);
 					}
 
 					const query = String(serverRequest.query);
+					console.log(`  #${requestNo} query: ${query}`);
+					
 					switch (query) {
 						case 'meta.json':
 							respond(await container.getMetadata() ?? '', 'application/json', 'raw');
@@ -201,6 +225,7 @@ export function startServer(opt: ServerOptions): void {
 				}
 
 				function sendError(code: number, message: string): void {
+					if (verbose) console.log(`  #${requestNo} error ${code}: ${message}`);
 					serverResponse
 						.status(code)
 						.type('text')
