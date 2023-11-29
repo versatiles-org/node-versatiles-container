@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>VersaTiles</title>
+	<meta name="viewport" content="width=device-width">
+	<script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+	<link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet">
+	<style>
+		body {
+			margin: 0;
+		}
+
+		#map {
+			width: 100vw;
+			height: 100vh;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+	<script>
+		(async () => {
+			const map = new maplibregl.Map({
+				container: 'map',
+				style: await (await fetch('?style.json')).json(),
+				hash: true,
+			});
+
+			//map.dragRotate.disable();
+			//map.touchZoomRotate.disableRotation();
+			map.addControl(new maplibregl.NavigationControl());
+		})()
+	</script>
+</body>
+
+</html>

@@ -9,6 +9,7 @@ import { recompress } from './recompress.js';
 import { Container as VersatilesContainer } from '@versatiles/container';
 import { guessStyle } from '@versatiles/style';
 import type { MaplibreStyle } from '@versatiles/style/dist/lib/types.js';
+import { readFile } from 'node:fs/promises';
 
 
 
@@ -21,7 +22,7 @@ export interface ServerOptions {
 	verbose: boolean;
 }
 
-
+const filenamePreview = new URL('../../static/preview.html', import.meta.url).pathname;
 
 export function startServer(opt: ServerOptions): void {
 	const { bucketName, port, fastRecompression, verbose } = opt;
@@ -151,6 +152,10 @@ export function startServer(opt: ServerOptions): void {
 					if (verbose) console.log(`  #${requestNo} query: ${JSON.stringify(query)}`);
 
 					switch (query) {
+						case 'preview':
+							if (verbose) console.log(`  #${requestNo} respond preview`);
+							respond(await readFile(filenamePreview), 'text/html', 'raw');
+							return;
 						case 'meta.json':
 							if (verbose) console.log(`  #${requestNo} respond with meta.json`);
 							respond(JSON.stringify(metadata), 'application/json', 'raw');
@@ -159,7 +164,7 @@ export function startServer(opt: ServerOptions): void {
 							if (verbose) console.log(`  #${requestNo} respond with style.json`);
 
 							let style: MaplibreStyle;
-							const tiles = [`${baseUrl}${filename}?tile/{z}/{x}/{y}`];
+							const tiles = [`${baseUrl}${filename}?tiles/{z}/{x}/{y}`];
 							const format = header.tileFormat;
 							switch (format) {
 								case 'jpeg': style = guessStyle({ tiles, format: 'jpg' }); break;
@@ -227,6 +232,7 @@ export function startServer(opt: ServerOptions): void {
 						headers['content-type'] = contentType;
 						headers['content-encoding'] = encoding;
 						if (typeof body === 'string') body = Buffer.from(body);
+						console.log('A', headers);
 						void recompress(serverRequest.headers, headers, body, serverResponse, fastRecompression);
 					}
 				}

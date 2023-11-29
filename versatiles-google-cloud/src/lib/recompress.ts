@@ -116,6 +116,8 @@ export async function recompress(headersRequest: IncomingHttpHeaders, headersRes
 
 		const type = String(headersResponse['content-type']).replace(/\/.*/, '').toLowerCase();
 
+		console.log('B', headersResponse);
+
 		// do not recompress images, videos, ...
 		switch (type) {
 			case 'audio':
@@ -148,6 +150,8 @@ export async function recompress(headersRequest: IncomingHttpHeaders, headersRes
 
 			delete headersResponse['transfer-encoding'];
 			headersResponse['content-length'] = String(buffer.length);
+
+			console.log({ headersResponse });
 
 			response
 				.status(200)
