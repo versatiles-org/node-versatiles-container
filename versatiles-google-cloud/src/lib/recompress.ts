@@ -9,13 +9,13 @@ import through from 'through2';
 const maxBufferSize = 10 * 1024 * 1024;
 
 // eslint-disable-next-line @typescript-eslint/max-params
-export function recompress(
+export async function recompress(
 	headersRequest: IncomingHttpHeaders,
 	headersResponse: OutgoingHttpHeaders,
 	body: Buffer | Readable,
 	response: Response,
 	fastCompression = false,
-): void {
+): Promise<void> {
 
 	// detect encoding:
 	const encodingIn: EncodingTools | null = parseContentEncoding(headersResponse);
@@ -56,7 +56,7 @@ export function recompress(
 		delete headersResponse['content-length'];
 	}
 
-	bufferStream(stream, handleBuffer, handleStream);
+	await bufferStream(stream, handleBuffer, handleStream);
 
 	return;
 
@@ -83,35 +83,40 @@ export function recompress(
 	}
 }
 
-export function bufferStream(
+export async function bufferStream(
 	stream: Readable,
 	handleBuffer: (buffer: Buffer) => void,
 	handleStream: (stream: Readable) => void,
-): void {
+): Promise<void> {
 	const buffers: Buffer[] = [];
 	let size = 0;
 	let bufferMode = true;
 
-	stream.pipe(through(
-		function (chunk: Buffer, enc, cb) {
-			if (bufferMode) {
-				buffers.push(chunk);
-				size += chunk.length;
-				if (size >= maxBufferSize) {
-					bufferMode = false;
-					handleStream(stream);
-					// eslint-disable-next-line @typescript-eslint/no-invalid-this
-					for (const buffer of buffers) this.push(buffer);
+	return new Promise(resolve => {
+
+		stream.pipe(through(
+			function (chunk: Buffer, enc, cb) {
+				if (bufferMode) {
+					buffers.push(chunk);
+					size += chunk.length;
+					if (size >= maxBufferSize) {
+						bufferMode = false;
+						handleStream(stream);
+						// eslint-disable-next-line @typescript-eslint/no-invalid-this
+						for (const buffer of buffers) this.push(buffer);
+					}
+					cb();
+				} else {
+					cb(null, chunk);
 				}
+			},
+			(cb): void => {
+				if (bufferMode) handleBuffer(Buffer.concat(buffers));
 				cb();
-			} else {
-				cb(null, chunk);
-			}
-		},
-		(cb): void => {
-			if (bufferMode) handleBuffer(Buffer.concat(buffers));
-			cb();
-			return;
-		},
-	));
+				return;
+			},
+		)).on('finish', () => {
+			resolve();
+		});
+	});
 }
