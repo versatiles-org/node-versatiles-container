@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
-import type { EncodingType } from './encoding.js';
+import { ENCODINGS, type EncodingType } from './encoding.js';
 import type { Response } from 'express';
 import { recompress } from './recompress.js';
 
@@ -10,7 +10,7 @@ export interface ResponderInterface {
 	fastRecompression: boolean;
 	requestNo: number;
 	requestHeaders: IncomingHttpHeaders;
-	respond: (body: Buffer | string, contentType: string, encoding: EncodingType) => void;
+	respond: (body: Buffer | string, contentType: string, encoding: EncodingType) => Promise<void>;
 	response: Response;
 	responseHeaders: OutgoingHttpHeaders;
 	set: (key: string, value: string) => ResponderInterface;
@@ -57,12 +57,12 @@ export function Responder(options: {
 
 	return responder;
 
-	function respond(body: Buffer | string, contentType: string, encoding: EncodingType): void {
+	async function respond(body: Buffer | string, contentType: string, encoding: EncodingType): Promise<void> {
 		set('content-type', contentType);
-		set('content-encoding', encoding);
+		ENCODINGS[encoding].setEncodingHeader(responseHeaders);
 		if (typeof body === 'string') body = Buffer.from(body);
 		if (verbose) console.log(`  #${requestNo} respond`);
-		void recompress(responder, body);
+		await recompress(responder, body);
 	}
 
 	function error(code: number, message: string): void {
