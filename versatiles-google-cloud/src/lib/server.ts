@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type { EncodingType } from './recompress.js';
+import type { EncodingType } from './encoding.js';
 import type { OutgoingHttpHeaders } from 'node:http';
 import type { Header as VersatilesHeader, Reader } from '@versatiles/container';
+import type { MaplibreStyle } from '@versatiles/style/dist/lib/types.js';
 import express from 'express';
 import { Storage } from '@google-cloud/storage';
 import { recompress } from './recompress.js';
 import { Container as VersatilesContainer } from '@versatiles/container';
 import { guessStyle } from '@versatiles/style';
-import type { MaplibreStyle } from '@versatiles/style/dist/lib/types.js';
 import { readFile } from 'node:fs/promises';
 
 
