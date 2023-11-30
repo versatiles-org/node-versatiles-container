@@ -1,5 +1,5 @@
-import type { EncodingTools } from './recompress.js';
-import { ENCODINGS } from './recompress.js';
+import type { EncodingTools } from './encoding.js';
+import { ENCODINGS } from './encoding.js';
 
 describe('Encoding Tools', () => {
 	// Test each encoding tool
