@@ -8,11 +8,13 @@ export interface ResponderInterface {
 	del: (key: string) => void;
 	error: (code: number, message: string) => void;
 	fastRecompression: boolean;
+	requestNo: number;
 	requestHeaders: IncomingHttpHeaders;
 	respond: (body: Buffer | string, contentType: string, encoding: EncodingType) => void;
 	response: Response;
 	responseHeaders: OutgoingHttpHeaders;
 	set: (key: string, value: string) => ResponderInterface;
+	verbose: boolean;
 }
 
 export function Responder(options: {
@@ -37,6 +39,9 @@ export function Responder(options: {
 		get requestHeaders(): IncomingHttpHeaders {
 			return requestHeaders;
 		},
+		get requestNo(): number {
+			return requestNo;
+		},
 		respond,
 		get response(): Response {
 			return response;
@@ -45,6 +50,9 @@ export function Responder(options: {
 			return responseHeaders;
 		},
 		set,
+		get verbose(): boolean {
+			return verbose;
+		},
 	};
 
 	return responder;
