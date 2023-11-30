@@ -86,13 +86,14 @@ describe('Responder', () => {
 
 	it('should respond correctly with gzip compressed text content', async () => {
 		const content = Buffer.from('gzip compressed text content');
-		await responder.respond(gzipSync(content), 'text/plain', 'gzip');
+		const contentCompressed = gzipSync(content);
+		await responder.respond(contentCompressed, 'text/plain', 'gzip');
 
 		expect(responder.response.set).toHaveBeenCalledTimes(1);
 		expect(responder.response.set).toHaveBeenCalledWith({
 			'cache-control': 'max-age=86400',
 			'content-encoding': 'gzip',
-			'content-length': '46',
+			'content-length': '' + contentCompressed.length,
 			'content-type': 'text/plain',
 			'vary': 'accept-encoding',
 		});
@@ -106,13 +107,14 @@ describe('Responder', () => {
 
 	it('should respond correctly with brotli compressed text content', async () => {
 		const content = Buffer.from('brotli compressed text content');
-		await responder.respond(brotliCompressSync(content), 'text/plain', 'br');
+		const contentCompressed = brotliCompressSync(content);
+		await responder.respond(contentCompressed, 'text/plain', 'br');
 
 		expect(responder.response.set).toHaveBeenCalledTimes(1);
 		expect(responder.response.set).toHaveBeenCalledWith({
 			'cache-control': 'max-age=86400',
 			'content-encoding': 'br',
-			'content-length': '30',
+			'content-length': '' + contentCompressed.length,
 			'content-type': 'text/plain',
 			'vary': 'accept-encoding',
 		});
