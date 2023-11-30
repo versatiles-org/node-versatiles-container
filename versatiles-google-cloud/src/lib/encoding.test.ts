@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { brotliCompressSync, gzipSync } from 'node:zlib';
 import type { EncodingType } from './encoding.js';
-import { ENCODINGS, parseContentEncoding } from './encoding.js';
+import { ENCODINGS, findBestEncoding, parseContentEncoding } from './encoding.js';
 import { Readable } from 'node:stream';
 
 describe('Encoding Tools', () => {
@@ -127,7 +127,29 @@ describe('parseContentEncoding', () => {
 });
 
 describe('findBestEncoding', () => {
-	// Test with different scenarios of accept-encoding headers
+	it('handles encodings correctly', () => {
+		expect(findBestEncoding({}).name).toBe('raw');
+		expect(findBestEncoding({ 'accept-encoding': '' }).name).toBe('raw');
+		expect(findBestEncoding({ 'accept-encoding': 'br' }).name).toBe('br');
+		expect(findBestEncoding({ 'accept-encoding': 'BR' }).name).toBe('br');
+		expect(findBestEncoding({ 'accept-encoding': 'gzip' }).name).toBe('gzip');
+		expect(findBestEncoding({ 'accept-encoding': 'GZIP' }).name).toBe('gzip');
+	});
+	it('handles multiple encodings correctly', () => {
+		expect(findBestEncoding({ 'accept-encoding': 'gzip, deflate, br;q=1.0, identity;q=0.5, *;q=0.25' }).name).toBe('br');
+		expect(findBestEncoding({ 'accept-encoding': 'deflate, gzip;q=1.0, *;q=0.5' }).name).toBe('gzip');
+		expect(findBestEncoding({ 'accept-encoding': 'gzip, compress, br' }).name).toBe('br');
+		expect(findBestEncoding({ 'accept-encoding': 'gzip, compress' }).name).toBe('gzip');
+		expect(findBestEncoding({ 'accept-encoding': 'compress, gzip' }).name).toBe('gzip');
+		expect(findBestEncoding({ 'accept-encoding': 'br;q=1.0, gzip;q=0.8, *;q=0.1' }).name).toBe('br');
+		expect(findBestEncoding({ 'accept-encoding': 'q=1.0, gzip;q=0.8, *;q=0.1' }).name).toBe('gzip');
+	});
+	it('handles unusable encodings correctly', () => {
+		expect(findBestEncoding({ 'accept-encoding': 'compress' }).name).toBe('raw');
+		expect(findBestEncoding({ 'accept-encoding': 'deflate' }).name).toBe('raw');
+		expect(findBestEncoding({ 'accept-encoding': 'identity' }).name).toBe('raw');
+		expect(findBestEncoding({ 'accept-encoding': '*' }).name).toBe('raw');
+	});
 });
 
 describe('acceptEncoding', () => {
