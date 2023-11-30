@@ -79,16 +79,18 @@ export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 
 export function parseContentEncoding(headers: OutgoingHttpHeaders): EncodingTools {
 	const contentEncoding = headers['content-encoding'];
+	if (contentEncoding == null) return ENCODINGS.raw;
 
-	if (typeof contentEncoding !== 'string') return ENCODINGS.raw;
+	if (typeof contentEncoding !== 'string') throw Error(`unknown content-encoding ${JSON.stringify(contentEncoding)}`);
 
-	const contentEncodingString = contentEncoding.trim().toLowerCase().replace(/[^a-z].*/, '');
+	const contentEncodingString = contentEncoding.trim().toLowerCase();
 	switch (contentEncodingString) {
+		case '': return ENCODINGS.raw;
 		case 'br': return ENCODINGS.br;
 		case 'gzip': return ENCODINGS.gzip;
 	}
-
-	return ENCODINGS.raw;
+	
+	throw Error(`unknown content-encoding ${JSON.stringify(contentEncoding)}`);
 }
 
 export function findBestEncoding(headers: OutgoingHttpHeaders): EncodingTools {

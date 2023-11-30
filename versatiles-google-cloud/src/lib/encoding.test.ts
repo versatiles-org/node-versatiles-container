@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { brotliCompressSync, gzipSync } from 'node:zlib';
 import type { EncodingType } from './encoding.js';
-import { ENCODINGS } from './encoding.js';
+import { ENCODINGS, parseContentEncoding } from './encoding.js';
 import { Readable } from 'node:stream';
 
 describe('Encoding Tools', () => {
@@ -112,7 +112,18 @@ describe('Encoding Tools', () => {
 });
 
 describe('parseContentEncoding', () => {
-	// Test the functionality with different header configurations
+	it('parses correct encodings', () => {
+		expect(parseContentEncoding({}).name).toBe('raw');
+		expect(parseContentEncoding({ 'content-encoding': '' }).name).toBe('raw');
+		expect(parseContentEncoding({ 'content-encoding': 'br' }).name).toBe('br');
+		expect(parseContentEncoding({ 'content-encoding': 'BR' }).name).toBe('br');
+		expect(parseContentEncoding({ 'content-encoding': 'gzip' }).name).toBe('gzip');
+		expect(parseContentEncoding({ 'content-encoding': 'GZIP' }).name).toBe('gzip');
+	});
+	it('throws errors on icorrect encodings', () => {
+		expect(() => parseContentEncoding({ 'content-encoding': 'deflate' })).toThrow();
+		expect(() => parseContentEncoding({ 'content-encoding': 'br, gzip' })).toThrow();
+	});
 });
 
 describe('findBestEncoding', () => {
