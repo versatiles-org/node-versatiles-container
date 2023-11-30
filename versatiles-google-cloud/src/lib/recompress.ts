@@ -1,59 +1,54 @@
 
 import type { EncodingTools } from './encoding.js';
-import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http';
-import type { Response } from 'express';
+import type { ResponderInterface } from './responder.js';
 import { ENCODINGS, acceptEncoding, findBestEncoding, parseContentEncoding } from './encoding.js';
 import { Readable } from 'node:stream';
 import through from 'through2';
 
 const maxBufferSize = 10 * 1024 * 1024;
 
-// eslint-disable-next-line @typescript-eslint/max-params
 export async function recompress(
-	headersRequest: IncomingHttpHeaders,
-	headersResponse: OutgoingHttpHeaders,
+	responder: ResponderInterface,
 	body: Buffer | Readable,
-	response: Response,
-	fastCompression = false,
 ): Promise<void> {
 
 	// detect encoding:
-	const encodingIn: EncodingTools | null = parseContentEncoding(headersResponse);
+	const encodingIn: EncodingTools | null = parseContentEncoding(responder.responseHeaders);
 	let encodingOut: EncodingTools | null = encodingIn;
 
-	const mediaType = String(headersResponse['content-type']).replace(/\/.*/, '').toLowerCase();
+	const mediaType = String(responder.responseHeaders['content-type']).replace(/\/.*/, '').toLowerCase();
 
 	// do not recompress images, videos, ...
 	switch (mediaType) {
 		case 'audio':
 		case 'image':
 		case 'video':
-			if (!acceptEncoding(headersRequest, encodingOut)) {
+			if (!acceptEncoding(responder.requestHeaders, encodingOut)) {
 				// decompress it
 				encodingOut = ENCODINGS.raw;
 			}
 			break;
 		default:
-			if (fastCompression) {
-				if (!acceptEncoding(headersRequest, encodingOut)) {
+			if (responder.fastRecompression) {
+				if (!acceptEncoding(responder.requestHeaders, encodingOut)) {
 					// decompress it
 					encodingOut = ENCODINGS.raw;
 				}
 			} else {
 				// find best accepted encoding
-				encodingOut = findBestEncoding(headersRequest);
+				encodingOut = findBestEncoding(responder.requestHeaders);
 			}
 	}
 
-	headersResponse.vary = 'accept-encoding';
+	responder.set('vary', 'accept-encoding');
 
-	encodingOut.setEncodingHeader(headersResponse);
+	encodingOut.setEncodingHeader(responder.responseHeaders);
 
 	let stream: Readable = Readable.from(body);
 
 	if (encodingIn !== encodingOut) {
-		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(fastCompression));
-		delete headersResponse['content-length'];
+		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(responder.fastRecompression));
+		responder.del('content-length');
 	}
 
 	await bufferStream(stream, handleBuffer, handleStream);
@@ -61,25 +56,25 @@ export async function recompress(
 	return;
 
 	function handleBuffer(buffer: Buffer): void {
-		delete headersResponse['transfer-encoding'];
+		responder.del('transfer-encoding');
 
-		headersResponse['content-length'] ??= buffer.length;
+		responder.responseHeaders['content-length'] ??= '' + buffer.length;
 
-		response
+		responder.response
 			.status(200)
-			.set(headersResponse)
+			.set(responder.responseHeaders)
 			.end(buffer);
 	}
 
 	function handleStream(streamResult: Readable): void {
-		headersResponse['transfer-encoding'] = 'chunked';
-		delete headersResponse['content-length'];
+		responder.set('transfer-encoding', 'chunked');
+		responder.del('content-length');
 
-		response
+		responder.response
 			.status(200)
-			.set(headersResponse);
+			.set(responder.responseHeaders);
 
-		streamResult.pipe(response);
+		streamResult.pipe(responder.response);
 	}
 }
 

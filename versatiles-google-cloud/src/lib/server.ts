@@ -1,15 +1,12 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
-import type { EncodingType } from './encoding.js';
-import type { OutgoingHttpHeaders } from 'node:http';
 import type { Header as VersatilesHeader, Reader } from '@versatiles/container';
 import type { MaplibreStyle } from '@versatiles/style/dist/lib/types.js';
 import express from 'express';
 import { Storage } from '@google-cloud/storage';
-import { recompress } from './recompress.js';
 import { Container as VersatilesContainer } from '@versatiles/container';
 import { guessStyle } from '@versatiles/style';
 import { readFile } from 'node:fs/promises';
+import { Responder } from './responder.js';
+import { recompress } from './recompress.js';
 
 
 
@@ -52,29 +49,33 @@ export function startServer(opt: ServerOptions): void {
 			.send('ok');
 	});
 
-	app.get(/.*/, (serverRequest, serverResponse): void => {
+	app.get(/.*/, (request, response): void => {
 		void (async (): Promise<void> => {
 			requestNo++;
+			const responder = Responder({
+				fastRecompression,
+				requestHeaders: request.headers,
+				requestNo,
+				response,
+				verbose,
+			});
+
 			if (verbose) console.log('new request: #' + requestNo);
 			try {
-				const filename = decodeURI(String(serverRequest.path)).trim().replace(/^\/+/, '');
+				const filename = decodeURI(String(request.path)).trim().replace(/^\/+/, '');
 
 				if (verbose) console.log(`  #${requestNo} public filename: ${filename}`);
 
 				if (filename === '') {
-					sendError(404, `file "${filename}" not found`); return;
+					responder.error(404, `file "${filename}" not found`); return;
 				}
-
-				const headers: OutgoingHttpHeaders = {
-					'cache-control': 'max-age=86400', // default: 1 day
-				};
 
 				if (verbose) console.log(`  #${requestNo} request filename: ${bucketPrefix + filename}`);
 				const file = bucket.file(bucketPrefix + filename);
 
 				const [exists] = await file.exists();
 				if (!exists) {
-					sendError(404, `file "${filename}" not found`);
+					responder.error(404, `file "${filename}" not found`);
 					return;
 				}
 
@@ -90,22 +91,22 @@ export function startServer(opt: ServerOptions): void {
 					const [metadata] = await file.getMetadata();
 					if (verbose) console.log(`  #${requestNo} metadata: ${JSON.stringify(metadata)}`);
 
-					if (metadata.contentType != null) headers['content-type'] = metadata.contentType;
-					if (metadata.size != null) headers['content-length'] = String(metadata.size);
-					if (metadata.etag != null) headers.etag = metadata.etag;
+					if (metadata.contentType != null) responder.set('content-type', metadata.contentType);
+					if (metadata.size != null) responder.set('content-length', String(metadata.size));
+					if (metadata.etag != null) responder.set('etag', metadata.etag);
 					if (metadata.cacheControl != null) {
 						const match = /^max-age=([0-9]+)$/.exec(metadata.cacheControl);
 						if (match) {
 							let maxAge = parseInt(match[1], 10) || 86400;
 							if (maxAge < 300) maxAge = 300; // minimum: 5 minutes
 							if (maxAge > 8640000) maxAge = 8640000; // maximum: 100 days
-							headers['cache-control'] = 'max-age=' + maxAge;
+							responder.set('cache-control', 'max-age=' + maxAge);
 						}
 					}
 
 					const fileStream = file.createReadStream();
 
-					void recompress(serverRequest.headers, headers, fileStream, serverResponse, fastRecompression);
+					void recompress(responder, fileStream);
 				}
 
 				async function serveVersatiles(): Promise<void> {
@@ -148,17 +149,17 @@ export function startServer(opt: ServerOptions): void {
 						({ container, header, metadata } = cache);
 					}
 
-					const query = String(serverRequest.query);
+					const query = String(request.query);
 					if (verbose) console.log(`  #${requestNo} query: ${JSON.stringify(query)}`);
 
 					switch (query) {
 						case 'preview':
 							if (verbose) console.log(`  #${requestNo} respond preview`);
-							respond(await readFile(filenamePreview), 'text/html', 'raw');
+							responder.respond(await readFile(filenamePreview), 'text/html', 'raw');
 							return;
 						case 'meta.json':
 							if (verbose) console.log(`  #${requestNo} respond with meta.json`);
-							respond(JSON.stringify(metadata), 'application/json', 'raw');
+							responder.respond(JSON.stringify(metadata), 'application/json', 'raw');
 							return;
 						case 'style.json':
 							if (verbose) console.log(`  #${requestNo} respond with style.json`);
@@ -175,20 +176,20 @@ export function startServer(opt: ServerOptions): void {
 									break;
 								case 'pbf':
 									if (metadata == null) {
-										sendError(500, 'metadata must be defined');
+										responder.error(500, 'metadata must be defined');
 										return;
 									}
 									if (typeof metadata !== 'object') {
-										sendError(500, 'metadata must be an object');
+										responder.error(500, 'metadata must be an object');
 										return;
 									}
 									if (!('vector_layers' in metadata)) {
-										sendError(500, 'metadata must contain property vector_layers');
+										responder.error(500, 'metadata must contain property vector_layers');
 										return;
 									}
 									const vectorLayers = metadata.vector_layers;
 									if (!Array.isArray(vectorLayers)) {
-										sendError(500, 'metadata.vector_layers must be an array');
+										responder.error(500, 'metadata.vector_layers must be an array');
 										return;
 									}
 									style = guessStyle({ tiles, format, vectorLayers });
@@ -198,16 +199,16 @@ export function startServer(opt: ServerOptions): void {
 								case 'json':
 								case 'svg':
 								case 'topojson':
-									sendError(500, `tile format "${format}" is not supported`);
+									responder.error(500, `tile format "${format}" is not supported`);
 									return;
 							}
-							respond(JSON.stringify(style), 'application/json', 'raw');
+							responder.respond(JSON.stringify(style), 'application/json', 'raw');
 							return;
 					}
 
 					const match = /tiles\/(?<z>\d+)\/(?<x>\d+)\/(?<y>\d+)/.exec(query);
 					if (match == null) {
-						sendError(400, 'get parameter must be "meta.json", "style.json", or "tile/{z}/{x}/{y}"');
+						responder.error(400, 'get parameter must be "meta.json", "style.json", or "tile/{z}/{x}/{y}"');
 						return;
 					}
 
@@ -220,36 +221,18 @@ export function startServer(opt: ServerOptions): void {
 						parseInt(y, 10),
 					);
 					if (tile == null) {
-						sendError(404, `map tile {x:${x}, y:${y}, z:${z}} not found`);
+						responder.error(404, `map tile {x:${x}, y:${y}, z:${z}} not found`);
 					} else {
 						if (verbose) console.log(`  #${requestNo} return tile ${z}/${x}/${y}`);
-						respond(tile, header.tileMime, header.tileCompression);
+						responder.respond(tile, header.tileMime, header.tileCompression);
 					}
 
 					return;
-
-					function respond(body: Buffer | string, contentType: string, encoding: EncodingType): void {
-						headers['content-type'] = contentType;
-						headers['content-encoding'] = encoding;
-						if (typeof body === 'string') body = Buffer.from(body);
-						void recompress(serverRequest.headers, headers, body, serverResponse, fastRecompression);
-					}
-				}
-
-				function sendError(code: number, message: string): void {
-					if (verbose) console.log(`  #${requestNo} error ${code}: ${message}`);
-					serverResponse
-						.status(code)
-						.type('text')
-						.send(message);
 				}
 			} catch (error) {
 				console.error({ error });
 
-				serverResponse
-					.status(500)
-					.type('text')
-					.send('Internal Server Error for request: ' + JSON.stringify(serverRequest.path));
+				responder.error(500, 'Internal Server Error for request: ' + JSON.stringify(request.path));
 			}
 		})();
 	});
