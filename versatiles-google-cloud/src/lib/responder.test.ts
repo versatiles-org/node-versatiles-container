@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import type { ResponderInterface } from './responder.js';
 import { Responder } from './responder.js';
 import { jest } from '@jest/globals';
-import { brotliCompressSync, gzipSync } from 'zlib';
+import { brotliCompressSync, brotliDecompressSync, gunzipSync, gzipSync } from 'zlib';
 
 describe('Responder', () => {
 	let responder: ResponderInterface;
@@ -81,35 +81,47 @@ describe('Responder', () => {
 			'content-type': 'image/png',
 			'vary': 'accept-encoding',
 		});
-		expect(responder.response.end).toHaveBeenCalledWith(Buffer.from([105, 109, 97, 103, 101, 100, 97, 116, 97]));
+		expect(responder.response.end).toHaveBeenCalledWith(Buffer.from('imagedata'));
 	});
 
 	it('should respond correctly with gzip compressed text content', async () => {
-		await responder.respond(gzipSync(Buffer.from('content')), 'text/plain', 'gzip');
+		const content = Buffer.from('gzip compressed text content');
+		await responder.respond(gzipSync(content), 'text/plain', 'gzip');
 
 		expect(responder.response.set).toHaveBeenCalledTimes(1);
 		expect(responder.response.set).toHaveBeenCalledWith({
 			'cache-control': 'max-age=86400',
 			'content-encoding': 'gzip',
-			'content-length': '27',
+			'content-length': '46',
 			'content-type': 'text/plain',
 			'vary': 'accept-encoding',
 		});
-		expect(responder.response.end).toHaveBeenCalledWith(Buffer.from([31, 139, 8, 0, 0, 0, 0, 0, 0, 19, 75, 206, 207, 43, 73, 205, 43, 1, 0, 169, 48, 197, 254, 7, 0, 0, 0]));
+
+		expect(responder.response.end).toHaveBeenCalledTimes(1);
+		const mockFunction = responder.response.end as unknown as jest.MockedFunction<(chunk: Buffer) => Response>;
+		const buffer = mockFunction.mock.calls.pop();
+		if (buffer == null) throw Error();
+		expect(gunzipSync(buffer[0])).toStrictEqual(content);
 	});
 
 	it('should respond correctly with brotli compressed text content', async () => {
-		await responder.respond(brotliCompressSync(Buffer.from('content')), 'text/plain', 'br');
+		const content = Buffer.from('brotli compressed text content');
+		await responder.respond(brotliCompressSync(content), 'text/plain', 'br');
 
 		expect(responder.response.set).toHaveBeenCalledTimes(1);
 		expect(responder.response.set).toHaveBeenCalledWith({
 			'cache-control': 'max-age=86400',
 			'content-encoding': 'br',
-			'content-length': '10',
+			'content-length': '30',
 			'content-type': 'text/plain',
 			'vary': 'accept-encoding',
 		});
-		expect(responder.response.end).toHaveBeenCalledWith(Buffer.from([27, 6, 0, 248, 37, 0, 162, 144, 168, 0]));
+
+		expect(responder.response.end).toHaveBeenCalledTimes(1);
+		const mockFunction = responder.response.end as unknown as jest.MockedFunction<(chunk: Buffer) => Response>;
+		const buffer = mockFunction.mock.calls.pop();
+		if (buffer == null) throw Error();
+		expect(brotliDecompressSync(buffer[0])).toStrictEqual(content);
 	});
 });
 
