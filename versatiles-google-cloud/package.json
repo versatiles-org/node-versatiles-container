@@ -1,6 +1,6 @@
 {
   "name": "@versatiles/google-cloud",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A server for VersaTiles in Google Cloud Run",
   "bin": {
     "versatiles-google-cloud": "./dist/index.js"
@@ -8,7 +8,8 @@
   "prefix": "./",
   "files": [
     "dist/**/*.js",
-    "dist/**/*.d.ts"
+    "dist/**/*.d.ts",
+    "static"
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
