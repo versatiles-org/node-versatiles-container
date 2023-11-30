@@ -10,7 +10,6 @@ describe('Responder', () => {
 	let responder: ResponderInterface;
 
 	beforeEach(() => {
-
 		responder = Responder({
 			fastRecompression: true,
 			requestHeaders: {

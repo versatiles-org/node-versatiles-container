@@ -63,11 +63,11 @@ export async function serveVersatiles(file: File, path: string, query: string, r
 	switch (query) {
 		case 'preview':
 			if (responder.verbose) console.log(`  #${responder.requestNo} respond preview`);
-			responder.respond(await readFile(filenamePreview), 'text/html', 'raw');
+			await responder.respond(await readFile(filenamePreview), 'text/html', 'raw');
 			return;
 		case 'meta.json':
 			if (responder.verbose) console.log(`  #${responder.requestNo} respond with meta.json`);
-			responder.respond(JSON.stringify(metadata), 'application/json', 'raw');
+			await responder.respond(JSON.stringify(metadata), 'application/json', 'raw');
 			return;
 		case 'style.json':
 			if (responder.verbose) console.log(`  #${responder.requestNo} respond with style.json`);
@@ -110,7 +110,7 @@ export async function serveVersatiles(file: File, path: string, query: string, r
 					responder.error(500, `tile format "${format}" is not supported`);
 					return;
 			}
-			responder.respond(JSON.stringify(style), 'application/json', 'raw');
+			await responder.respond(JSON.stringify(style), 'application/json', 'raw');
 			return;
 	}
 
@@ -132,7 +132,7 @@ export async function serveVersatiles(file: File, path: string, query: string, r
 		responder.error(404, `map tile {x:${x}, y:${y}, z:${z}} not found`);
 	} else {
 		if (responder.verbose) console.log(`  #${responder.requestNo} return tile ${z}/${x}/${y}`);
-		responder.respond(tile, header.tileMime, header.tileCompression);
+		await responder.respond(tile, header.tileMime, header.tileCompression);
 	}
 
 	return;
