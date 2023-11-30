@@ -12,6 +12,11 @@ const config: JestConfigWithTsJest = {
 	coveragePathIgnorePatterns: [
 		'/dist/'
 	],
+	collectCoverageFrom: [
+		'**/*.ts',
+		'!**/node_modules/**',
+		'!jest*.ts',
+	]
 }
 
 export default config;
