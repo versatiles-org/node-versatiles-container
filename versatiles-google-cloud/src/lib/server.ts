@@ -105,7 +105,7 @@ export function startServer(opt: ServerOptions): void {
 
 					const fileStream = file.createReadStream();
 
-					recompress(serverRequest.headers, headers, fileStream, serverResponse, fastRecompression);
+					void recompress(serverRequest.headers, headers, fileStream, serverResponse, fastRecompression);
 				}
 
 				async function serveVersatiles(): Promise<void> {
@@ -232,7 +232,7 @@ export function startServer(opt: ServerOptions): void {
 						headers['content-type'] = contentType;
 						headers['content-encoding'] = encoding;
 						if (typeof body === 'string') body = Buffer.from(body);
-						recompress(serverRequest.headers, headers, body, serverResponse, fastRecompression);
+						void recompress(serverRequest.headers, headers, body, serverResponse, fastRecompression);
 					}
 				}
 
