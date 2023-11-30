@@ -29,9 +29,9 @@ program
 		const verbose = Boolean(cmdOptions.verbose ?? false);
 
 		try {
-			startServer({
+			void startServer({
 				baseUrl,
-				bucketName,
+				bucket: bucketName,
 				bucketPrefix,
 				fastRecompression,
 				port,

@@ -1,3 +1,5 @@
+import type { Server } from 'http';
+import type { Bucket } from '@google-cloud/storage';
 import express from 'express';
 import { Storage } from '@google-cloud/storage';
 import { Responder } from './responder.js';
@@ -8,21 +10,21 @@ import { serveVersatiles } from './versatiles.js';
 
 export interface ServerOptions {
 	baseUrl: string;
-	bucketName: string;
+	bucket: Bucket | string;
 	bucketPrefix: string;
 	fastRecompression: boolean;
 	port: number;
 	verbose: boolean;
 }
 
-export function startServer(opt: ServerOptions): void {
-	const { bucketName, port, fastRecompression, verbose } = opt;
+export async function startServer(opt: ServerOptions): Promise<Server> {
+	const { bucket, port, fastRecompression, verbose } = opt;
 	let bucketPrefix = opt.bucketPrefix.replace(/^\/+|\/+$/g, '');
 	if (bucketPrefix !== '') bucketPrefix += '/';
 
 	const baseUrl = new URL(opt.baseUrl).href;
 	const storage = new Storage();
-	const bucket = storage.bucket(bucketName);
+	const bucketStorage = (typeof bucket == 'string') ? storage.bucket(bucket) : bucket;
 
 	let requestNo = 0;
 
@@ -59,7 +61,7 @@ export function startServer(opt: ServerOptions): void {
 				}
 
 				if (verbose) console.log(`  #${requestNo} request filename: ${bucketPrefix + filename}`);
-				const file = bucket.file(bucketPrefix + filename);
+				const file = bucketStorage.file(bucketPrefix + filename);
 
 				const [exists] = await file.exists();
 				if (!exists) {
@@ -105,8 +107,11 @@ export function startServer(opt: ServerOptions): void {
 		})();
 	});
 
-	app.listen(port, () => {
-		console.log(`listening on port ${port}`);
-		console.log(`you can find me at ${baseUrl}`);
+	return new Promise(resolve => {
+		const server = app.listen(port, () => {
+			console.log(`listening on port ${port}`);
+			console.log(`you can find me at ${baseUrl}`);
+			resolve(server);
+		});
 	});
 }
