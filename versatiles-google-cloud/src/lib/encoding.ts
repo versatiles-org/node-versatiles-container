@@ -1,10 +1,13 @@
 import type { BrotliOptions, ZlibOptions } from 'node:zlib';
-import type { OutgoingHttpHeaders } from 'node:http';
+import type { OutgoingHttpHeaders, IncomingHttpHeaders } from 'node:http';
 import { PassThrough, type Transform } from 'node:stream';
 import zlib from 'node:zlib';
 
 export type EncodingType = 'br' | 'gzip' | 'raw';
 
+/**
+ * Interface representing tools for handling different encoding types.
+ */
 export interface EncodingTools {
 	name: EncodingType;
 	compressStream: (fast: boolean, size?: number) => Transform;
@@ -14,6 +17,9 @@ export interface EncodingTools {
 	setEncodingHeader: (headers: OutgoingHttpHeaders) => void;
 }
 
+/**
+ * Record mapping encoding types to their respective tools.
+ */
 export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 	'br': ((): EncodingTools => {
 		function getOptions(fast: boolean, size?: number): BrotliOptions {
@@ -77,6 +83,12 @@ export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 	},
 };
 
+/**
+ * Parses the content encoding from the given HTTP headers and returns the corresponding encoding tools.
+ * @param headers - The outgoing HTTP headers.
+ * @returns The corresponding `EncodingTools` based on the content encoding header.
+ * @throws Error if the content encoding is unknown.
+ */
 export function parseContentEncoding(headers: OutgoingHttpHeaders): EncodingTools {
 	const contentEncoding = headers['content-encoding'];
 	if (contentEncoding == null) return ENCODINGS.raw;
@@ -93,7 +105,12 @@ export function parseContentEncoding(headers: OutgoingHttpHeaders): EncodingTool
 	throw Error(`unknown content-encoding ${JSON.stringify(contentEncoding)}`);
 }
 
-export function findBestEncoding(headers: OutgoingHttpHeaders): EncodingTools {
+/**
+ * Determines the best encoding supported by the client based on the `accept-encoding` HTTP header.
+ * @param headers - The incoming HTTP headers.
+ * @returns The best available `EncodingTools` based on client's preferences.
+ */
+export function findBestEncoding(headers: IncomingHttpHeaders): EncodingTools {
 	const encodingHeader = headers['accept-encoding'];
 	if (typeof encodingHeader !== 'string') return ENCODINGS.raw;
 
@@ -104,7 +121,13 @@ export function findBestEncoding(headers: OutgoingHttpHeaders): EncodingTools {
 	return ENCODINGS.raw;
 }
 
-export function acceptEncoding(headers: OutgoingHttpHeaders, encoding: EncodingTools): boolean {
+/**
+ * Checks if the given encoding is acceptable based on the `accept-encoding` HTTP header.
+ * @param headers - The incoming HTTP headers.
+ * @param encoding - The `EncodingTools` to check.
+ * @returns `true` if the encoding is acceptable, otherwise `false`.
+ */
+export function acceptEncoding(headers: IncomingHttpHeaders, encoding: EncodingTools): boolean {
 	if (encoding.name === 'raw') return true;
 
 	const encodingHeader = headers['accept-encoding'];
