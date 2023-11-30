@@ -3,6 +3,8 @@ import type { OutgoingHttpHeaders } from 'node:http';
 import { PassThrough, type Transform } from 'node:stream';
 import zlib from 'node:zlib';
 
+export type EncodingType = 'br' | 'deflate' | 'gzip' | 'raw';
+
 export interface EncodingTools {
 	name: EncodingType;
 	compressStream: (fast: boolean, size?: number) => Transform;
@@ -99,31 +101,38 @@ export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 	},
 };
 
-export type EncodingType = 'br' | 'deflate' | 'gzip' | 'raw';
+export function parseContentEncoding(headers: OutgoingHttpHeaders): EncodingTools {
+	const contentEncoding = headers['content-encoding'];
 
-export function parseEncoding(acceptEncoding: unknown): EncodingTools {
-	if (typeof acceptEncoding !== 'string') return ENCODINGS.raw;
-	acceptEncoding = acceptEncoding.trim().toLowerCase().replace(/[^a-z].*/, '');
-	switch (acceptEncoding) {
+	if (typeof contentEncoding !== 'string') return ENCODINGS.raw;
+
+	const contentEncodingString = contentEncoding.trim().toLowerCase().replace(/[^a-z].*/, '');
+	switch (contentEncodingString) {
 		case 'br': return ENCODINGS.br;
 		case 'deflate': return ENCODINGS.deflate;
 		case 'gzip': return ENCODINGS.gzip;
 	}
+
 	return ENCODINGS.raw;
 }
 
-export function findBestEncoding(acceptEncoding: unknown): EncodingTools {
-	if (typeof acceptEncoding !== 'string') return ENCODINGS.raw;
+export function findBestEncoding(headers: OutgoingHttpHeaders): EncodingTools {
+	const encodingHeader = headers['accept-encoding'];
+	if (typeof encodingHeader !== 'string') return ENCODINGS.raw;
 
-	const acceptEncodingString: string = acceptEncoding.toLowerCase();
+	const encodingString: string = encodingHeader.toLowerCase();
 
-	if (acceptEncodingString.includes('br')) return ENCODINGS.br;
-	if (acceptEncodingString.includes('gzip')) return ENCODINGS.gzip;
-	if (acceptEncodingString.includes('deflate')) return ENCODINGS.deflate;
+	if (encodingString.includes('br')) return ENCODINGS.br;
+	if (encodingString.includes('gzip')) return ENCODINGS.gzip;
+	if (encodingString.includes('deflate')) return ENCODINGS.deflate;
 	return ENCODINGS.raw;
 }
 
-export function coversEncoding(acceptEncoding: string, encoding: EncodingTools): boolean {
+export function acceptEncoding(headers: OutgoingHttpHeaders, encoding: EncodingTools): boolean {
 	if (encoding.name === 'raw') return true;
-	return acceptEncoding.toLowerCase().includes(encoding.name);
+
+	const encodingHeader = headers['accept-encoding'];
+	if (typeof encodingHeader !== 'string') return encoding === ENCODINGS.raw;
+
+	return encodingHeader.toLowerCase().includes(encoding.name);
 }

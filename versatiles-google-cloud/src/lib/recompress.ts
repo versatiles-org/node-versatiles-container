@@ -2,7 +2,7 @@
 import type { EncodingTools } from './encoding.js';
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http';
 import type { Response } from 'express';
-import { ENCODINGS, coversEncoding, findBestEncoding, parseEncoding } from './encoding.js';
+import { ENCODINGS, acceptEncoding, findBestEncoding, parseContentEncoding } from './encoding.js';
 import { Readable } from 'node:stream';
 import through from 'through2';
 
@@ -18,7 +18,7 @@ export function recompress(
 ): void {
 
 	// detect encoding:
-	const encodingIn: EncodingTools | null = parseEncoding(headersResponse['content-encoding']);
+	const encodingIn: EncodingTools | null = parseContentEncoding(headersResponse);
 	let encodingOut: EncodingTools | null = encodingIn;
 
 	const mediaType = String(headersResponse['content-type']).replace(/\/.*/, '').toLowerCase();
@@ -28,19 +28,20 @@ export function recompress(
 		case 'audio':
 		case 'image':
 		case 'video':
+			if (!acceptEncoding(headersRequest, encodingOut)) {
+				// decompress it
+				encodingOut = ENCODINGS.raw;
+			}
 			break;
 		default:
-			const acceptEncoding = String(headersRequest['accept-encoding'] ?? '');
 			if (fastCompression) {
-				if (coversEncoding(acceptEncoding, encodingIn)) {
-					// go for it!
-				} else {
+				if (!acceptEncoding(headersRequest, encodingOut)) {
 					// decompress it
 					encodingOut = ENCODINGS.raw;
 				}
 			} else {
 				// find best accepted encoding
-				encodingOut = findBestEncoding(acceptEncoding);
+				encodingOut = findBestEncoding(headersRequest);
 			}
 	}
 
