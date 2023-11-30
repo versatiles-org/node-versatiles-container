@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { brotliCompressSync, gzipSync } from 'node:zlib';
 import type { EncodingType } from './encoding.js';
-import { ENCODINGS, findBestEncoding, parseContentEncoding } from './encoding.js';
+import type { IncomingHttpHeaders } from 'node:http';
+import { brotliCompressSync, gzipSync } from 'node:zlib';
+import { ENCODINGS, acceptEncoding, findBestEncoding, parseContentEncoding } from './encoding.js';
 import { Readable } from 'node:stream';
 
 describe('Encoding Tools', () => {
@@ -153,7 +154,48 @@ describe('findBestEncoding', () => {
 });
 
 describe('acceptEncoding', () => {
-	// Test with various encoding options and headers
+	const encodings: EncodingType[] = ['raw', 'gzip', 'br'];
+	describe('handles encodings correctly', () => {
+		check(undefined, 'raw');
+		check('', 'raw');
+		check('br', 'raw,br');
+		check('BR', 'raw,br');
+		check('gzip', 'raw,gzip');
+		check('GZIP', 'raw,gzip');
+	});
+	describe('handles multiple encodings correctly', () => {
+		check('gzip, deflate, br;q=1.0, identity;q=0.5, *;q=0.25', 'raw,gzip,br');
+		check(['gzip', 'deflate', 'br;q=1.0', 'identity;q=0.5', '*;q=0.25'], 'raw,gzip,br');
+		check('deflate, gzip;q=1.0, *;q=0.5', 'raw,gzip');
+		check(['deflate', ' gzip;q=1.0', ' *;q=0.5'], 'raw,gzip');
+		check('gzip, compress, br', 'raw,gzip,br');
+		check(['gzip', ' compress', ' br'], 'raw,gzip,br');
+		check(['GZIP', ' COMPRESS', ' BR'], 'raw,gzip,br');
+		check('gzip, compress', 'raw,gzip');
+		check(['gzip', ' compress'], 'raw,gzip');
+		check('compress, gzip', 'raw,gzip');
+		check(['compress', ' gzip'], 'raw,gzip');
+		check('br;q=1.0, gzip;q=0.8, *;q=0.1', 'raw,gzip,br');
+		check(['br;q=1.0', ' gzip;q=0.8', ' *;q=0.1'], 'raw,gzip,br');
+		check('q=1.0, gzip;q=0.8, *;q=0.1', 'raw,gzip');
+		check(['q=1.0', ' gzip;q=0.8', ' *;q=0.1'], 'raw,gzip');
+	});
+	describe('handles unusable encodings correctly', () => {
+		check('compress', 'raw');
+		check('deflate', 'raw');
+		check('identity', 'raw');
+		check('*', 'raw');
+	});
+
+	function check(acceptedEncoding: string[] | string | undefined, encodingList: string): void {
+		const header: IncomingHttpHeaders = {};
+		if (acceptedEncoding != null) header['accept-encoding'] = acceptedEncoding;
+
+		it(`works for ${JSON.stringify(acceptedEncoding)}`, () => {
+			const result = encodings.filter(encodingName => acceptEncoding(header, ENCODINGS[encodingName]));
+			expect(result.join(',')).toBe(encodingList);
+		});
+	}
 });
 
 async function stream2buffer(stream: Readable): Promise<Buffer> {

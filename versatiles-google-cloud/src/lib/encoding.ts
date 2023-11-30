@@ -89,7 +89,7 @@ export function parseContentEncoding(headers: OutgoingHttpHeaders): EncodingTool
 		case 'br': return ENCODINGS.br;
 		case 'gzip': return ENCODINGS.gzip;
 	}
-	
+
 	throw Error(`unknown content-encoding ${JSON.stringify(contentEncoding)}`);
 }
 
@@ -108,7 +108,7 @@ export function acceptEncoding(headers: OutgoingHttpHeaders, encoding: EncodingT
 	if (encoding.name === 'raw') return true;
 
 	const encodingHeader = headers['accept-encoding'];
-	if (typeof encodingHeader !== 'string') return encoding === ENCODINGS.raw;
+	if (encodingHeader == null) return encoding === ENCODINGS.raw;
 
-	return encodingHeader.toLowerCase().includes(encoding.name);
+	return JSON.stringify(encodingHeader).toLowerCase().includes(encoding.name);
 }
