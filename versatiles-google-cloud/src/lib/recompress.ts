@@ -143,8 +143,6 @@ export function recompress(
 			}
 	}
 
-	console.log(encodingIn.name, encodingOut.name);
-
 	headersResponse.vary = 'accept-encoding';
 
 	encodingOut.setEncoding(headersResponse);
@@ -185,13 +183,14 @@ export function recompress(
 
 
 export function parseEncoding(acceptEncoding: unknown): EncodingTools {
+	if (typeof acceptEncoding !== 'string') return ENCODINGS.raw;
+	acceptEncoding = acceptEncoding.trim().toLowerCase().replace(/[^a-z].*/, '');
 	switch (acceptEncoding) {
 		case 'br': return ENCODINGS.br;
 		case 'deflate': return ENCODINGS.deflate;
 		case 'gzip': return ENCODINGS.gzip;
-		case 'raw': return ENCODINGS.raw;
 	}
-	throw Error();
+	return ENCODINGS.raw;
 }
 
 export function findBestEncoding(acceptEncoding: unknown): EncodingTools {
