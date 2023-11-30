@@ -3,7 +3,7 @@ import type { OutgoingHttpHeaders } from 'node:http';
 import { PassThrough, type Transform } from 'node:stream';
 import zlib from 'node:zlib';
 
-export type EncodingType = 'br' | 'deflate' | 'gzip' | 'raw';
+export type EncodingType = 'br' | 'gzip' | 'raw';
 
 export interface EncodingTools {
 	name: EncodingType;
@@ -65,30 +65,6 @@ export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 			},
 		};
 	})(),
-	'deflate': ((): EncodingTools => {
-		function getOptions(fast: boolean): ZlibOptions {
-			return { level: fast ? 3 : 9 };
-		}
-		return {
-			name: 'deflate',
-			compressStream: (fast: boolean) => zlib.createDeflate(getOptions(fast)),
-			decompressStream: () => zlib.createInflate(),
-			compressBuffer: async (buffer: Buffer, fast: boolean) => new Promise(resolve => {
-				zlib.deflate(buffer, getOptions(fast), (e, b) => {
-					resolve(b);
-				});
-			}),
-			decompressBuffer: async (buffer: Buffer) => new Promise(resolve => {
-				zlib.inflate(buffer, (e, b) => {
-					resolve(b);
-				});
-			}),
-			setEncodingHeader: (headers: OutgoingHttpHeaders): void => {
-				headers['content-encoding'] = 'deflate';
-				return;
-			},
-		};
-	})(),
 	'raw': {
 		name: 'raw',
 		compressStream: () => new PassThrough(),
@@ -109,7 +85,6 @@ export function parseContentEncoding(headers: OutgoingHttpHeaders): EncodingTool
 	const contentEncodingString = contentEncoding.trim().toLowerCase().replace(/[^a-z].*/, '');
 	switch (contentEncodingString) {
 		case 'br': return ENCODINGS.br;
-		case 'deflate': return ENCODINGS.deflate;
 		case 'gzip': return ENCODINGS.gzip;
 	}
 
@@ -124,7 +99,6 @@ export function findBestEncoding(headers: OutgoingHttpHeaders): EncodingTools {
 
 	if (encodingString.includes('br')) return ENCODINGS.br;
 	if (encodingString.includes('gzip')) return ENCODINGS.gzip;
-	if (encodingString.includes('deflate')) return ENCODINGS.deflate;
 	return ENCODINGS.raw;
 }
 
