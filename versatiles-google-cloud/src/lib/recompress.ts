@@ -1,17 +1,17 @@
 
 import type { BrotliOptions, ZlibOptions } from 'node:zlib';
-import zlib from 'node:zlib';
-import through from 'through2';
-import type { Transform, Readable } from 'node:stream';
-import { Stream } from 'node:stream';
-import type { Response } from 'express';
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http';
+import type { Response } from 'express';
+import type { Transform } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
+import through from 'through2';
+import zlib from 'node:zlib';
 
 export type EncodingType = 'br' | 'deflate' | 'gzip' | 'raw';
 export interface EncodingTools {
 	name: EncodingType;
-	compressStream: (fast: boolean, size?: number) => Transform | null;
-	decompressStream: () => Transform | null;
+	compressStream: (fast: boolean, size?: number) => Transform;
+	decompressStream: () => Transform;
 	compressBuffer: (buffer: Buffer, fast: boolean) => Buffer | Promise<Buffer>;
 	decompressBuffer: (buffer: Buffer) => Buffer | Promise<Buffer>;
 	setEncoding: (headers: OutgoingHttpHeaders) => void;
@@ -95,8 +95,8 @@ export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 	})(),
 	'raw': {
 		name: 'raw',
-		compressStream: () => null,
-		decompressStream: () => null,
+		compressStream: () => new PassThrough(),
+		decompressStream: () => new PassThrough(),
 		compressBuffer: (buffer: Buffer): Buffer => buffer,
 		decompressBuffer: (buffer: Buffer): Buffer => buffer,
 		setEncoding: (headers: OutgoingHttpHeaders): void => {
@@ -108,97 +108,120 @@ export const ENCODINGS: Record<EncodingType, EncodingTools> = {
 
 
 // eslint-disable-next-line @typescript-eslint/max-params
-export async function recompress(headersRequest: IncomingHttpHeaders, headersResponse: OutgoingHttpHeaders, body: Buffer | Readable, response: Response, fastCompression = false): Promise<void> {
-	return new Promise(resolve => {
-		// detect encoding:
-		const encodingIn = detectEncoding(headersResponse['content-encoding']);
-		let encodingOut: EncodingTools;
+export function recompress(
+	headersRequest: IncomingHttpHeaders,
+	headersResponse: OutgoingHttpHeaders,
+	body: Buffer | Readable,
+	response: Response,
+	fastCompression = false,
+): void {
 
-		const type = String(headersResponse['content-type']).replace(/\/.*/, '').toLowerCase();
+	// detect encoding:
+	const encodingIn: EncodingTools | null = parseEncoding(headersResponse['content-encoding']);
+	let encodingOut: EncodingTools | null = encodingIn;
 
-		console.log('B', headersResponse);
+	const mediaType = String(headersResponse['content-type']).replace(/\/.*/, '').toLowerCase();
 
-		// do not recompress images, videos, ...
-		switch (type) {
-			case 'audio':
-			case 'image':
-			case 'video':
-				encodingOut = ENCODINGS.raw;
-				break;
-			default:
-				const ignoreBrotli = fastCompression && (encodingIn.name === 'gzip');
-				encodingOut = detectEncoding(String(headersRequest['accept-encoding']), ignoreBrotli);
-		}
+	// do not recompress images, videos, ...
+	switch (mediaType) {
+		case 'audio':
+		case 'image':
+		case 'video':
+			break;
+		default:
+			const acceptEncoding = String(headersRequest['accept-encoding'] ?? '');
+			if (fastCompression) {
+				if (coversEncoding(acceptEncoding, encodingIn)) {
+					// go for it!
+				} else {
+					// decompress it
+					encodingOut = ENCODINGS.raw;
+				}
+			} else {
+				// find best accepted encoding
+				encodingOut = findBestEncoding(acceptEncoding);
+			}
+	}
 
-		headersResponse.vary = 'accept-encoding';
+	console.log(encodingIn.name, encodingOut.name);
 
-		encodingOut.setEncoding(headersResponse);
+	headersResponse.vary = 'accept-encoding';
 
-		if (Buffer.isBuffer(body)) {
-			void handleBuffer(body);
-		} else if (Stream.isReadable(body)) {
-			let stream: Readable = body;
-			const transform1 = encodingIn.decompressStream();
-			if (transform1) stream = stream.pipe(transform1);
-			stream.pipe(bufferStream(16 * MB, handleBuffer, handleStream));
-		}
+	encodingOut.setEncoding(headersResponse);
 
-		return;
+	let stream: Readable = Readable.from(body);
 
-		async function handleBuffer(buffer: Buffer): Promise<void> {
-			buffer = await encodingOut.compressBuffer(buffer, fastCompression);
+	if (encodingIn !== encodingOut) {
+		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(fastCompression));
+		delete headersResponse['content-length'];
+	}
 
-			delete headersResponse['transfer-encoding'];
-			headersResponse['content-length'] = String(buffer.length);
+	bufferStream(stream, 10 * MB, handleBuffer, handleStream);
 
-			console.log({ headersResponse });
+	return;
 
-			response
-				.status(200)
-				.set(headersResponse)
-				.end(buffer);
+	function handleBuffer(buffer: Buffer): void {
+		delete headersResponse['transfer-encoding'];
 
-			resolve();
-		}
+		headersResponse['content-length'] ??= buffer.length;
 
-		function handleStream(transform: Transform): void {
-			headersResponse['transfer-encoding'] = 'chunked';
-			delete headersResponse['content-length'];
+		response
+			.status(200)
+			.set(headersResponse)
+			.end(buffer);
+	}
 
-			response
-				.status(200)
-				.set(headersResponse);
+	function handleStream(streamResult: Readable): void {
+		headersResponse['transfer-encoding'] = 'chunked';
+		delete headersResponse['content-length'];
 
-			const transform2 = encodingOut.compressStream(fastCompression);
-			if (transform2) transform = transform.pipe(transform2);
+		response
+			.status(200)
+			.set(headersResponse);
 
-			transform.pipe(response).on('finish', () => {
-				resolve();
-			});
-		}
-	});
+		streamResult.pipe(response);
+	}
 }
 
 
+export function parseEncoding(acceptEncoding: unknown): EncodingTools {
+	switch (acceptEncoding) {
+		case 'br': return ENCODINGS.br;
+		case 'deflate': return ENCODINGS.deflate;
+		case 'gzip': return ENCODINGS.gzip;
+		case 'raw': return ENCODINGS.raw;
+	}
+	throw Error();
+}
 
-export function detectEncoding(text?: string, ignoreBrotli = false): EncodingTools {
-	if (text == null) return ENCODINGS.raw;
+export function findBestEncoding(acceptEncoding: unknown): EncodingTools {
+	if (typeof acceptEncoding !== 'string') return ENCODINGS.raw;
 
-	text = String(text).toLowerCase();
+	const acceptEncodingString: string = acceptEncoding.toLowerCase();
 
-	if (!ignoreBrotli && text.includes('br')) return ENCODINGS.br;
-	if (text.includes('gzip')) return ENCODINGS.gzip;
-	if (text.includes('deflate')) return ENCODINGS.deflate;
+	if (acceptEncodingString.includes('br')) return ENCODINGS.br;
+	if (acceptEncodingString.includes('gzip')) return ENCODINGS.gzip;
+	if (acceptEncodingString.includes('deflate')) return ENCODINGS.deflate;
 	return ENCODINGS.raw;
 }
 
+export function coversEncoding(acceptEncoding: string, encoding: EncodingTools): boolean {
+	if (encoding.name === 'raw') return true;
+	return acceptEncoding.toLowerCase().includes(encoding.name);
+}
 
-export function bufferStream(maxSize: number, handleBuffer: (buffer: Buffer) => Promise<void>, handleStream: (stream: Transform) => void): Transform {
+// eslint-disable-next-line @typescript-eslint/max-params
+export function bufferStream(
+	stream: Readable,
+	maxSize: number,
+	handleBuffer: (buffer: Buffer) => void,
+	handleStream: (stream: Readable) => void,
+): void {
 	const buffers: Buffer[] = [];
 	let size = 0;
 	let bufferMode = true;
 
-	const stream = through(
+	stream.pipe(through(
 		function (chunk: Buffer, enc, cb) {
 			if (bufferMode) {
 				buffers.push(chunk);
@@ -215,15 +238,9 @@ export function bufferStream(maxSize: number, handleBuffer: (buffer: Buffer) => 
 			}
 		},
 		(cb): void => {
-			if (bufferMode) {
-				void handleBuffer(Buffer.concat(buffers)).then(() => {
-					cb();
-				});
-			} else {
-				cb();
-			}
+			if (bufferMode) handleBuffer(Buffer.concat(buffers));
+			cb();
 			return;
 		},
-	);
-	return stream;
+	));
 }

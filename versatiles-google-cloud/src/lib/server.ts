@@ -105,7 +105,7 @@ export function startServer(opt: ServerOptions): void {
 
 					const fileStream = file.createReadStream();
 
-					await recompress(serverRequest.headers, headers, fileStream, serverResponse, fastRecompression);
+					recompress(serverRequest.headers, headers, fileStream, serverResponse, fastRecompression);
 				}
 
 				async function serveVersatiles(): Promise<void> {
@@ -140,7 +140,7 @@ export function startServer(opt: ServerOptions): void {
 
 						if (verbose) {
 							console.log(`  #${requestNo} header: ${JSON.stringify(header)}`);
-							console.log(`  #${requestNo} metadata: ${JSON.stringify(metadata)}`);
+							console.log(`  #${requestNo} metadata: ${JSON.stringify(metadata).slice(0, 80)}`);
 						}
 
 						containerCache.set(filename, { container, header, metadata });
@@ -186,12 +186,12 @@ export function startServer(opt: ServerOptions): void {
 										sendError(500, 'metadata must contain property vector_layers');
 										return;
 									}
-									const { vector_layers } = metadata;
-									if (!Array.isArray(vector_layers)) {
+									const vectorLayers = metadata.vector_layers;
+									if (!Array.isArray(vectorLayers)) {
 										sendError(500, 'metadata.vector_layers must be an array');
 										return;
 									}
-									style = guessStyle({ tiles, format, vector_layers });
+									style = guessStyle({ tiles, format, vectorLayers });
 									break;
 								case 'bin':
 								case 'geojson':
@@ -222,7 +222,7 @@ export function startServer(opt: ServerOptions): void {
 					if (tile == null) {
 						sendError(404, `map tile {x:${x}, y:${y}, z:${z}} not found`);
 					} else {
-						if (verbose) console.log(`  #${requestNo} return tile x:${x}, y:${y}, z:${z}`);
+						if (verbose) console.log(`  #${requestNo} return tile ${z}/${x}/${y}`);
 						respond(tile, header.tileMime, header.tileCompression);
 					}
 
@@ -232,8 +232,7 @@ export function startServer(opt: ServerOptions): void {
 						headers['content-type'] = contentType;
 						headers['content-encoding'] = encoding;
 						if (typeof body === 'string') body = Buffer.from(body);
-						console.log('A', headers);
-						void recompress(serverRequest.headers, headers, body, serverResponse, fastRecompression);
+						recompress(serverRequest.headers, headers, body, serverResponse, fastRecompression);
 					}
 				}
 
