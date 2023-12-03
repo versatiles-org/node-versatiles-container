@@ -49,7 +49,7 @@ describe('Server Tests', () => {
 				} as unknown as File;
 			},
 		} as unknown as Bucket;
-		server = await startServer({
+		const serverTmp = await startServer({
 			baseUrl,
 			bucket,
 			bucketPrefix: '',
@@ -57,6 +57,8 @@ describe('Server Tests', () => {
 			port: 3000,
 			verbose: false,
 		});
+		if (serverTmp == null) throw Error();
+		server = serverTmp;
 		request = Request(server);
 	});
 

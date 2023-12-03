@@ -12,7 +12,7 @@ import { startServer } from './lib/server.js';
  * For more details, visit:
  * https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-google-cloud/README.md
  */
-const program = new Command();
+export const program = new Command();
 
 program
 	.showHelpAfterError()
@@ -25,8 +25,8 @@ program
 	.argument('<bucket-name>', 'Name of the Google Cloud Storage bucket.')
 	.option('-b, --base-url <url>', 'Set the public base URL. Defaults to "http://localhost:<port>/".')
 	.option('-d, --directory <directory>', 'Set the bucket directory (prefix), e.g., "/public/".')
-	.option('-f, --fast-recompress', 'Enable faster server responses by avoiding recompression.')
-	.option('-p, --port <port>', 'Set the server port.', parseInt, 8080)
+	.option('-f, --fast-recompression', 'Enable faster server responses by avoiding recompression.')
+	.option('-p, --port <port>', 'Set the server port. (default: 8080)')
 	.option('-v, --verbose', 'Enable verbose mode for detailed operational logs.')
 	.action((bucketName: string, cmdOptions: Record<string, unknown>) => {
 
@@ -36,8 +36,18 @@ program
 		const bucketPrefix = String(cmdOptions.directory ?? '');
 		const verbose = Boolean(cmdOptions.verbose ?? false);
 
+		if (verbose) {
+			console.table({
+				port,
+				fastRecompression,
+				baseUrl,
+				bucketPrefix,
+				verbose,
+			});
+		}
+
 		try {
-			void startServer({
+			startServer({
 				baseUrl,
 				bucket: bucketName,
 				bucketPrefix,
@@ -52,4 +62,7 @@ program
 		}
 	});
 
-program.parse();
+if (process.env.NODE_ENV !== 'test') {
+	console.log(process.argv);
+	program.parse();
+}

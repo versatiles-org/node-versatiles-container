@@ -17,7 +17,7 @@ export interface ServerOptions {
 	verbose: boolean;
 }
 
-export async function startServer(opt: ServerOptions): Promise<Server> {
+export function startServer(opt: ServerOptions): Server | null {
 	const { bucket, port, fastRecompression, verbose } = opt;
 	let bucketPrefix = opt.bucketPrefix.replace(/^\/+|\/+$/g, '');
 	if (bucketPrefix !== '') bucketPrefix += '/';
@@ -107,11 +107,8 @@ export async function startServer(opt: ServerOptions): Promise<Server> {
 		})();
 	});
 
-	return new Promise(resolve => {
-		const server = app.listen(port, () => {
-			console.log(`listening on port ${port}`);
-			console.log(`you can find me at ${baseUrl}`);
-			resolve(server);
-		});
+	return app.listen(port, () => {
+		console.log(`listening on port ${port}`);
+		console.log(`you can find me at ${baseUrl}`);
 	});
 }
