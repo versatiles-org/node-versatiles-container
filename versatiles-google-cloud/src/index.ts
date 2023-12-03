@@ -4,22 +4,30 @@ import { Command } from 'commander';
 import { startServer } from './lib/server.js';
 
 /**
- * Entry script for the VersaTiles server command-line application.
- * Utilizes the commander.js library to parse command-line arguments and options,
- * sets up the server based on these options, and optionally opens the server URL in a web browser.
+ * This script is the entry point for the VersaTiles Google Cloud command-line application.
+ * It sets up a server to serve files from a specified Google Cloud Storage bucket through a Google
+ * Load Balancer and Content Delivery Network (CDN). It handles HTTP headers, optimizes content
+ * compression, and provides a RESTful API interface to serve tiles from VersaTiles containers.
+ * 
+ * For more details, visit:
+ * https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-google-cloud/README.md
  */
 const program = new Command();
 
 program
 	.showHelpAfterError()
-	.name('versatiles-server')
-	.description('Simple VersaTiles server')
-	.option('-b, --base-url <url>', 'public base URL (default: "http://localhost:<port>/")')
-	.option('-d, --directory <directory>', 'bucket directory/prefix, e.g. "/public/"')
-	.option('-f, --fast-recompress', 'Don\'t force Brotli compression, so the server respond faster')
-	.option('-p, --port <port>', 'Port to bind the server to', parseInt, 8080)
-	.option('-v, --verbose', 'Tell me what you\'re doing')
-	.argument('<bucket name>', 'Name of the Google bucket')
+	.name('versatiles-google-cloud')
+	.description(
+		'Initialises a server to serve files from a specified Google Bucket to a Google Load Balancer with CDN, '
+		+ 'handles HTTP headers and compression, and provides a RESTful API for VersaTiles containers.\n'
+		+ 'For more details, visit: https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-google-cloud/README.md',
+	)
+	.argument('<bucket-name>', 'Name of the Google Cloud Storage bucket.')
+	.option('-b, --base-url <url>', 'Set the public base URL. Defaults to "http://localhost:<port>/".')
+	.option('-d, --directory <directory>', 'Set the bucket directory (prefix), e.g., "/public/".')
+	.option('-f, --fast-recompress', 'Enable faster server responses by avoiding recompression.')
+	.option('-p, --port <port>', 'Set the server port.', parseInt, 8080)
+	.option('-v, --verbose', 'Enable verbose mode for detailed operational logs.')
 	.action((bucketName: string, cmdOptions: Record<string, unknown>) => {
 
 		const port = Number(cmdOptions.port ?? 8080);
