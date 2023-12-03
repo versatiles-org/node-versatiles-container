@@ -3,7 +3,7 @@
 This tool solves perfectly the use cases, when you want to publish multiple map application using multiple versatiles tile sources in Google Cloud.
 E.g. for data journalists, academia, ...
 
-> [!WARNING]
+> \[!WARNING]
 > It is strongly recommended to always use a CDN in front of this server!
 
 ## Outline:
@@ -30,21 +30,27 @@ E.g. for data journalists, academia, ...
 
 ```console
 $ versatiles-google-cloud
-Usage: versatiles-server [options] <bucket name>
+Usage: versatiles-google-cloud [options] <bucket-name>
 
-Simple VersaTiles server
+Initialises a server to serve files from a specified Google Bucket to a Google
+Load Balancer with CDN, handles HTTP headers and compression, and provides a
+RESTful API for VersaTiles containers.
+For more details, visit:
+https://github.com/versatiles-org/node-versatiles/blob/main/packages/google-cloud/README.md
 
 Arguments:
-  bucket name                  Name of the Google bucket
+  bucket-name                  Name of the Google Cloud Storage bucket.
 
 Options:
-  -b, --base-url <url>         public base URL (default:
-                               "http://localhost:<port>/")
-  -d, --directory <directory>  bucket directory/prefix, e.g. "/public/"
-  -f, --fast-recompress        Don't force Brotli compression, so the server
-                               respond faster
-  -p, --port <port>            Port to bind the server to (default: 8080)
-  -v, --verbose                Tell me what you're doing
+  -b, --base-url <url>         Set the public base URL. Defaults to
+                               "http://localhost:<port>/".
+  -d, --directory <directory>  Set the bucket directory (prefix), e.g.,
+                               "/public/".
+  -f, --fast-recompression     Enable faster server responses by avoiding
+                               recompression.
+  -p, --port <port>            Set the server port. (default: 8080)
+  -v, --verbose                Enable verbose mode for detailed operational
+                               logs.
   -h, --help                   display help for command
 ```
 
