@@ -9,6 +9,9 @@ import { jest } from '@jest/globals';
 import { Readable } from 'stream';
 import { openSync, readSync } from 'fs';
 
+
+
+jest.spyOn(console, 'log').mockReturnValue();
 jest.mock('express', () => express); // Mock express
 jest.mock('@google-cloud/storage'); // Mock Google Cloud Storage
 
@@ -49,7 +52,7 @@ describe('Server Tests', () => {
 				} as unknown as File;
 			},
 		} as unknown as Bucket;
-		const serverTmp = await startServer({
+		const serverTmp = startServer({
 			baseUrl,
 			bucket,
 			bucketPrefix: '',
