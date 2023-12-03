@@ -10,11 +10,9 @@ describe('generateCommandDocumentation using mocked spawn', () => {
 	// Mock implementation of spawn
 
 	const spawnSpy = jest.spyOn(cp, 'spawn');
-	spawnSpy.mockImplementation((
-		command: string,
-		args: readonly string[],
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		options: SpawnOptions): ChildProcessWithoutNullStreams => {
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	spawnSpy.mockImplementation((command: string, args: readonly string[], options: SpawnOptions): ChildProcessWithoutNullStreams => {
 		const mockChildProcess = new EventEmitter() as ChildProcessByStdio<Writable, Readable, Readable>;
 		mockChildProcess.stdout = getReader('Example command output for ' + [command, ...args].join(' '));
 		mockChildProcess.stderr = getReader('');
@@ -71,7 +69,10 @@ describe('generateCommandDocumentation', () => {
 			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			while (true) {
 				const line = lines.shift();
-				if (line == null) throw new Error(`line not found: "${text}"`);
+				if (line == null) {
+					console.log(documentation.split('\n'));
+					throw new Error(`line not found: "${text}"`);
+				}
 				if (line.startsWith(text)) return;
 			}
 		}
