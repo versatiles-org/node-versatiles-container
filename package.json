@@ -4,6 +4,9 @@
   "workspaces": [
     "./packages/*"
   ],
+  "bin": {
+    "vrt": "./packages/release-tool/dist/index.js"
+  },
   "eslintConfig": {
     "root": true
   },
@@ -15,12 +18,12 @@
     "lint": "npm run build-deps && eslint . --color",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
-    "upgrade": "npm-check-updates -u -ws --root && rm -f package-lock.json; rm -rf node_modules */node_modules; npm i -ws --force --include-workspace-root && npm update -ws --force --include-workspace-root"
+    "upgrade": "npm-check-updates -u -ws --root && rm -f package-lock.json; rm -rf node_modules */node_modules; npm i -ws --include-workspace-root && npm update -ws --include-workspace-root"
   },
   "type": "module",
   "devDependencies": {
     "@types/jest": "^29.5.10",
-    "@types/node": "^20.10.2",
+    "@types/node": "^20.10.3",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
     "@typescript-eslint/parser": "^6.13.1",
     "eslint": "^8.55.0",
