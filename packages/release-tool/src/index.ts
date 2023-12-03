@@ -9,7 +9,7 @@ import { cwd } from 'node:process';
 import { generateCommandDocumentation } from './lib/command.js';
 
 
-const program = new Command();
+export const program = new Command();
 
 program
 	.name('vrt')
@@ -57,7 +57,9 @@ program.command('inserttoc')
 		writeFileSync(mdFilename, mdFile);
 	});
 
-program.parse();
+if (process.env.NODE_ENV !== 'test') {
+	await program.parseAsync();
+}
 
 function checkFilename(filename: string): string {
 	const fullname = resolve(cwd(), filename);

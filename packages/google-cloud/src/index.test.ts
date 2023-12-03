@@ -5,7 +5,6 @@ import type { startServer } from './lib/server.js';
 import { jest } from '@jest/globals';
 
 const mockedStartServer = jest.fn<typeof startServer>().mockReturnValue(null);
-
 jest.unstable_mockModule('./lib/server.js', () => ({ startServer: mockedStartServer }));
 
 jest.mock('node:process');
@@ -69,8 +68,6 @@ describe('index.ts', () => {
 		expect(mockedStartServer).toHaveBeenCalledTimes(1);
 		expect(mockedStartServer).toHaveBeenCalledWith({ ...defaultResults, verbose: true });
 	});
-
-	// Additional tests for different command line options
 
 	async function run(...args: string[]): Promise<void> {
 		const moduleUrl = './index.js?t=' + Math.random();
