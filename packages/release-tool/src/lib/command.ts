@@ -34,8 +34,11 @@ export async function generateCommandDocumentation(command: string): Promise<str
  */
 async function getCommandResults(command: string): Promise<{ markdown: string; subcommands: string[] }> {
 	return new Promise((resolve, reject) => {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		const env = { ...process.env, NODE_ENV: undefined };
+
 		// Spawn a child process to run the command with the '--help' flag.
-		const childProcess = cp.spawn('npx', [...command.split(' '), '--help']);
+		const childProcess = cp.spawn('npx', [...command.split(' '), '--help'], { env });
 		let output = '';
 
 		// Collect output data from the process.

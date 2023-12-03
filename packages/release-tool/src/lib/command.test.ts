@@ -32,15 +32,16 @@ describe('generateCommandDocumentation using mocked spawn', () => {
 		}
 	});
 
-	afterEach(() => {
+	afterAll(() => {
 		jest.restoreAllMocks();
 	});
 
 	it('generates documentation for a CLI command', async () => {
 		const documentation = await generateCommandDocumentation('example-command');
 		expect(documentation).toBe('```console\n$ example-command\nExample command output for npx example-command --help\n```\n');
-		expect(spawnSpy).toHaveBeenCalled();
-		expect(spawnSpy).toHaveBeenCalledWith('npx', ['example-command', '--help']);
+
+		const lastCall = spawnSpy.mock.calls.pop();
+		expect(lastCall?.slice(0, 2)).toStrictEqual(['npx', ['example-command', '--help']]);
 	});
 });
 

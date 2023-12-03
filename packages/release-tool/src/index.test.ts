@@ -34,6 +34,10 @@ describe('release-tool CLI', () => {
 		jest.clearAllMocks();
 	});
 
+	afterAll(() => {
+		jest.restoreAllMocks();
+	});
+
 	describe('ts2md command', () => {
 		test('should generate markdown documentation from a TypeScript file', async () => {
 			const tsFilename = rootDir + 'src/index.ts';
