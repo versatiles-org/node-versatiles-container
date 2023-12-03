@@ -1,7 +1,7 @@
 import { statSync } from 'fs';
 import getFileReader from './reader_file.js';
 
-const TESTFILE = new URL('../../test/island.versatiles', import.meta.url).pathname;
+const TESTFILE = new URL('../../../testdata/island.versatiles', import.meta.url).pathname;
 
 describe('getFileReader', () => {
 	const read = getFileReader(TESTFILE);

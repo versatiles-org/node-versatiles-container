@@ -13,7 +13,7 @@ jest.mock('express', () => express); // Mock express
 jest.mock('@google-cloud/storage'); // Mock Google Cloud Storage
 
 describe('Server Tests', () => {
-	const fd = openSync(new URL('../../../test/island.versatiles', import.meta.url).pathname, 'r');
+	const fd = openSync(new URL('../../../../testdata/island.versatiles', import.meta.url).pathname, 'r');
 	const files = new Map<string, { meta: FileMetadata; content: (options?: { start: number; end: number }) => Buffer }>([
 		['static/file', { meta: {}, content: (): Buffer => Buffer.from('static file') }],
 		['geodata/test.versatiles', {

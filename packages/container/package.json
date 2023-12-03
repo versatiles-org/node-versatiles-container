@@ -8,7 +8,7 @@
     "doc": "npx vrt ts2md src/index.ts tsconfig.build.json | npx vrt insertmd README.md '# API' true",
     "lint": "eslint . --color",
     "prepack": "npm run build && npm run doc",
-    "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-container"
+    "test": "cd ../..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern packages/container"
   },
   "files": [
     "dist/**/*.js",

@@ -2,10 +2,7 @@
   "name": "node-versatiles",
   "private": true,
   "workspaces": [
-    "versatiles-container",
-    "versatiles-google-cloud",
-    "versatiles-release-tool",
-    "versatiles-server"
+    "./packages/*"
   ],
   "eslintConfig": {
     "root": true

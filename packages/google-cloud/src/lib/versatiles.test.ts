@@ -15,7 +15,7 @@ jest.mock('node:fs/promises');
 jest.mock('@versatiles/style');
 
 describe('serveVersatiles', () => {
-	const fd = openSync(new URL('../../../test/island.versatiles', import.meta.url).pathname, 'r');
+	const fd = openSync(new URL('../../../../testdata/island.versatiles', import.meta.url).pathname, 'r');
 	let mockFile: File;
 	let mockResponder: ResponderInterface;
 

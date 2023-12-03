@@ -18,7 +18,7 @@
     "lint": "eslint . --color",
     "prepack": "npm run build && npm run doc",
     "start": "tsx src/index.ts",
-    "test": "cd ..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern versatiles-server"
+    "test": "cd ../..; NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern packages/server"
   },
   "repository": {
     "type": "git",
