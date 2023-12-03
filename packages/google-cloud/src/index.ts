@@ -20,7 +20,7 @@ program
 	.description(
 		'Initialises a server to serve files from a specified Google Bucket to a Google Load Balancer with CDN, '
 		+ 'handles HTTP headers and compression, and provides a RESTful API for VersaTiles containers.\n'
-		+ 'For more details, visit: https://github.com/versatiles-org/node-versatiles/blob/main/versatiles-google-cloud/README.md',
+		+ 'For more details, visit: https://github.com/versatiles-org/node-versatiles/blob/main/packages/google-cloud/README.md',
 	)
 	.argument('<bucket-name>', 'Name of the Google Cloud Storage bucket.')
 	.option('-b, --base-url <url>', 'Set the public base URL. Defaults to "http://localhost:<port>/".')
@@ -63,6 +63,5 @@ program
 	});
 
 if (process.env.NODE_ENV !== 'test') {
-	console.log(process.argv);
 	program.parse();
 }
