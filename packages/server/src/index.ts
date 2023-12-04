@@ -10,7 +10,7 @@ import { Server } from './lib/server.js';
  * Utilizes the commander.js library to parse command-line arguments and options,
  * sets up the server based on these options, and optionally opens the server URL in a web browser.
  */
-const program = new Command();
+export const program = new Command();
 
 program
 	.showHelpAfterError()
@@ -18,23 +18,25 @@ program
 	.description('Simple VersaTiles server')
 	.option('-b, --base-url <url>', 'Base URL for the server (default: "http://localhost:<port>/")')
 	.option('-f, --fast', 'Only recompress data if it is really necessary. Faster response, but more traffic.')
-	.option('-i, --host <hostname|ip>', 'Hostname or IP to bind the server to', '0.0.0.0')
+	.option('-h, --host <hostnameip>', 'Hostname or IP to bind the server to', '0.0.0.0')
 	.option('-o, --open', 'Open map in web browser')
-	.option('-p, --port <port>', 'Port to bind the server to', parseInt, 8080)
+	.option('-p, --port <port>', 'Port to bind the server to (default: 8080)')
 	.option('-t, --tms', 'Use TMS tile order (flip y axis)')
 	.argument('<source>', 'VersaTiles container, can be a URL or filename of a "*.versatiles" file')
 	.action(async (source: string, cmdOptions: Record<string, unknown>) => {
 		const srvOptions: ServerOptions = {
 			baseUrl: cmdOptions.baseUrl as string | undefined,
 			compress: !Boolean(cmdOptions.fast),
-			host: cmdOptions.host as string | undefined,
-			port: cmdOptions.port as number | undefined,
+			host: String(cmdOptions.host ?? '0.0.0.0'),
+			port: Number(cmdOptions.port ?? 8080),
 			tms: Boolean(cmdOptions.tms),
 		};
 
+		if (!source) throw Error('source not defined');
+
 		try {
 			const server = new Server(source, srvOptions);
-			await server.start();
+			void server.start();
 
 			if (Boolean(cmdOptions.open)) {
 				await open(server.getUrl());
@@ -46,4 +48,6 @@ program
 		}
 	});
 
-program.parse();
+if (process.env.NODE_ENV !== 'test') {
+	program.parse();
+}

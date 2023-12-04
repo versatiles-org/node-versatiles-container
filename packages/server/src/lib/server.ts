@@ -19,6 +19,9 @@ export class Server {
 	#server?: httpServer;
 
 	public constructor(source: Reader | string, options: ServerOptions) {
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		if (source == null) throw Error('source not defined');
+
 		Object.assign(this.#options, options);
 
 		this.#options.compress ??= true;
