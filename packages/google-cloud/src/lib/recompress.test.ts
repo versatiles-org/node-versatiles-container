@@ -4,10 +4,21 @@
 import type { Response } from 'express';
 import type { ResponderInterface } from './responder.js';
 import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http';
-import { recompress, bufferStream } from './recompress.js';
-import { Readable } from 'node:stream';
+import { recompress, BufferStream } from './recompress.js';
+import { Readable, Writable } from 'node:stream';
 import { jest } from '@jest/globals';
 import { Responder } from './responder.js';
+
+
+
+function getSink(): Writable {
+	class Sink extends Writable {
+		public _write(chunk: unknown, encoding: BufferEncoding, callback: (error?: Error | null | undefined) => void): void {
+			callback();
+		}
+	}
+	return new Sink();
+}
 
 describe('recompress', () => {
 	function getMockResponder(
@@ -15,19 +26,17 @@ describe('recompress', () => {
 		responseHeaders: OutgoingHttpHeaders = { 'content-type': 'text/plain' },
 		fastRecompression = false,
 	): ResponderInterface {
+
+		const response = getSink() as unknown as Response;
+		jest.spyOn(response, 'end');
+		response.set = jest.fn<Response['set']>().mockReturnThis();
+		response.status = jest.fn<Response['status']>().mockReturnThis();
+
 		const responder = Responder({
 			fastRecompression,
 			requestHeaders,
 			requestNo: 0,
-			response: {
-				emit: jest.fn().mockReturnThis(),
-				end: jest.fn().mockReturnThis(),
-				on: jest.fn().mockReturnThis(),
-				once: jest.fn().mockReturnThis(),
-				pipe: jest.fn().mockReturnThis(),
-				set: jest.fn().mockReturnThis(),
-				status: jest.fn().mockReturnThis(),
-			} as unknown as Response,
+			response,
 			verbose: false,
 		});
 		for (const key in responseHeaders) responder.set(key, responseHeaders[key] as string);
@@ -77,7 +86,7 @@ describe('recompress', () => {
 		expect(responder.response.set).toHaveBeenCalledWith(responseHeaders);
 	});
 
-	it('should properly handle stream and buffer modes', async () => {
+	it('should properly handle stream and buffer modes 1', async () => {
 		const responder = getMockResponder();
 		await recompress(responder, Readable.from(Buffer.allocUnsafe(11e6)));
 
@@ -92,7 +101,7 @@ describe('recompress', () => {
 		expect(responder.response.end).toHaveBeenCalled();
 	});
 
-	it('should properly handle stream and buffer modes', async () => {
+	it('should properly handle stream and buffer modes 2', async () => {
 		const responder = getMockResponder(undefined, { 'content-type': 'video/mp4' });
 		await recompress(responder, Readable.from(Buffer.allocUnsafe(11e6)));
 
@@ -108,31 +117,47 @@ describe('recompress', () => {
 	});
 });
 
-describe('bufferStream', () => {
+describe('BufferStream', () => {
 	const maxBufferSize = 10 * 1024 * 1024;
 
 	it('should buffer small streams correctly', async () => {
-		const stream = Readable.from('small data');
-		const handleBuffer = jest.fn();
-		const handleStream = jest.fn();
+		const data = Buffer.from('small data');
+		const stream = Readable.from(data);
+		const handleBuffer = jest.fn<(buffer: Buffer) => void>();
+		const handleStream = jest.fn<() => Writable>(getSink);
 
-		await bufferStream(stream, handleBuffer, handleStream);
+		const bufferStream = new BufferStream(handleBuffer, handleStream);
+		await new Promise(resolve => {
+			stream.pipe(bufferStream);
+			bufferStream.on('finish', () => {
+				resolve(null);
+			});
+		});
 
 		// Assumption: handleBuffer should be called for small data
-		expect(handleBuffer).toHaveBeenCalled();
+		expect(handleBuffer).toHaveBeenCalledTimes(1);
+		expect(handleBuffer).toHaveBeenCalledWith(data);
 		expect(handleStream).not.toHaveBeenCalled();
 	});
 
 	it('should switch to stream mode for large data', async () => {
-		const largeData = 'x'.repeat(maxBufferSize + 1);
-		const stream = Readable.from(largeData);
-		const handleBuffer = jest.fn();
-		const handleStream = jest.fn();
+		const chunk = 'x'.repeat(maxBufferSize / 100);
+		const data = [chunk.repeat(100), chunk, chunk];
+		const stream = Readable.from(data);
+		const handleBuffer = jest.fn<(buffer: Buffer) => void>();
+		const handleStream = jest.fn<() => Writable>(getSink);
 
-		await bufferStream(stream, handleBuffer, handleStream);
+		const bufferStream = new BufferStream(handleBuffer, handleStream);
+		await new Promise(resolve => {
+			stream.pipe(bufferStream);
+			bufferStream.on('finish', () => {
+				resolve(null);
+			});
+		});
 
 		// Assumption: handleStream should be called for large data
 		expect(handleBuffer).not.toHaveBeenCalled();
+		expect(handleStream).toHaveBeenCalledTimes(1);
 		expect(handleStream).toHaveBeenCalled();
 	});
 });

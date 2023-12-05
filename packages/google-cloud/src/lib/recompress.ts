@@ -2,10 +2,96 @@
 import type { EncodingTools } from './encoding.js';
 import type { ResponderInterface } from './responder.js';
 import { ENCODINGS, acceptEncoding, findBestEncoding, parseContentEncoding } from './encoding.js';
-import { Readable } from 'node:stream';
-import through from 'through2';
+import { Writable, Readable } from 'node:stream';
 
 const maxBufferSize = 10 * 1024 * 1024;
+
+export class BufferStream extends Writable {
+	readonly #handleBuffer: (buffer: Buffer) => void;
+
+	readonly #handleStream: () => Writable;
+
+	readonly #logPrefix: string | undefined;
+
+	readonly #buffers: Buffer[] = [];
+
+	#size = 0;
+
+	#bufferMode = true;
+
+	#outputStream = new Writable();
+
+	/*
+	 * Class constructor will receive the injections as parameters.
+	 */
+	public constructor(
+		handleBuffer: (buffer: Buffer) => void,
+		handleStream: () => Writable,
+		logPrefix?: string,
+	) {
+		super();
+
+		this.#handleBuffer = handleBuffer;
+		this.#handleStream = handleStream;
+		this.#logPrefix = logPrefix;
+	}
+
+	public _write(chunk: Buffer, encoding: BufferEncoding, callback: (error?: Error | null | undefined) => void): void {
+		//public _write(chunk: any, encoding: any, callback: () => void) {
+		if (this.#logPrefix != null) {
+			console.log(this.#logPrefix, 'new chunk:', chunk.length);
+		}
+
+		if (this.#bufferMode) {
+			this.#buffers.push(chunk);
+			this.#size += chunk.length;
+
+			if (this.#size >= maxBufferSize) {
+				if (this.#logPrefix != null) {
+					console.log(this.#logPrefix, 'stop bufferMode:', this.#buffers.length);
+				}
+
+				this.#bufferMode = false;
+				this.#outputStream = this.#handleStream();
+
+				const buffer = Buffer.concat(this.#buffers);
+				this.#buffers.length = 0;
+
+				this.#outputStream.write(buffer, encoding, () => {
+					callback();
+				});
+			} else {
+				callback();
+			}
+		} else {
+			this.#outputStream.write(chunk, encoding, () => {
+				callback();
+			});
+		}
+	}
+
+	public _final(callback: (error?: Error | null | undefined) => void): void {
+
+		if (this.#logPrefix != null) {
+			console.log(this.#logPrefix, 'finish stream');
+		}
+
+		if (this.#bufferMode) {
+			const buffer = Buffer.concat(this.#buffers);
+
+			if (this.#logPrefix != null) {
+				console.log(this.#logPrefix, 'flush to handleBuffer:', buffer.length);
+			}
+
+			this.#handleBuffer(buffer);
+			callback();
+		} else {
+			this.#outputStream.end((): void => {
+				callback();
+			});
+		}
+	}
+}
 
 export async function recompress(
 	responder: ResponderInterface,
@@ -47,23 +133,22 @@ export async function recompress(
 
 	let stream: Readable = Readable.from(body);
 
-	if (logPrefix != null) {
-		console.log(logPrefix, 'stream:', stream);
-	}
-
 	if (encodingIn !== encodingOut) {
 		if (logPrefix != null) {
 			console.log(logPrefix, 'recompress:', encodingIn.name, encodingOut.name);
 		}
 		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(responder.fastRecompression));
 		responder.del('content-length');
-		
-		if (logPrefix != null) {
-			console.log(logPrefix, 'new stream:', stream);
-		}
 	}
 
-	await bufferStream(stream, handleBuffer, handleStream, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined);
+	const bufferStream = new BufferStream(handleBuffer, handleStream, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined);
+	stream.pipe(bufferStream);
+
+	await new Promise(resolve => {
+		bufferStream.on('finish', () => {
+			resolve(null);
+		});
+	});
 
 	return;
 
@@ -83,78 +168,18 @@ export async function recompress(
 			.end(buffer);
 	}
 
-	function handleStream(streamResult: Readable): void {
+	function handleStream(): Writable {
 		responder.set('transfer-encoding', 'chunked');
 		responder.del('content-length');
 
 		if (logPrefix != null) {
 			console.log(logPrefix, 'response header for stream:', responder.responseHeaders);
-			console.log(logPrefix, 'response stream:', streamResult);
 		}
 
 		responder.response
 			.status(200)
 			.set(responder.responseHeaders);
 
-		streamResult.pipe(responder.response);
+		return responder.response;
 	}
-}
-
-// eslint-disable-next-line @typescript-eslint/max-params
-export async function bufferStream(
-	stream: Readable,
-	handleBuffer: (buffer: Buffer) => void,
-	handleStream: (stream: Readable) => void,
-	logPrefix?: string,
-): Promise<void> {
-	const buffers: Buffer[] = [];
-	let size = 0;
-	let bufferMode = true;
-
-	return new Promise(resolve => {
-
-		if (logPrefix != null) {
-			console.log(logPrefix, 'stream:', stream);
-		}
-
-		stream.pipe(through(
-			function (chunk: Buffer, enc, cb) {
-				if (logPrefix != null) {
-					console.log(logPrefix, 'new chunk:', chunk.length);
-				}
-
-				if (bufferMode) {
-					buffers.push(chunk);
-					size += chunk.length;
-					if (size >= maxBufferSize) {
-						if (logPrefix != null) {
-							console.log(logPrefix, 'stop bufferMode:', buffers.length);
-						}
-
-						bufferMode = false;
-						handleStream(stream);
-
-						// eslint-disable-next-line @typescript-eslint/no-invalid-this
-						for (const buffer of buffers) this.push(buffer);
-					}
-					cb();
-				} else {
-					cb(null, chunk);
-				}
-			},
-			(cb): void => {
-				if (bufferMode) {
-					if (logPrefix != null) {
-						console.log(logPrefix, 'flush to handleBuffer:', buffers.length);
-					}
-
-					handleBuffer(Buffer.concat(buffers));
-				}
-				cb();
-				return;
-			},
-		)).on('finish', () => {
-			resolve();
-		});
-	});
 }
