@@ -96,7 +96,7 @@ export function startServer(opt: ServerOptions): Server | null {
 
 					const fileStream = file.createReadStream();
 
-					void recompress(responder, fileStream);
+					void recompress(responder, fileStream, verbose ? `  #${requestNo}` : undefined);
 				}
 
 			} catch (error) {

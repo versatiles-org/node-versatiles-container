@@ -10,6 +10,7 @@ const maxBufferSize = 10 * 1024 * 1024;
 export async function recompress(
 	responder: ResponderInterface,
 	body: Buffer | Readable,
+	logPrefix?: string,
 ): Promise<void> {
 
 	// detect encoding:
@@ -46,12 +47,23 @@ export async function recompress(
 
 	let stream: Readable = Readable.from(body);
 
-	if (encodingIn !== encodingOut) {
-		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(responder.fastRecompression));
-		responder.del('content-length');
+	if (logPrefix != null) {
+		console.log(logPrefix, 'stream:', stream);
 	}
 
-	await bufferStream(stream, handleBuffer, handleStream);
+	if (encodingIn !== encodingOut) {
+		if (logPrefix != null) {
+			console.log(logPrefix, 'recompress:', encodingIn.name, encodingOut.name);
+		}
+		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(responder.fastRecompression));
+		responder.del('content-length');
+		
+		if (logPrefix != null) {
+			console.log(logPrefix, 'new stream:', stream);
+		}
+	}
+
+	await bufferStream(stream, handleBuffer, handleStream, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined);
 
 	return;
 
@@ -59,6 +71,11 @@ export async function recompress(
 		responder.del('transfer-encoding');
 
 		responder.responseHeaders['content-length'] ??= '' + buffer.length;
+
+		if (logPrefix != null) {
+			console.log(logPrefix, 'response header for buffer:', responder.responseHeaders);
+			console.log(logPrefix, 'response buffer length:', buffer.length);
+		}
 
 		responder.response
 			.status(200)
@@ -70,6 +87,11 @@ export async function recompress(
 		responder.set('transfer-encoding', 'chunked');
 		responder.del('content-length');
 
+		if (logPrefix != null) {
+			console.log(logPrefix, 'response header for stream:', responder.responseHeaders);
+			console.log(logPrefix, 'response stream:', streamResult);
+		}
+
 		responder.response
 			.status(200)
 			.set(responder.responseHeaders);
@@ -78,10 +100,12 @@ export async function recompress(
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/max-params
 export async function bufferStream(
 	stream: Readable,
 	handleBuffer: (buffer: Buffer) => void,
 	handleStream: (stream: Readable) => void,
+	logPrefix?: string,
 ): Promise<void> {
 	const buffers: Buffer[] = [];
 	let size = 0;
@@ -89,14 +113,27 @@ export async function bufferStream(
 
 	return new Promise(resolve => {
 
+		if (logPrefix != null) {
+			console.log(logPrefix, 'stream:', stream);
+		}
+
 		stream.pipe(through(
 			function (chunk: Buffer, enc, cb) {
+				if (logPrefix != null) {
+					console.log(logPrefix, 'new chunk:', chunk.length);
+				}
+
 				if (bufferMode) {
 					buffers.push(chunk);
 					size += chunk.length;
 					if (size >= maxBufferSize) {
+						if (logPrefix != null) {
+							console.log(logPrefix, 'stop bufferMode:', buffers.length);
+						}
+
 						bufferMode = false;
 						handleStream(stream);
+
 						// eslint-disable-next-line @typescript-eslint/no-invalid-this
 						for (const buffer of buffers) this.push(buffer);
 					}
@@ -106,7 +143,13 @@ export async function bufferStream(
 				}
 			},
 			(cb): void => {
-				if (bufferMode) handleBuffer(Buffer.concat(buffers));
+				if (bufferMode) {
+					if (logPrefix != null) {
+						console.log(logPrefix, 'flush to handleBuffer:', buffers.length);
+					}
+
+					handleBuffer(Buffer.concat(buffers));
+				}
 				cb();
 				return;
 			},
