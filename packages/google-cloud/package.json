@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/index.js",
-    "check": "npm run lint && npm run test && npm run build",
+    "check": "npm run lint && npm run build && npm run test",
     "doc": "npx vrt cmd2md versatiles-google-cloud | npx vrt insertmd README.md '## Options'",
     "lint": "eslint . --color",
     "prepack": "npm run build && npm run doc",

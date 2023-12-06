@@ -13,7 +13,7 @@
   "scripts": {
     "build-deps": "npm run build -w @versatiles/container",
     "build": "npm run build -ws --if-present",
-    "check": "npm run lint && npm run test && npm run build",
+    "check": "npm run lint && npm run build && npm run test",
     "doc": "npm run build -w @versatiles/release-tool && npm run doc -ws --if-present",
     "lint": "npm run build-deps && eslint . --color",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
