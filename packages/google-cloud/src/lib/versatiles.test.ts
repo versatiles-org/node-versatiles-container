@@ -3,11 +3,12 @@
 import type { File } from '@google-cloud/storage';
 import type { Response } from 'express';
 import { serveVersatiles } from './versatiles.js';
-import { Responder, type ResponderInterface } from './responder.js';
 import { jest } from '@jest/globals';
 import { Readable } from 'stream';
 import { openSync, readSync } from 'fs';
 import { createHash } from 'crypto';
+import type { EnhancedResponder, EnhancedResponse } from './responder.mock.test.js';
+import { getMockedResponder } from './responder.mock.test.js';
 
 jest.mock('@google-cloud/storage');
 jest.mock('@versatiles/container');
@@ -17,7 +18,7 @@ jest.mock('@versatiles/style');
 describe('serveVersatiles', () => {
 	const fd = openSync(new URL('../../../../testdata/island.versatiles', import.meta.url).pathname, 'r');
 	let mockFile: File;
-	let mockResponder: ResponderInterface;
+	let mockResponder: EnhancedResponder;
 
 	beforeEach(() => {
 		mockFile = {
@@ -31,18 +32,11 @@ describe('serveVersatiles', () => {
 			},
 		} as unknown as File;
 
-		mockResponder = Responder({
+		mockResponder = getMockedResponder({
 			fastRecompression: true,
 			requestHeaders: {
 				'accept-encoding': 'gzip, br',
 			},
-			response: {
-				end: jest.fn().mockReturnThis(),
-				set: jest.fn().mockReturnThis(),
-				send: jest.fn().mockReturnThis(),
-				status: jest.fn().mockReturnThis(),
-				type: jest.fn().mockReturnThis(),
-			} as unknown as Response,
 			requestNo: 5,
 			verbose: false,
 		});
@@ -106,7 +100,7 @@ describe('serveVersatiles', () => {
 	});
 
 	function checkResponse(status: number, content: string, headers: unknown): void {
-		const response: Response = mockResponder.response;
+		const response: EnhancedResponse = mockResponder.response;
 
 		expect(response.status).toHaveBeenCalledTimes(1);
 		expect(response.status).toHaveBeenCalledWith(status);
@@ -115,12 +109,10 @@ describe('serveVersatiles', () => {
 		expect(response.set).toHaveBeenCalledWith(headers);
 
 		expect(response.end).toHaveBeenCalledTimes(1);
-		const mockFunction = response.end as unknown as jest.MockedFunction<(chunk: Buffer) => Response>;
-		const buffer = mockFunction.mock.calls.pop();
-		if (buffer == null) throw Error();
+		const buffer = response.getBuffer();
 		if (content.length === 16) {
 			const hasher = createHash('sha256');
-			hasher.update(buffer[0]);
+			hasher.update(buffer);
 			expect(hasher.digest('hex').slice(0, 16)).toBe(content);
 		} else {
 			expect(buffer.toString()).toContain(content);

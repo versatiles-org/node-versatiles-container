@@ -10,7 +10,7 @@ export interface ResponderInterface {
 	fastRecompression: boolean;
 	requestNo: number;
 	requestHeaders: IncomingHttpHeaders;
-	respond: (body: Buffer | string, contentType: string, encoding: EncodingType) => Promise<void>;
+	respond: (content: Buffer | string, contentMIME: string, contentEncoding: EncodingType) => Promise<void>;
 	response: Response;
 	responseHeaders: OutgoingHttpHeaders;
 	set: (key: string, value: string) => ResponderInterface;

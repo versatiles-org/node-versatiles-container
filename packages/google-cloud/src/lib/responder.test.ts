@@ -1,38 +1,32 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { Response } from 'express';
-import type { ResponderInterface } from './responder.js';
-import { Responder } from './responder.js';
-import { jest } from '@jest/globals';
 import { brotliCompressSync, brotliDecompressSync, gunzipSync, gzipSync } from 'zlib';
+import { getMockedResponder } from './responder.mock.test.js';
+
+
 
 describe('Responder', () => {
+
+	/*
 	let responder: ResponderInterface;
 
 	beforeEach(() => {
-		responder = Responder({
+		responder = getMockResponder({
 			fastRecompression: true,
 			requestHeaders: {
 				'accept-encoding': 'gzip, br',
 				'content-type': 'application/json',
 			},
-			response: {
-				emit: jest.fn().mockReturnThis(),
-				end: jest.fn().mockReturnThis(),
-				on: jest.fn().mockReturnThis(),
-				once: jest.fn().mockReturnThis(),
-				pipe: jest.fn().mockReturnThis(),
-				set: jest.fn().mockReturnThis(),
-				send: jest.fn().mockReturnThis(),
-				status: jest.fn().mockReturnThis(),
-				type: jest.fn().mockReturnThis(),
-			} as unknown as Response,
 			requestNo: 5,
 			verbose: false,
 		});
 	});
+	*/
 
 	it('should set and get response headers correctly', () => {
+		const responder = getMockedResponder();
+
 		responder.set('test-header', 'test-value');
 		expect(responder.responseHeaders['test-header']).toBe('test-value');
 
@@ -41,14 +35,23 @@ describe('Responder', () => {
 	});
 
 	it('should get request number', () => {
-		expect(responder.requestNo).toBe(5);
+		const responder1 = getMockedResponder({ requestNo: 13 });
+		expect(responder1.requestNo).toBe(13);
+
+		const responder2 = getMockedResponder({ requestNo: 42 });
+		expect(responder2.requestNo).toBe(42);
 	});
 
 	it('should get verbose', () => {
-		expect(responder.verbose).toBe(false);
+		const responder1 = getMockedResponder({ verbose: false });
+		expect(responder1.verbose).toBe(false);
+
+		const responder2 = getMockedResponder({ verbose: true });
+		expect(responder2.verbose).toBe(true);
 	});
 
 	it('should handle error responses correctly', () => {
+		const responder = getMockedResponder();
 		const errorCode = 404;
 		const errorMessage = 'Not Found';
 		responder.error(errorCode, errorMessage);
@@ -59,32 +62,38 @@ describe('Responder', () => {
 	});
 
 	it('should respond correctly with raw text content', async () => {
-		await responder.respond('content', 'text/plain', 'raw');
+		const responder = getMockedResponder({ fastRecompression: true });
 
-		expect(responder.response.set).toHaveBeenCalledTimes(1);
-		expect(responder.response.set).toHaveBeenCalledWith({
-			'cache-control': 'max-age=86400',
-			'content-length': '7',
-			'content-type': 'text/plain',
-			'vary': 'accept-encoding',
-		});
-		expect(responder.response.end).toHaveBeenCalledWith(Buffer.from('content'));
-	});
-
-	it('should respond correctly with raw image content', async () => {
-		await responder.respond('imagedata', 'image/png', 'raw');
+		await responder.respond('content42', 'text/plain', 'raw');
 
 		expect(responder.response.set).toHaveBeenCalledTimes(1);
 		expect(responder.response.set).toHaveBeenCalledWith({
 			'cache-control': 'max-age=86400',
 			'content-length': '9',
+			'content-type': 'text/plain',
+			'vary': 'accept-encoding',
+		});
+		expect(responder.response.getBuffer().toString()).toBe('content42');
+	});
+
+	it('should respond correctly with raw image content', async () => {
+		const responder = getMockedResponder();
+
+		await responder.respond('prettyimagedata', 'image/png', 'raw');
+
+		expect(responder.response.set).toHaveBeenCalledTimes(1);
+		expect(responder.response.set).toHaveBeenCalledWith({
+			'cache-control': 'max-age=86400',
+			'content-length': '15',
 			'content-type': 'image/png',
 			'vary': 'accept-encoding',
 		});
-		expect(responder.response.end).toHaveBeenCalledWith(Buffer.from('imagedata'));
+		expect(responder.response.getBuffer().toString()).toBe('prettyimagedata');
 	});
 
 	it('should respond correctly with gzip compressed text content', async () => {
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip, br', 'content-type': 'application/json' }, fastRecompression: true });
+
 		const content = Buffer.from('gzip compressed text content');
 		const contentCompressed = gzipSync(content);
 		await responder.respond(contentCompressed, 'text/plain', 'gzip');
@@ -106,6 +115,8 @@ describe('Responder', () => {
 	});
 
 	it('should respond correctly with brotli compressed text content', async () => {
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip, br', 'content-type': 'application/json' } });
+
 		const content = Buffer.from('brotli compressed text content');
 		const contentCompressed = brotliCompressSync(content);
 		await responder.respond(contentCompressed, 'text/plain', 'br');

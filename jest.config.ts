@@ -6,7 +6,10 @@ const config: JestConfigWithTsJest = {
 	transform: {
 		'^.+\\.ts$': ['ts-jest', { useESM: true }]
 	},
-	testRegex: 'src/.*\\.test\\.ts',
+	testMatch: [ 
+		'**/src/**/*.test.ts',
+		'!**/src/**/*.mock.test.ts',
+	],
 	extensionsToTreatAsEsm: ['.ts'],
 	moduleNameMapper: { '^(\\.{1,2}/.*)\\.js$': '$1' },
 	coveragePathIgnorePatterns: [
@@ -14,6 +17,7 @@ const config: JestConfigWithTsJest = {
 	],
 	collectCoverageFrom: [
 		'**/*.ts',
+		'!**/*.mock.test.ts',
 		'!**/node_modules/**',
 		'!jest*.ts',
 	]

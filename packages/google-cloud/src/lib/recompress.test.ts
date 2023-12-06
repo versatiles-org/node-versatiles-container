@@ -2,49 +2,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import type { Response } from 'express';
-import type { ResponderInterface } from './responder.js';
-import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http';
 import { recompress, BufferStream } from './recompress.js';
-import { Readable, Writable } from 'node:stream';
-import { jest } from '@jest/globals';
-import { Responder } from './responder.js';
+import { Readable } from 'node:stream';
+import { getMockedResponder } from './responder.mock.test.js';
 
 
 
-function getSink(): Writable {
-	class Sink extends Writable {
-		public _write(chunk: unknown, encoding: BufferEncoding, callback: (error?: Error | null | undefined) => void): void {
-			callback();
-		}
-	}
-	return new Sink();
-}
+const maxBufferSize = 10 * 1024 * 1024;
 
 describe('recompress', () => {
-	function getMockResponder(
-		requestHeaders: IncomingHttpHeaders = { 'accept-encoding': '' },
-		responseHeaders: OutgoingHttpHeaders = { 'content-type': 'text/plain' },
-		fastRecompression = false,
-	): ResponderInterface {
-
-		const response = getSink() as unknown as Response;
-		jest.spyOn(response, 'end');
-		response.set = jest.fn<Response['set']>().mockReturnThis();
-		response.status = jest.fn<Response['status']>().mockReturnThis();
-
-		const responder = Responder({
-			fastRecompression,
-			requestHeaders,
-			requestNo: 0,
-			response,
-			verbose: false,
-		});
-		for (const key in responseHeaders) responder.set(key, responseHeaders[key] as string);
-		return responder;
-	}
-
 	it('should handle different types of media without recompression', async () => {
-		const responder = getMockResponder({ 'accept-encoding': 'gzip' }, { 'content-type': 'audio/mpeg' });
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip' }, responseHeaders: { 'content-type': 'audio/mpeg' } });
 		await recompress(responder, Buffer.from('test data'));
 
 		const responseHeaders = {
@@ -58,7 +26,7 @@ describe('recompress', () => {
 	});
 
 	it('should handle fast compression setting', async () => {
-		const responder = getMockResponder({ 'accept-encoding': 'gzip' }, { 'content-type': 'text/plain' }, true);
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip' }, responseHeaders: { 'content-type': 'text/plain' }, fastRecompression: true });
 		await recompress(responder, Buffer.from('test data'));
 
 		const responseHeaders = {
@@ -72,7 +40,7 @@ describe('recompress', () => {
 	});
 
 	it('should find the best encoding based on headers', async () => {
-		const responder = getMockResponder({ 'accept-encoding': 'gzip, deflate, br' });
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip, deflate, br' } });
 		await recompress(responder, Buffer.from('test data'));
 
 		const responseHeaders = {
@@ -87,7 +55,7 @@ describe('recompress', () => {
 	});
 
 	it('should properly handle stream and buffer modes 1', async () => {
-		const responder = getMockResponder();
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': '' } });
 		await recompress(responder, Readable.from(Buffer.allocUnsafe(11e6)));
 
 		const responseHeaders = {
@@ -102,7 +70,7 @@ describe('recompress', () => {
 	});
 
 	it('should properly handle stream and buffer modes 2', async () => {
-		const responder = getMockResponder(undefined, { 'content-type': 'video/mp4' });
+		const responder = getMockedResponder({ responseHeaders: { 'content-type': 'video/mp4' } });
 		await recompress(responder, Readable.from(Buffer.allocUnsafe(11e6)));
 
 		const responseHeaders = {
@@ -115,18 +83,13 @@ describe('recompress', () => {
 		expect(responder.response.set).toHaveBeenCalledWith(responseHeaders);
 		expect(responder.response.end).toHaveBeenCalled();
 	});
-});
-
-describe('BufferStream', () => {
-	const maxBufferSize = 10 * 1024 * 1024;
 
 	it('should buffer small streams correctly', async () => {
 		const data = Buffer.from('small data');
 		const stream = Readable.from(data);
-		const handleBuffer = jest.fn<(buffer: Buffer) => void>();
-		const handleStream = jest.fn<() => Writable>(getSink);
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip' }, responseHeaders: { 'content-type': 'audio/mpeg' } });
 
-		const bufferStream = new BufferStream(handleBuffer, handleStream);
+		const bufferStream = new BufferStream(responder);
 		await new Promise(resolve => {
 			stream.pipe(bufferStream);
 			bufferStream.on('finish', () => {
@@ -134,20 +97,30 @@ describe('BufferStream', () => {
 			});
 		});
 
-		// Assumption: handleBuffer should be called for small data
-		expect(handleBuffer).toHaveBeenCalledTimes(1);
-		expect(handleBuffer).toHaveBeenCalledWith(data);
-		expect(handleStream).not.toHaveBeenCalled();
+		const response = responder.response as Response & { getBuffer: () => Buffer };
+
+		expect(response.status).toHaveBeenCalledTimes(1);
+		expect(response.status).toHaveBeenCalledWith(200);
+		expect(response.set).toHaveBeenCalledTimes(1);
+		expect(response.set).toHaveBeenCalledWith({
+			'cache-control': 'max-age=86400',
+			'content-length': '10',
+			'content-type': 'audio/mpeg',
+		});
+		expect(response.end).toHaveBeenCalledTimes(1);
+		expect(response.getBuffer()).toStrictEqual(data);
 	});
 
 	it('should switch to stream mode for large data', async () => {
-		const chunk = 'x'.repeat(maxBufferSize / 100);
-		const data = [chunk.repeat(100), chunk, chunk];
+		const data = [
+			Buffer.from('x'.repeat(maxBufferSize - 1)),
+			Buffer.from('x'.repeat(100)),
+			Buffer.from('x'.repeat(100)),
+		];
 		const stream = Readable.from(data);
-		const handleBuffer = jest.fn<(buffer: Buffer) => void>();
-		const handleStream = jest.fn<() => Writable>(getSink);
+		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip' }, responseHeaders: { 'content-type': 'audio/mpeg' } });
 
-		const bufferStream = new BufferStream(handleBuffer, handleStream);
+		const bufferStream = new BufferStream(responder);
 		await new Promise(resolve => {
 			stream.pipe(bufferStream);
 			bufferStream.on('finish', () => {
@@ -155,9 +128,17 @@ describe('BufferStream', () => {
 			});
 		});
 
-		// Assumption: handleStream should be called for large data
-		expect(handleBuffer).not.toHaveBeenCalled();
-		expect(handleStream).toHaveBeenCalledTimes(1);
-		expect(handleStream).toHaveBeenCalled();
+		const response = responder.response as Response & { getBuffer: () => Buffer };
+
+		expect(response.status).toHaveBeenCalledTimes(1);
+		expect(response.status).toHaveBeenCalledWith(200);
+		expect(response.set).toHaveBeenCalledTimes(1);
+		expect(response.set).toHaveBeenCalledWith({
+			'cache-control': 'max-age=86400',
+			'content-type': 'audio/mpeg',
+			'transfer-encoding': 'chunked',
+		});
+		expect(response.end).toHaveBeenCalledTimes(1);
+		expect(Buffer.concat(data).compare(response.getBuffer())).toBe(0);
 	});
 });
