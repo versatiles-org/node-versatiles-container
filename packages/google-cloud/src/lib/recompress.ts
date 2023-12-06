@@ -7,9 +7,7 @@ import { Writable, Readable } from 'node:stream';
 const maxBufferSize = 10 * 1024 * 1024;
 
 export class BufferStream extends Writable {
-	readonly #handleBuffer: (buffer: Buffer) => void;
-
-	readonly #handleStream: () => Writable;
+	readonly #responder: ResponderInterface;
 
 	readonly #logPrefix: string | undefined;
 
@@ -19,20 +17,15 @@ export class BufferStream extends Writable {
 
 	#bufferMode = true;
 
-	#outputStream = new Writable();
-
 	/*
 	 * Class constructor will receive the injections as parameters.
 	 */
 	public constructor(
-		handleBuffer: (buffer: Buffer) => void,
-		handleStream: () => Writable,
+		responder: ResponderInterface,
 		logPrefix?: string,
 	) {
 		super();
-
-		this.#handleBuffer = handleBuffer;
-		this.#handleStream = handleStream;
+		this.#responder = responder;
 		this.#logPrefix = logPrefix;
 	}
 
@@ -52,19 +45,19 @@ export class BufferStream extends Writable {
 				}
 
 				this.#bufferMode = false;
-				this.#outputStream = this.#handleStream();
+				this.#prepareStreamMode();
 
 				const buffer = Buffer.concat(this.#buffers);
 				this.#buffers.length = 0;
 
-				this.#outputStream.write(buffer, encoding, () => {
+				this.#responder.response.write(buffer, encoding, () => {
 					callback();
 				});
 			} else {
 				callback();
 			}
 		} else {
-			this.#outputStream.write(chunk, encoding, () => {
+			this.#responder.response.write(chunk, encoding, () => {
 				callback();
 			});
 		}
@@ -83,13 +76,43 @@ export class BufferStream extends Writable {
 				console.log(this.#logPrefix, 'flush to handleBuffer:', buffer.length);
 			}
 
-			this.#handleBuffer(buffer);
-			callback();
+			this.#prepareBufferMode(buffer.length);
+			this.#responder.response.end(buffer, (): void => {
+				callback();
+			});
 		} else {
-			this.#outputStream.end((): void => {
+			this.#responder.response.end((): void => {
 				callback();
 			});
 		}
+	}
+
+	#prepareBufferMode(bufferLength: number): void {
+		this.#responder.del('transfer-encoding');
+
+		this.#responder.responseHeaders['content-length'] ??= '' + bufferLength;
+
+		if (this.#logPrefix != null) {
+			console.log(this.#logPrefix, 'response header for buffer:', this.#responder.responseHeaders);
+			console.log(this.#logPrefix, 'response buffer length:', bufferLength);
+		}
+
+		this.#responder.response
+			.status(200)
+			.set(this.#responder.responseHeaders);
+	}
+
+	#prepareStreamMode(): void {
+		this.#responder.set('transfer-encoding', 'chunked');
+		this.#responder.del('content-length');
+
+		if (this.#logPrefix != null) {
+			console.log(this.#logPrefix, 'response header for stream:', this.#responder.responseHeaders);
+		}
+
+		this.#responder.response
+			.status(200)
+			.set(this.#responder.responseHeaders);
 	}
 }
 
@@ -141,7 +164,7 @@ export async function recompress(
 		responder.del('content-length');
 	}
 
-	const bufferStream = new BufferStream(handleBuffer, handleStream, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined);
+	const bufferStream = new BufferStream(responder, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined);
 	stream.pipe(bufferStream);
 
 	await new Promise(resolve => {
@@ -151,35 +174,4 @@ export async function recompress(
 	});
 
 	return;
-
-	function handleBuffer(buffer: Buffer): void {
-		responder.del('transfer-encoding');
-
-		responder.responseHeaders['content-length'] ??= '' + buffer.length;
-
-		if (logPrefix != null) {
-			console.log(logPrefix, 'response header for buffer:', responder.responseHeaders);
-			console.log(logPrefix, 'response buffer length:', buffer.length);
-		}
-
-		responder.response
-			.status(200)
-			.set(responder.responseHeaders)
-			.end(buffer);
-	}
-
-	function handleStream(): Writable {
-		responder.set('transfer-encoding', 'chunked');
-		responder.del('content-length');
-
-		if (logPrefix != null) {
-			console.log(logPrefix, 'response header for stream:', responder.responseHeaders);
-		}
-
-		responder.response
-			.status(200)
-			.set(responder.responseHeaders);
-
-		return responder.response;
-	}
 }
