@@ -19,11 +19,14 @@ describe('Encoding Tools', () => {
 			const encoding = ENCODINGS[name];
 			expect(encoding).toBeDefined();
 			expect(encoding.name).toBe(name);
+			expect(typeof encoding.setEncodingHeader).toBe('function');
+
+			if (encoding.name === 'raw') return;
+			
 			expect(typeof encoding.compressStream).toBe('function');
 			expect(typeof encoding.decompressStream).toBe('function');
 			expect(typeof encoding.compressBuffer).toBe('function');
 			expect(typeof encoding.decompressBuffer).toBe('function');
-			expect(typeof encoding.setEncodingHeader).toBe('function');
 		});
 		expect(Object.keys(ENCODINGS).sort()).toEqual(encodings.sort());
 	});
@@ -32,6 +35,9 @@ describe('Encoding Tools', () => {
 		encodings.forEach(name => {
 			it(name, async () => {
 				const encoding = ENCODINGS[name];
+
+				if (!encoding.compressBuffer && !encoding.decompressBuffer) return;
+				if (!encoding.compressBuffer || !encoding.decompressBuffer) throw Error();
 
 				let buffer1 = await encoding.compressBuffer(buffer, true);
 				if (name !== 'raw') {
@@ -53,7 +59,11 @@ describe('Encoding Tools', () => {
 	describe('decompress buffer', () => {
 		encodings.forEach(name => {
 			it(name, async () => {
-				expect(await ENCODINGS[name].decompressBuffer(buffers[name])).toStrictEqual(buffer);
+				const encoding = ENCODINGS[name];
+
+				if (!encoding.decompressBuffer) return;
+				
+				expect(await encoding.decompressBuffer(buffers[name])).toStrictEqual(buffer);
 			});
 		});
 	});
@@ -63,7 +73,10 @@ describe('Encoding Tools', () => {
 			it(name, async () => {
 				const encoding = ENCODINGS[name];
 
-				const stream1 = Readable.from(buffer).pipe(ENCODINGS[name].compressStream(true));
+				if (!encoding.compressStream && !encoding.decompressBuffer) return;
+				if (!encoding.compressStream || !encoding.decompressBuffer) throw Error();
+
+				const stream1 = Readable.from(buffer).pipe(encoding.compressStream(true));
 				let buffer1 = await stream2buffer(stream1);
 				if (name !== 'raw') {
 					expect(buffer1.length).toBeLessThan(buffer.length);
@@ -71,7 +84,7 @@ describe('Encoding Tools', () => {
 				}
 				expect(buffer1).toStrictEqual(buffer);
 
-				const stream2 = Readable.from(buffer).pipe(ENCODINGS[name].compressStream(false));
+				const stream2 = Readable.from(buffer).pipe(encoding.compressStream(false));
 				let buffer2 = await stream2buffer(stream2);
 				if (name !== 'raw') {
 					expect(buffer2.length).toBeLessThan(buffer.length);
@@ -85,7 +98,11 @@ describe('Encoding Tools', () => {
 	describe('decompress stream', () => {
 		encodings.forEach(name => {
 			it(name, async () => {
-				const stream = Readable.from(buffers[name]).pipe(ENCODINGS[name].decompressStream());
+				const encoding = ENCODINGS[name];
+
+				if (!encoding.decompressStream) return;
+
+				const stream = Readable.from(buffers[name]).pipe(encoding.decompressStream());
 				expect(await stream2buffer(stream)).toStrictEqual(buffer);
 			});
 		});

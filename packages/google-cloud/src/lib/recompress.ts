@@ -154,13 +154,30 @@ export async function recompress(
 
 	encodingOut.setEncodingHeader(responder.responseHeaders);
 
-	let stream: Readable = Readable.from(body);
+	let stream: Readable;
+	if (Buffer.isBuffer(body)) {
+		console.log('is Buffer');
+		stream = Readable.from(body);
+	} else if (Readable.isReadable(body)) {
+		console.log('is Readable');
+		stream = body;
+	} else {
+		throw Error('neither Readable nor Buffer');
+	}
 
 	if (encodingIn !== encodingOut) {
 		if (logPrefix != null) {
 			console.log(logPrefix, 'recompress:', encodingIn.name, encodingOut.name);
 		}
-		stream = stream.pipe(encodingIn.decompressStream()).pipe(encodingOut.compressStream(responder.fastRecompression));
+
+		if (encodingIn.decompressStream) {
+			stream = stream.pipe(encodingIn.decompressStream());
+		}
+
+		if (encodingIn.compressStream) {
+			stream = stream.pipe(encodingIn.compressStream(responder.fastRecompression));
+		}
+
 		responder.del('content-length');
 	}
 

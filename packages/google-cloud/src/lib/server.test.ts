@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/require-await */
 
-import type { Server } from 'http';
 import type { Bucket, File, FileMetadata } from '@google-cloud/storage';
 import Request from 'supertest';
 import express from 'express';
@@ -31,39 +30,34 @@ describe('Server Tests', () => {
 		}],
 	]);
 	const baseUrl = 'http://localhost:3000';
-	let server: Server;
-	let request: Request.SuperTest<Request.Test>;
-
-	beforeAll(async () => {
-		const bucket = {
-			file: (path: string): File => {
-				return {
-					exists: async (): Promise<[boolean]> => [files.has(path)],
-					getMetadata: async (): Promise<[FileMetadata]> => {
-						const file = files.get(path);
-						if (file == null) throw Error();
-						return [file.meta];
-					},
-					createReadStream: (options?: { start: number; end: number }): Readable => {
-						const file = files.get(path);
-						if (file == null) throw Error();
-						return Readable.from(file.content(options));
-					},
-				} as unknown as File;
-			},
-		} as unknown as Bucket;
-		const serverTmp = startServer({
-			baseUrl,
-			bucket,
-			bucketPrefix: '',
-			fastRecompression: false,
-			port: 3000,
-			verbose: false,
-		});
-		if (serverTmp == null) throw Error();
-		server = serverTmp;
-		request = Request(server);
+	const bucket = {
+		file: (path: string): File => {
+			return {
+				exists: async (): Promise<[boolean]> => [files.has(path)],
+				getMetadata: async (): Promise<[FileMetadata]> => {
+					const file = files.get(path);
+					if (file == null) throw Error();
+					return [file.meta];
+				},
+				createReadStream: (options?: { start: number; end: number }): Readable => {
+					const file = files.get(path);
+					if (file == null) throw Error();
+					return Readable.from(file.content(options));
+				},
+			} as unknown as File;
+		},
+	} as unknown as Bucket;
+	const serverTmp = startServer({
+		baseUrl,
+		bucket,
+		bucketPrefix: '',
+		fastRecompression: false,
+		port: 3000,
+		verbose: false,
 	});
+	if (serverTmp == null) throw Error();
+	const server = serverTmp;
+	const request = Request(server);
 
 	afterAll(() => {
 		server.close();
