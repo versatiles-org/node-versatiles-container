@@ -156,10 +156,8 @@ export async function recompress(
 
 	let stream: Readable;
 	if (Buffer.isBuffer(body)) {
-		console.log('is Buffer');
 		stream = Readable.from(body);
 	} else if (Readable.isReadable(body)) {
-		console.log('is Readable');
 		stream = body;
 	} else {
 		throw Error('neither Readable nor Buffer');
@@ -174,8 +172,8 @@ export async function recompress(
 			stream = stream.pipe(encodingIn.decompressStream());
 		}
 
-		if (encodingIn.compressStream) {
-			stream = stream.pipe(encodingIn.compressStream(responder.fastRecompression));
+		if (encodingOut.compressStream) {
+			stream = stream.pipe(encodingOut.compressStream(responder.fastRecompression));
 		}
 
 		responder.del('content-length');

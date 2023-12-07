@@ -46,7 +46,7 @@ describe('recompress', () => {
 		const responseHeaders = {
 			'cache-control': 'max-age=86400',
 			'content-encoding': 'br',
-			'content-length': '9',
+			'content-length': '13',
 			'content-type': 'text/plain',
 			'vary': 'accept-encoding',
 		};
