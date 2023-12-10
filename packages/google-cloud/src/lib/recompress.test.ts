@@ -5,12 +5,12 @@
 import type { EnhancedResponder } from './responder.mock.test.js';
 import type { OutgoingHttpHeaders } from 'node:http';
 import type { Response } from 'express';
-import type { Writable } from 'node:stream';
 import { getMockedResponder } from './responder.mock.test.js';
 import { Readable } from 'node:stream';
 import { recompress, BufferStream } from './recompress.js';
 import { ENCODINGS } from './encoding.js';
 import zlib from 'node:zlib';
+import { finished } from 'node:stream/promises';
 
 
 
@@ -88,7 +88,7 @@ describe('recompress', () => {
 		const stream = Readable.from(testBuffer);
 		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip' }, responseHeaders: { 'content-type': 'audio/mpeg' } });
 
-		await isFinished(stream.pipe(new BufferStream(responder)));
+		await finished(stream.pipe(new BufferStream(responder)));
 
 		const response = responder.response as Response & { getBuffer: () => Buffer };
 
@@ -113,7 +113,7 @@ describe('recompress', () => {
 		const stream = Readable.from(data);
 		const responder = getMockedResponder({ requestHeaders: { 'accept-encoding': 'gzip' }, responseHeaders: { 'content-type': 'audio/mpeg' } });
 
-		await isFinished(stream.pipe(new BufferStream(responder)));
+		await finished(stream.pipe(new BufferStream(responder)));
 
 		const response = responder.response as Response & { getBuffer: () => Buffer };
 
@@ -168,14 +168,6 @@ describe('recompress', () => {
 			}
 		}
 	});
-
-	async function isFinished(stream: Writable): Promise<void> {
-		return new Promise(resolve => {
-			stream.on('finish', () => {
-				resolve();
-			});
-		});
-	}
 
 	function checkResponseHeaders(responder: EnhancedResponder, responseHeaders: OutgoingHttpHeaders): void {
 		expect(responder.responseHeaders).toStrictEqual(responseHeaders);

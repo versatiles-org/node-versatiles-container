@@ -8,22 +8,6 @@ import { getMockedResponder } from './responder.mock.test.js';
 
 describe('Responder', () => {
 
-	/*
-	let responder: ResponderInterface;
-
-	beforeEach(() => {
-		responder = getMockResponder({
-			fastRecompression: true,
-			requestHeaders: {
-				'accept-encoding': 'gzip, br',
-				'content-type': 'application/json',
-			},
-			requestNo: 5,
-			verbose: false,
-		});
-	});
-	*/
-
 	it('should set and get response headers correctly', () => {
 		const responder = getMockedResponder();
 
