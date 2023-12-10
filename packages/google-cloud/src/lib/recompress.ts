@@ -3,6 +3,7 @@ import type { EncodingTools } from './encoding.js';
 import type { ResponderInterface } from './responder.js';
 import { ENCODINGS, acceptEncoding, findBestEncoding, parseContentEncoding } from './encoding.js';
 import { Writable, Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 
 const maxBufferSize = 10 * 1024 * 1024;
 
@@ -154,11 +155,11 @@ export async function recompress(
 
 	encodingOut.setEncodingHeader(responder.responseHeaders);
 
-	let stream: Readable;
+	const streams: (Readable | Writable)[] = [];
 	if (Buffer.isBuffer(body)) {
-		stream = Readable.from(body);
+		streams.push(Readable.from(body));
 	} else if (Readable.isReadable(body)) {
-		stream = body;
+		streams.push(body);
 	} else {
 		throw Error('neither Readable nor Buffer');
 	}
@@ -168,25 +169,22 @@ export async function recompress(
 			console.log(logPrefix, 'recompress:', encodingIn.name, encodingOut.name);
 		}
 
+		//stream = new Wrapper(stream);
+
 		if (encodingIn.decompressStream) {
-			stream = stream.pipe(encodingIn.decompressStream());
+			streams.push(encodingIn.decompressStream());
 		}
 
 		if (encodingOut.compressStream) {
-			stream = stream.pipe(encodingOut.compressStream(responder.fastRecompression));
+			streams.push(encodingOut.compressStream(responder.fastRecompression));
 		}
 
 		responder.del('content-length');
 	}
 
-	const bufferStream = new BufferStream(responder, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined);
-	stream.pipe(bufferStream);
+	streams.push(new BufferStream(responder, (logPrefix != null) ? logPrefix + ' bufferStream' : undefined));
 
-	await new Promise(resolve => {
-		bufferStream.on('finish', () => {
-			resolve(null);
-		});
-	});
+	await pipeline(streams);
 
 	return;
 }
