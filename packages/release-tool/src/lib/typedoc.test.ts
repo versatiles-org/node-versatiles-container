@@ -19,8 +19,13 @@ Constructor for the class. <sup><a href="">[src]</a></sup>
 
 
 ### Properties
-  - <code>d: number</code>  
+  - <code>d1: number</code>  
     Represents a numeric value.
+  - <code>d2: number</code> (optional)
+  - <code>d3: number[]</code> (optional)
+  - <code>d4: [number, number]</code> (optional)
+  - <code>d5: true | "1"</code> (optional)
+  - <code>d6: Set&lt;number&gt;</code> (optional)
 
 ### Accessors
   - <code>j</code>
@@ -45,7 +50,7 @@ Returns a function of type K. <sup><a href="">[src]</a></sup>
   - <code>i: [boolean, [I](#interface_i)]</code>  
     A tuple containing a boolean and an object of type I.
 
-**Returns:** <code>[K](#type_k)</code>
+**Returns:** <code>[K1](#type_k1)</code>
 
 # Interfaces
 
@@ -59,9 +64,21 @@ interface {
 
 # Type Aliases
 
-## Type: \`K\`<a id="type_k"></a>
+## Type: \`K1\`<a id="type_k1"></a>
 
 **Type:** <code>(l: number) => string</code>
+
+## Type: \`K2\`<a id="type_k2"></a>
+
+**Type:** <code>() => void</code>
+
+## Type: \`K3\`<a id="type_k3"></a>
+
+**Type:** <code>() => [I](#interface_i)</code>
+
+## Type: \`K4\`<a id="type_k4"></a>
+
+**Type:** <code>() => {a:?}</code>
 
 ## Type: \`T\`<a id="type_t"></a>
 
@@ -110,7 +127,13 @@ export type T = boolean;
  * @param l - The number input.
  * @returns The string output.
  */
-export type K = (l: number) => string;
+export type K1 = (l: number) => string;
+
+export type K2 = () => void;
+
+export type K3 = () => I;
+
+export type K4 = () => { a: number };
 
 /**
  * Interface representing a structure with a boolean type property.
@@ -142,7 +165,17 @@ export class C {
 	/**
 	 * Represents a numeric value.
 	 */
-	public d = 1;
+	public d1 = 1;
+
+	public d2?: number;
+
+	public d3?: number[];
+
+	public d4?: [number, number];
+
+	public d5?: '1' | true;
+
+	public d6?: Set<number>;
 
 	/**
 	 * Constructor for the class.
@@ -154,7 +187,7 @@ export class C {
 	 * @returns The value of 'd'.
 	 */
 	public get j(): number {
-		return this.d;
+		return this.d1;
 	}
 
 	/**
@@ -169,7 +202,7 @@ export class C {
 	 * @param i - A tuple containing a boolean and an object of type I.
 	 * @returns A function of type K.
 	 */
-	public h(i: [boolean, I]): K {
+	public h(i: [boolean, I]): K1 {
 		return (l: number) => 'l';
 	}
 }
