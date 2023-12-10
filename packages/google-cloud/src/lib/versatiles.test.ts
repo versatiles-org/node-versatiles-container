@@ -5,7 +5,7 @@ import type { Response } from 'express';
 import { serveVersatiles } from './versatiles.js';
 import { jest } from '@jest/globals';
 import { Readable } from 'stream';
-import { openSync, readSync } from 'fs';
+import { openSync, readFileSync, readSync } from 'fs';
 import { createHash } from 'crypto';
 import type { EnhancedResponder, EnhancedResponse } from './responder.mock.test.js';
 import { getMockedResponder } from './responder.mock.test.js';
@@ -43,11 +43,12 @@ describe('serveVersatiles', () => {
 	});
 
 	test('should handle preview request correctly', async () => {
+		const html = readFileSync(new URL('../../static/preview.html', import.meta.url).pathname, 'utf8');
 		await serveVersatiles(mockFile, 'https://example.com/osm.versatiles', 'preview', mockResponder);
 
-		checkResponse(200, '<!DOCTYPE html>', {
+		checkResponse(200, html, {
 			'cache-control': 'max-age=86400',
-			'content-length': '763',
+			'content-length': '' + html.length,
 			'content-type': 'text/html',
 			'vary': 'accept-encoding',
 		});
@@ -56,7 +57,7 @@ describe('serveVersatiles', () => {
 	test('should handle meta.json request correctly', async () => {
 		await serveVersatiles(mockFile, 'https://example.com/osm.versatiles', 'meta.json', mockResponder);
 
-		checkResponse(200, '30fd3e0d66ef5a6e', {
+		checkResponse(200, '{"vector_layers":[{"id":"place_labels"', {
 			'cache-control': 'max-age=86400',
 			'content-length': '4329',
 			'content-type': 'application/json',
@@ -67,9 +68,9 @@ describe('serveVersatiles', () => {
 	test('should handle style.json request correctly', async () => {
 		await serveVersatiles(mockFile, 'https://example.com/osm.versatiles', 'style.json', mockResponder);
 
-		checkResponse(200, ' ', {
+		checkResponse(200, '{"version":8,"name":"versatiles-colorful",', {
 			'cache-control': 'max-age=86400',
-			'content-length': '81970',
+			'content-length': '82040',
 			'content-type': 'application/json',
 			'vary': 'accept-encoding',
 		});
