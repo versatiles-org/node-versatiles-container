@@ -26,8 +26,7 @@ export function injectMarkdown(document: string, segment: string, heading: strin
 		startIndex = findSegmentStartIndex(documentAst, headingAst);
 	} catch (error) {
 		// Handle errors during the search for the start index.
-		console.error(`Error while searching for segment "${heading}": ${getErrorMessage(error)}`);
-		throw error;
+		throw new Error(`Error while searching for segment "${heading}": ${getErrorMessage(error)}`);
 	}
 
 	// Get the depth of the specified heading to maintain the structure.
@@ -118,7 +117,7 @@ function findNextHeadingIndex(mainAst: Root, startIndex: number, depth: number):
 	for (let i = startIndex; i < mainAst.children.length; i++) {
 		const child = mainAst.children[i];
 		// Return the index of the next heading at the same depth.
-		if (child.type === 'heading' && child.depth === depth) return i;
+		if (child.type === 'heading' && child.depth <= depth) return i;
 	}
 	return mainAst.children.length;
 }
@@ -289,17 +288,11 @@ export function nodeToHtml(node: PhrasingContent): string {
 			return `<strong>${nodesToHtml(node.children)}</strong>`;
 		case 'link':
 			return `<a href="${node.url}"${node.title == null ? '' : ` title="${node.title}"`}>${nodesToHtml(node.children)}</a>`;
-		case 'linkReference':
-			throw new Error('"linkReference to html" not implemented');
-		case 'footnoteReference':
-			throw new Error('"footnoteReference to html" not implemented');
 		case 'image':
 			const attributes = [`src="${node.url}"`];
 			if (node.alt ?? '') attributes.push(`alt="${node.alt}"`);
 			if (node.title ?? '') attributes.push(`title="${node.title}"`);
 			return `<img ${attributes.join(' ')} />`;
-		case 'imageReference':
-			throw new Error('"imageReference to html" not implemented');
 		default:
 			console.log(node);
 			throw Error('unknown type');

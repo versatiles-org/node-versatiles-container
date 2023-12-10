@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-confusing-void-expression */
 import type { PhrasingContent, PhrasingContentMap } from 'mdast';
 import { injectMarkdown, nodeToHtml, parseMarkdown, updateTOC } from './markdown.js'; // Replace with the actual path of your module
 
@@ -5,25 +6,78 @@ const document = getDoc('C 2');
 
 describe('inject markdown', () => {
 	it('injects a Markdown segment under a specified heading', () => {
-		const result = injectMarkdown(document, 'Injected content', '# H 2');
+		const result = injectMarkdown(document, 'Injected content', '## H 2');
 		expect(result).toBe(getDoc('Injected content'));
 	});
 
+	it('injects headings', () => {
+		const result = injectMarkdown(document, '# H 10\n\n## H 11', '## H 2');
+		expect(result).toBe(getDoc('### H 10\n\n#### H 11'));
+	});
+
+	it('injects code', () => {
+		const result = injectMarkdown(document, '`code`', '## H 2');
+		expect(result).toBe(getDoc('`code`'));
+	});
+
+	it('injects html', () => {
+		const result = injectMarkdown(document, '<i>html</i>', '## H 2');
+		expect(result).toBe(getDoc('<i>html</i>'));
+	});
+
 	it('handles foldable segments', () => {
-		const result = injectMarkdown(document, 'Foldable content', '# H 2', true);
+		const result = injectMarkdown(document, 'Foldable content', '## H 2', true);
 		expect(result).toBe(getDoc('Foldable content'));
 	});
 
 	it('handles foldable segments', () => {
-		const result = injectMarkdown(document, '# Foldable heading\n\nFoldable content', '# H 2', true);
-		expect(result).toBe(getDoc('<details>\n\n<summary><h2>Foldable heading</h2></summary>\n\nFoldable content\n\n</details>'));
+		const result = injectMarkdown(document, '# Foldable heading\n\nFoldable content', '## H 2', true);
+		expect(result).toBe(getDoc('<details>\n\n<summary><h3>Foldable heading</h3></summary>\n\nFoldable content\n\n</details>'));
+	});
+
+	it('injects at the end', () => {
+		expect(injectMarkdown('# H 1', '# H 2', '# H 1')).toBe('# H 1\n\n## H 2\n');
+	});
+
+	it('throws error on missing segment', () => {
+		expect(() => injectMarkdown(document, '# Foldable heading\n\nFoldable content', '# H 5'))
+			.toThrow('Error while searching for segment "# H 5": section not found');
+	});
+
+	it('throws error on multiple segment', () => {
+		expect(() => injectMarkdown('# H 1\n\n# H 1\n\n', 'content', '# H 1'))
+			.toThrow('Error while searching for segment "# H 1": too many sections found');
 	});
 });
 
 describe('update TOC', () => {
 	it('updates the Table of Contents of a Markdown document', () => {
-		const result = updateTOC(document, '# H 2');
+		const result = updateTOC(document, '## H 2');
 		expect(result).toBe(getDoc('* [H 1](#h-1)\n* [H 3](#h-3)'));
+	});
+
+	describe('getMDAnchor', () => {
+		it('text', () => test('HalO du', 'HalO du', 'halo-du'));
+		it('code', () => test('`code`', 'code', 'code'));
+		it('html', () => test('<i>test  123</i>', 'test  123', 'test-123'));
+
+		function test(input: string, text: string, anchor: string): void {
+			expect(updateTOC(`# H 1\n\n# H ${input}\n`, '# H 1'))
+				.toBe(`# H 1\n\n* [H ${text}](#h-${anchor})\n\n# H ${input}\n`);
+		}
+	});
+
+	it('getMDAnchor simple', () => {
+		expect(updateTOC('# H 1\n\n# H 2\n', '# H 1')).toBe('# H 1\n\n* [H 2](#h-2)\n\n# H 2\n');
+	});
+
+	it('getMDAnchor simple', () => {
+		expect(updateTOC('# H 1\n\n# H 2\n', '# H 1')).toBe('# H 1\n\n* [H 2](#h-2)\n\n# H 2\n');
+	});
+
+	it('throws error on missing segment', () => {
+		expect(() => updateTOC(document, '# H 2'))
+			.toThrow('Error while searching for segment "# H 2": section not found');
 	});
 });
 
@@ -97,5 +151,5 @@ describe('markdown to html', () => {
 });
 
 function getDoc(content: string): string {
-	return `# H 1\n\nC 1\n\n# H 2\n\n${content}\n\n# H 3\n\nC 3\n`;
+	return `# H 1\n\nC 1\n\n## H 2\n\n${content}\n\n# H 3\n\nC 3\n`;
 }
