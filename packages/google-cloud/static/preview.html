@@ -23,14 +23,8 @@
 	<div id="map"></div>
 	<script>
 		(async () => {
-			const map = new maplibregl.Map({
-				container: 'map',
-				style: await (await fetch('?style.json')).json(),
-				hash: true,
-			});
-
-			//map.dragRotate.disable();
-			//map.touchZoomRotate.disableRotation();
+			const style = await (await fetch('?style.json')).json();
+			const map = new maplibregl.Map({ container: 'map', style, hash: true });
 			map.addControl(new maplibregl.NavigationControl());
 		})()
 	</script>

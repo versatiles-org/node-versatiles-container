@@ -73,14 +73,20 @@ export async function serveVersatiles(file: File, path: string, query: string, r
 			if (responder.verbose) console.log(`  #${responder.requestNo} respond with style.json`);
 
 			let style: MaplibreStyle;
-			const tiles = [`${path}?tiles/{z}/{x}/{y}`];
 			const format = header.tileFormat;
+			const options = {
+				tiles: [`${path}?tiles/{z}/{x}/{y}`],
+				format,
+				bounds: header.bbox,
+				minzoom: header.zoomMin,
+				maxzoom: header.zoomMax,
+			};
 			switch (format) {
-				case 'jpeg': style = guessStyle({ tiles, format: 'jpg' }); break;
+				case 'jpeg': style = guessStyle({ ...options, format: 'jpg' }); break;
 				case 'webp':
 				case 'png':
 				case 'avif':
-					style = guessStyle({ tiles, format });
+					style = guessStyle({ ...options, format });
 					break;
 				case 'pbf':
 					if (metadata == null) {
@@ -100,7 +106,7 @@ export async function serveVersatiles(file: File, path: string, query: string, r
 						responder.error(500, 'metadata.vector_layers must be an array');
 						return;
 					}
-					style = guessStyle({ tiles, format, vectorLayers });
+					style = guessStyle({ ...options, format, vectorLayers });
 					break;
 				case 'bin':
 				case 'geojson':
