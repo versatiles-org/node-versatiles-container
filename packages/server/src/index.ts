@@ -17,7 +17,7 @@ program
 	.name('versatiles-server')
 	.description('Simple VersaTiles server')
 	.option('-b, --base-url <url>', 'Base URL for the server (default: "http://localhost:<port>/")')
-	.option('-f, --fast', 'Only recompress data if it is really necessary. Faster response, but more traffic.')
+	.option('-c, --compress', 'Reduces traffic by recompressing data, but responses take longer. Perfect if behind CDN.')
 	.option('-h, --host <hostnameip>', 'Hostname or IP to bind the server to', '0.0.0.0')
 	.option('-o, --open', 'Open map in web browser')
 	.option('-p, --port <port>', 'Port to bind the server to (default: 8080)')
@@ -26,7 +26,7 @@ program
 	.action(async (source: string, cmdOptions: Record<string, unknown>) => {
 		const srvOptions: ServerOptions = {
 			baseUrl: cmdOptions.baseUrl as string | undefined,
-			compress: !Boolean(cmdOptions.fast),
+			compress: Boolean(cmdOptions.compress),
 			host: String(cmdOptions.host ?? '0.0.0.0'),
 			port: Number(cmdOptions.port ?? 8080),
 			tms: Boolean(cmdOptions.tms),

@@ -29,7 +29,7 @@ describe('index.ts', () => {
 	const defaultSource = 'test.versatiles';
 	const defaultResults: ServerOptions = {
 		baseUrl: undefined,
-		compress: true,
+		compress: false,
 		host: '0.0.0.0',
 		port: 8080,
 		tms: false,
@@ -55,8 +55,8 @@ describe('index.ts', () => {
 	});
 
 	test('starts server with fast', async () => {
-		await run(defaultSource + ' -f');
-		expect(mockedServer).toHaveBeenCalledWith(defaultSource, { ...defaultResults, compress: false });
+		await run(defaultSource + ' -c');
+		expect(mockedServer).toHaveBeenCalledWith(defaultSource, { ...defaultResults, compress: true });
 	});
 
 	test('starts server with host', async () => {
