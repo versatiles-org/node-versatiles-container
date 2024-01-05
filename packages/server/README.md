@@ -39,8 +39,8 @@ Arguments:
 Options:
   -b, --base-url <url>     Base URL for the server (default:
                            "http://localhost:<port>/")
-  -f, --fast               Only recompress data if it is really necessary.
-                           Faster response, but more traffic.
+  -c, --compress           Reduces traffic by recompressing data, but responses
+                           take longer. Perfect if behind CDN.
   -h, --host <hostnameip>  Hostname or IP to bind the server to (default:
                            "0.0.0.0")
   -o, --open               Open map in web browser
