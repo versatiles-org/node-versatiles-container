@@ -1,7 +1,7 @@
 import { guessStyle } from '@versatiles/style';
 import type { ContainerInfo, ServerOptions } from './types.js';
 
-/** 
+/**
  * Asynchronously generates a style string based on the given container and options.
  * 
  * @param {VersaTiles} container - An instance of the VersaTiles container.
@@ -28,7 +28,7 @@ export function generateStyle(containerInfo: ContainerInfo, options: ServerOptio
 	}
 
 	const baseUrl = options.baseUrl ?? `http://localhost:${options.port}/`;
-	const { metadata } = containerInfo;
+	const { header, metadata } = containerInfo;
 
 	const style = guessStyle({
 		format,
@@ -36,6 +36,7 @@ export function generateStyle(containerInfo: ContainerInfo, options: ServerOptio
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 		vectorLayers: JSON.parse(metadata ?? '')?.vector_layers,
 		baseUrl,
+		bounds: header.bbox,
 	});
 
 	return JSON.stringify(style);
