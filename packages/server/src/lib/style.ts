@@ -2,38 +2,6 @@ import { guessStyle } from '@versatiles/style';
 import type { ContainerInfo, ServerOptions } from './types.js';
 
 /** 
- * Constant array representing the layers in the Shortbread styling.
- */
-export const SHORTBREAD_LAYERS = [
-	'place_labels',
-	'addresses',
-	'aerialways',
-	'boundaries',
-	'boundary_labels',
-	'bridges',
-	'buildings',
-	'dam_lines',
-	'dam_polygons',
-	'ferries',
-	'land',
-	'ocean',
-	'pier_lines',
-	'pier_polygons',
-	'pois',
-	'public_transport',
-	'sites',
-	'street_labels_points',
-	'street_labels',
-	'street_polygons',
-	'streets_polygons_labels',
-	'streets',
-	'water_lines_labels',
-	'water_lines',
-	'water_polygons_labels',
-	'water_polygons',
-];
-
-/**
  * Asynchronously generates a style string based on the given container and options.
  * 
  * @param {VersaTiles} container - An instance of the VersaTiles container.
@@ -71,25 +39,4 @@ export function generateStyle(containerInfo: ContainerInfo, options: ServerOptio
 	});
 
 	return JSON.stringify(style);
-}
-
-/**
- * Resolves a complete URL from given path segments.
- * 
- * @param {...string[]} paths - An array of path segments to be resolved into a URL.
- * @returns {string} The fully resolved URL.
- */
-export function resolveUrl(...paths: string[]): string {
-	paths = paths.map(path => path.replace(/[\{\}]/g, c => '%' + c.charCodeAt(0).toString(16)));
-
-	const pathStart = paths.shift();
-	let baseUrl: URL;
-	try {
-		baseUrl = new URL(pathStart ?? '', 'https://tiles.versatiles.org/');
-	} catch (error) {
-		throw Error(`Invalid URL. pathStart = "${pathStart}"`);
-	}
-
-	paths.forEach(path => baseUrl = new URL(path, baseUrl));
-	return baseUrl.href.replace(/\%7b/g, '{').replace(/\%7d/g, '}');
 }
