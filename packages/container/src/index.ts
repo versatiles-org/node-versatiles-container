@@ -2,7 +2,7 @@
 import HttpReader from './reader_http.js';
 import FileReader from './reader_file.js';
 import { decompress } from './decompress.js';
-import type { Block, Compression, Decompressor, Format, Header, OpenOptions, Reader, TileIndex } from './interfaces.js';
+import type { Block, Compression, Format, Header, OpenOptions, Reader, TileIndex } from './interfaces.js';
 export type { Compression, Format, Header, OpenOptions, Reader } from './interfaces.js';
 
 
@@ -42,8 +42,6 @@ export class Container {
 
 	readonly #reader: Reader;
 
-	readonly #decompress: Decompressor;
-
 	#header?: Header;
 
 	#metadata?: string;
@@ -72,8 +70,6 @@ export class Container {
 		} else {
 			throw new Error('source must be a string or a Reader');
 		}
-
-		this.#decompress = decompress;
 	}
 
 	/**
@@ -138,7 +134,7 @@ export class Container {
 			this.#metadata = undefined;
 		} else {
 			let buffer: Buffer = await this.read(header.metaOffset, header.metaLength);
-			buffer = await this.#decompress(buffer, header.tileCompression);
+			buffer = await decompress(buffer, header.tileCompression);
 			this.#metadata = buffer.toString();
 		}
 
@@ -208,7 +204,7 @@ export class Container {
 		const tile = await this.getTile(z, x, y);
 		if (!tile) return null;
 		const header = await this.getHeader();
-		return this.#decompress(tile, header.tileCompression);
+		return decompress(tile, header.tileCompression);
 	}
 
 	/**
@@ -225,7 +221,7 @@ export class Container {
 
 		// read block_index buffer
 		let data = await this.read(header.blockIndexOffset, header.blockIndexLength);
-		data = await this.#decompress(data, 'br');
+		data = await decompress(data, 'br');
 
 		// read index from buffer
 		const blocks: Block[] = [];
@@ -301,7 +297,7 @@ export class Container {
 		if (block.tileIndex) return block.tileIndex;
 
 		let buffer = await this.read(block.tileIndexOffset, block.tileIndexLength);
-		buffer = await this.#decompress(buffer, 'br');
+		buffer = await decompress(buffer, 'br');
 
 		const offsets = new Float64Array(block.tileCount);
 		const lengths = new Float64Array(block.tileCount);
