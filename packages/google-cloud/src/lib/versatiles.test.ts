@@ -79,10 +79,10 @@ describe('serveVersatiles', () => {
 	test('should handle tile data request correctly', async () => {
 		await serveVersatiles(mockFile, 'https://example.com/osm.versatiles', 'tiles/13/1870/2252', mockResponder);
 
-		checkResponse(200, '91b332abad238eae', {
+		checkResponse(200, '9bf3b76efbf8c96e', {
 			'cache-control': 'max-age=86400',
 			'content-encoding': 'br',
-			'content-length': '743',
+			'content-length': '742',
 			'content-type': 'application/x-protobuf',
 			'vary': 'accept-encoding',
 		});
