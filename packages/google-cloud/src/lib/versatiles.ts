@@ -30,7 +30,7 @@ export async function serveVersatiles(file: File, path: string, query: string, r
 		const reader: Reader = async (position: number, length: number): Promise<Buffer> => {
 			return new Promise<Buffer>((resolve, reject) => {
 				const buffers = Array<Buffer>();
-				file.createReadStream({ start: position, end: position + length })
+				file.createReadStream({ start: position, end: position + length - 1 })
 					.on('data', (chunk: Buffer) => buffers.push(chunk))
 					.on('end', () => {
 						resolve(Buffer.concat(buffers));

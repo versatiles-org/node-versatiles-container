@@ -16,7 +16,7 @@ export function createLocalDirectoryBucket(basePath: string): Bucket {
 					const stat = statSync(path);
 					return [{ size: stat.size }];
 				},
-				createReadStream: (options?: { start: number; end: number }): Readable => createReadStream(path, options),
+				createReadStream: (opt?: { start: number; end: number }): Readable => createReadStream(path, opt),
 			} as unknown as File;
 		},
 	} as unknown as Bucket;
