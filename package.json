@@ -16,6 +16,7 @@
     "check": "npm run lint && npm run build && npm run test",
     "doc": "npm run build -w @versatiles/release-tool && npm run doc -ws --if-present",
     "lint": "npm run build-deps && eslint . --color",
+    "prepack": "npm run prepack -ws --if-present",
     "test-coverage": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test": "npm run build-deps && NODE_OPTIONS=--experimental-vm-modules jest",
     "upgrade": "npm-check-updates -u -ws --root && rm -f package-lock.json; rm -rf node_modules */node_modules; npm i -ws --include-workspace-root && npm update -ws --include-workspace-root"

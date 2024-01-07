@@ -24,34 +24,38 @@ program
 	)
 	.argument('<bucket-name>', 'Name of the Google Cloud Storage bucket.')
 	.option('-b, --base-url <url>', 'Set the public base URL. Defaults to "http://localhost:<port>/".')
-	.option('-d, --directory <directory>', 'Set the bucket directory (prefix), e.g., "/public/".')
+	.option('-d, --directory <prefix>', 'Set the bucket directory (prefix), e.g., "/public/".')
 	.option('-f, --fast-recompression', 'Enable faster server responses by avoiding recompression.')
+	.option('-l, --local-directory <path>', 'Ignore bucket and use a local directory instead. (Useful e.g. for local development.)')
 	.option('-p, --port <port>', 'Set the server port. (default: 8080)')
 	.option('-v, --verbose', 'Enable verbose mode for detailed operational logs.')
 	.action((bucketName: string, cmdOptions: Record<string, unknown>) => {
 
 		const port = Number(cmdOptions.port ?? 8080);
-		const fastRecompression = Boolean(cmdOptions.fastRecompression ?? false);
 		const baseUrl = String(cmdOptions.baseUrl ?? `http://localhost:${port}/`);
 		const bucketPrefix = String(cmdOptions.directory ?? '');
+		const fastRecompression = Boolean(cmdOptions.fastRecompression ?? false);
+		const localDirectory: string | undefined = Boolean(cmdOptions.localDirectory) ? String(cmdOptions.localDirectory) : undefined;
 		const verbose = Boolean(cmdOptions.verbose ?? false);
 
 		if (verbose) {
 			console.table({
-				port,
-				fastRecompression,
 				baseUrl,
 				bucketPrefix,
+				fastRecompression,
+				localDirectory,
+				port,
 				verbose,
 			});
 		}
 
 		try {
-			startServer({
+			void startServer({
 				baseUrl,
 				bucket: bucketName,
 				bucketPrefix,
 				fastRecompression,
+				localDirectory,
 				port,
 				verbose,
 			});

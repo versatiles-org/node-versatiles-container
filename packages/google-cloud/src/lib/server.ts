@@ -5,6 +5,7 @@ import { Storage } from '@google-cloud/storage';
 import { Responder } from './responder.js';
 import { recompress } from './recompress.js';
 import { serveVersatiles } from './versatiles.js';
+import { createLocalDirectoryBucket } from './localDirectoryBucket.js';
 
 
 
@@ -13,18 +14,27 @@ export interface ServerOptions {
 	bucket: Bucket | string;
 	bucketPrefix: string;
 	fastRecompression: boolean;
+	localDirectory?: string;
 	port: number;
 	verbose: boolean;
 }
 
-export function startServer(opt: ServerOptions): Server | null {
-	const { bucket, port, fastRecompression, verbose } = opt;
+export async function startServer(opt: ServerOptions): Promise<Server | null> {
+	const { port, fastRecompression, verbose } = opt;
 	let bucketPrefix = opt.bucketPrefix.replace(/^\/+|\/+$/g, '');
 	if (bucketPrefix !== '') bucketPrefix += '/';
 
 	const baseUrl = new URL(opt.baseUrl).href;
 	const storage = new Storage();
-	const bucketStorage = (typeof bucket == 'string') ? storage.bucket(bucket) : bucket;
+
+	let bucket: Bucket;
+	if (typeof opt.localDirectory == 'string') {
+		bucket = createLocalDirectoryBucket(opt.localDirectory);
+	} else if (typeof opt.bucket == 'string') {
+		bucket = storage.bucket(opt.bucket);
+	} else {
+		({ bucket } = opt);
+	}
 
 	let requestNo = 0;
 
@@ -61,7 +71,7 @@ export function startServer(opt: ServerOptions): Server | null {
 				}
 
 				if (verbose) console.log(`  #${requestNo} request filename: ${bucketPrefix + filename}`);
-				const file = bucketStorage.file(bucketPrefix + filename);
+				const file = bucket.file(bucketPrefix + filename);
 
 				const [exists] = await file.exists();
 				if (!exists) {
@@ -105,8 +115,11 @@ export function startServer(opt: ServerOptions): Server | null {
 		})();
 	});
 
-	return app.listen(port, () => {
-		console.log(`listening on port ${port}`);
-		console.log(`you can find me at ${baseUrl}`);
+	return new Promise(res => {
+		const server = app.listen(port, () => {
+			console.log(`listening on port ${port}`);
+			console.log(`you can find me at ${baseUrl}`);
+			res(server);
+		});
 	});
 }

@@ -39,19 +39,21 @@ For more details, visit:
 https://github.com/versatiles-org/node-versatiles/blob/main/packages/google-cloud/README.md
 
 Arguments:
-  bucket-name                  Name of the Google Cloud Storage bucket.
+  bucket-name                   Name of the Google Cloud Storage bucket.
 
 Options:
-  -b, --base-url <url>         Set the public base URL. Defaults to
-                               "http://localhost:<port>/".
-  -d, --directory <directory>  Set the bucket directory (prefix), e.g.,
-                               "/public/".
-  -f, --fast-recompression     Enable faster server responses by avoiding
-                               recompression.
-  -p, --port <port>            Set the server port. (default: 8080)
-  -v, --verbose                Enable verbose mode for detailed operational
-                               logs.
-  -h, --help                   display help for command
+  -b, --base-url <url>          Set the public base URL. Defaults to
+                                "http://localhost:<port>/".
+  -d, --directory <prefix>      Set the bucket directory (prefix), e.g.,
+                                "/public/".
+  -f, --fast-recompression      Enable faster server responses by avoiding
+                                recompression.
+  -l, --local-directory <path>  Ignore bucket and use a local directory
+                                instead. (Useful e.g. for local development.)
+  -p, --port <port>             Set the server port. (default: 8080)
+  -v, --verbose                 Enable verbose mode for detailed operational
+                                logs.
+  -h, --help                    display help for command
 ```
 
 ## License

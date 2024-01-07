@@ -4,7 +4,7 @@ import type { Command } from 'commander';
 import type { startServer } from './lib/server.js';
 import { jest } from '@jest/globals';
 
-const mockedStartServer = jest.fn<typeof startServer>().mockReturnValue(null);
+const mockedStartServer = jest.fn<typeof startServer>().mockResolvedValue(null);
 jest.unstable_mockModule('./lib/server.js', () => ({ startServer: mockedStartServer }));
 
 jest.mock('node:process');
@@ -21,6 +21,7 @@ describe('index.ts', () => {
 		fastRecompression: false,
 		port: 8080,
 		verbose: false,
+		localDirectory: undefined,
 	};
 
 	beforeEach(() => {
@@ -31,6 +32,12 @@ describe('index.ts', () => {
 		await run('test-bucket');
 		expect(mockedStartServer).toHaveBeenCalledTimes(1);
 		expect(mockedStartServer).toHaveBeenCalledWith({ ...defaultResults });
+	});
+
+	test('starts server in local directory mode', async () => {
+		await run('test-bucket', '-l', '.');
+		expect(mockedStartServer).toHaveBeenCalledTimes(1);
+		expect(mockedStartServer).toHaveBeenCalledWith({ ...defaultResults, localDirectory: '.' });
 	});
 
 	test('starts server with base URL', async () => {
