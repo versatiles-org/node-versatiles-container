@@ -126,10 +126,22 @@ describe('Server Tests', () => {
 			expect(response.text).toBe('static file');
 		});
 
+		test('serve versatiles meta', async () => {
+			const response = await server.get('/geodata/test.versatiles?meta.json');
+			expect(response.status).toBe(200);
+			expect(response.text).toMatch(/^{"vector_layers"/);
+		});
+
+		test('serve versatiles style', async () => {
+			const response = await server.get('/geodata/test.versatiles?style.json');
+			expect(response.status).toBe(200);
+			expect(response.text).toMatch(/^{"version":8/);
+		});
+
 		test('serve versatiles preview', async () => {
 			const response = await server.get('/geodata/test.versatiles?preview');
 			expect(response.status).toBe(200);
-			expect(response.text.startsWith('<!DOCTYPE html>')).toBeTruthy();
+			expect(response.text).toMatch(/^<!DOCTYPE html>/);
 		});
 
 		test('serve versatiles tile', async () => {
@@ -178,6 +190,24 @@ describe('Server Tests', () => {
 			const response = await server.get('/static/file');
 			expect(response.status).toBe(404);
 			expect(response.text).toBe('file "static/file" not found');
+		});
+
+		test('serve versatiles meta', async () => {
+			const response = await server.get('/testdata/island.versatiles?meta.json');
+			expect(response.status).toBe(200);
+			expect(response.text).toMatch(/^{"vector_layers"/);
+		});
+
+		test('serve versatiles style', async () => {
+			const response = await server.get('/testdata/island.versatiles?style.json');
+			expect(response.status).toBe(200);
+			expect(response.text).toMatch(/^{"version":8/);
+		});
+
+		test('serve versatiles preview', async () => {
+			const response = await server.get('/testdata/island.versatiles?preview');
+			expect(response.status).toBe(200);
+			expect(response.text).toMatch(/^<!DOCTYPE html>/);
 		});
 	});
 });
