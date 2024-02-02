@@ -122,7 +122,6 @@ describe('Server', () => {
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const style = await response.json();
 		expect(style).toMatchObject({
 			version: 8,
@@ -130,7 +129,15 @@ describe('Server', () => {
 			glyphs: `http://localhost:${port}/assets/fonts/{fontstack}/{range}.pbf`,
 		});
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		expect(style).toBeDefined();
+		expect(style).toHaveProperty('layers');
+
+		if (style == null) throw Error();
+		if (!(typeof style === 'object')) throw Error();
+		if (!('layers' in style)) throw Error();
+		if (style.layers == null) throw Error();
+		if (!Array.isArray(style.layers)) throw Error();
+
 		expect(style.layers[0]).toMatchObject({
 			id: 'background',
 			paint: { 'background-color': '#f9f4ee' },
