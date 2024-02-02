@@ -1,4 +1,4 @@
-[![Code Coverage](https://codecov.io/gh/versatiles-org/node-versatiles-container/branch/main/graph/badge.svg?token=IDHAI13M0K)](https://codecov.io/gh/versatiles-org/node-versatiles-container)
+[![Code Coverage](https://codecov.io/gh/versatiles-org/node-versatiles/branch/main/graph/badge.svg?token=IDHAI13M0K)](https://codecov.io/gh/versatiles-org/node-versatiles)
 [![GitHub Workflow Status)](https://img.shields.io/github/actions/workflow/status/versatiles-org/node-versatiles-container/ci.yml)](https://github.com/versatiles-org/node-versatiles-container/actions/workflows/ci.yml)
 
 A client library for [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec).
