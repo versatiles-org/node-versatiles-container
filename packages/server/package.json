@@ -56,9 +56,9 @@
     "open": "^10.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.11.10",
+    "@types/node": "^20.11.16",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
-    "@versatiles/release-tool": "^1.0.3"
+    "@versatiles/release-tool": "^1.2.0"
   }
 }
