@@ -27,7 +27,7 @@ jobs:
 
       - name: Cache Node Modules
         id: cache-node-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -55,6 +55,6 @@ jobs:
         run: npm run test-coverage
 
       - name: Upload test coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
