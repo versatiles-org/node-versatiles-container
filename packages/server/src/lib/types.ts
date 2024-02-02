@@ -1,4 +1,4 @@
-import type { Compression, Header } from '@versatiles/container';
+import type { Compression, Format } from '@versatiles/container';
 
 export interface ContentResponse {
 	buffer: Buffer | string;
@@ -24,6 +24,9 @@ export interface ServerOptions {
 }
 
 export interface ContainerInfo {
-	header: Header;
+	header: {
+		tileFormat: Format;
+		bbox: [number, number, number, number];
+	};
 	metadata?: string;
 }

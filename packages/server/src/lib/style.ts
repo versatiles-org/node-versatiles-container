@@ -8,6 +8,7 @@ import type { ContainerInfo, ServerOptions } from './types.js';
  * @param {Record<string, any>} options - An object containing options for style generation.
  * @returns {Promise<string>} A promise that resolves to a style string.
  */
+
 export function generateStyle(containerInfo: ContainerInfo, options: ServerOptions): string {
 	if (typeof options.port !== 'number') throw Error('generateStyle: port must be defined');
 
