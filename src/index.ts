@@ -8,11 +8,11 @@ export type { Compression, Format, Header, OpenOptions, Reader } from './lib/int
 
 
 const FORMATS: Record<string, (Format | null)[]> = {
-	'c01': ['png', 'jpeg', 'webp', null, null, null, null, null, null, null, null, null, null, null, null, null, 'pbf'],
-	'v01': ['png', 'jpeg', 'webp', 'pbf'],
+	'c01': ['png', 'jpg', 'webp', null, null, null, null, null, null, null, null, null, null, null, null, null, 'pbf'],
+	'v01': ['png', 'jpg', 'webp', 'pbf'],
 	'v02': [
 		'bin', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-		'png', 'jpeg', 'webp', 'avif', 'svg', null, null, null, null, null, null, null, null, null, null, null,
+		'png', 'jpg', 'webp', 'avif', 'svg', null, null, null, null, null, null, null, null, null, null, null,
 		'pbf', 'geojson', 'topojson', 'json',
 	],
 };
@@ -21,7 +21,7 @@ const MIMETYPES: Record<Format, string> = {
 	'avif': 'image/avif',
 	'bin': 'application/octet-stream',
 	'geojson': 'application/geo+json; charset=utf-8',
-	'jpeg': 'image/jpeg',
+	'jpg': 'image/jpeg',
 	'json': 'application/json; charset=utf-8',
 	'pbf': 'application/x-protobuf',
 	'png': 'image/png',

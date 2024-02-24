@@ -8,7 +8,7 @@ export type Compression = 'br' | 'gzip' | 'raw';
 /**
  * Supported tile formats.
  */
-export type Format = 'avif' | 'bin' | 'geojson' | 'jpeg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
+export type Format = 'avif' | 'bin' | 'geojson' | 'jpg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
 
 
 /**
