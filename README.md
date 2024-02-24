@@ -28,11 +28,11 @@ fs.writeFileSync('tile.' + header.tile_format, tile);
 ### Class: `Container`<a id="class_container"></a>
 
 The `VersaTiles` class is a wrapper around a `.versatiles` container file. It provides methods\
-to access tile data, metadata, and other properties within the container. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/63b3b03/src/index.ts#L38">\[src]</a></sup>
+to access tile data, metadata, and other properties within the container. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/67a9864/src/index.ts#L38">\[src]</a></sup>
 
 #### Constructor: `new Container(source, options)`
 
-Constructs a new instance of the VersaTiles class. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/63b3b03/src/index.ts#L59">\[src]</a></sup>
+Constructs a new instance of the VersaTiles class. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/67a9864/src/index.ts#L59">\[src]</a></sup>
 
 **Parameters:**
 
@@ -44,7 +44,7 @@ Constructs a new instance of the VersaTiles class. <sup><a href="https://github.
 
 #### Method: `getHeader()`
 
-Asynchronously retrieves the header information from the `.versatiles` container. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/63b3b03/src/index.ts#L81">\[src]</a></sup>
+Asynchronously retrieves the header information from the `.versatiles` container. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/67a9864/src/index.ts#L81">\[src]</a></sup>
 
 **Returns:** <code>Promise<[Header](#interface_header)></code>
 
@@ -52,7 +52,7 @@ Asynchronously retrieves the header information from the `.versatiles` container
 
 Asynchronously retrieves the metadata associated with the `.versatiles` container.\
 Metadata typically includes information about `vector_layers` for vector tiles.
-If the container does not include metadata, this method returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/63b3b03/src/index.ts#L128">\[src]</a></sup>
+If the container does not include metadata, this method returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/67a9864/src/index.ts#L128">\[src]</a></sup>
 
 **Returns:** <code>Promise\<undefined | string></code>
 
@@ -61,7 +61,7 @@ If the container does not include metadata, this method returns `null`. <sup><a 
 Asynchronously retrieves a specific tile's data as a Buffer. If the tile data is compressed as\
 defined in the container header, the returned Buffer will contain the compressed data.
 To obtain uncompressed data, use the `getTileUncompressed` method.
-If the specified tile does not exist, the method returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/63b3b03/src/index.ts#L155">\[src]</a></sup>
+If the specified tile does not exist, the method returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/67a9864/src/index.ts#L155">\[src]</a></sup>
 
 **Parameters:**
 
@@ -79,7 +79,7 @@ If the specified tile does not exist, the method returns `null`. <sup><a href="h
 Asynchronously retrieves a specific tile's uncompressed data as a Buffer. This method first\
 retrieves the compressed tile data using `getTile` and then decompresses it based on the
 compression setting in the container header.
-If the specified tile does not exist, the method returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/63b3b03/src/index.ts#L203">\[src]</a></sup>
+If the specified tile does not exist, the method returns `null`. <sup><a href="https://github.com/versatiles-org/node-versatiles-container/blob/67a9864/src/index.ts#L203">\[src]</a></sup>
 
 **Parameters:**
 
