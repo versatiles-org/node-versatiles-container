@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { createHash } from 'node:crypto';
-import { Container } from './index.js';
+import { Container } from './index';
 
 const TESTFILE = new URL('../testdata/island.versatiles', import.meta.url).pathname;
 

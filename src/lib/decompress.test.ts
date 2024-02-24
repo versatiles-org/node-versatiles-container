@@ -1,4 +1,4 @@
-import { decompress } from './decompress.js'; // Adjust the import path to where your module is
+import { decompress } from './decompress';
 import { brotliCompressSync, gzipSync } from 'zlib';
 
 describe('decompress', () => {

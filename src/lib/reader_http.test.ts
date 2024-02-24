@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import http from 'http';
-import getHTTPReader from './reader_http.js';
-import type { Reader } from './interfaces.js';
+import getHTTPReader from './reader_http';
+import type { Reader } from './interfaces';
 
 describe('getHTTPReader', () => {
 	let server: http.Server;
