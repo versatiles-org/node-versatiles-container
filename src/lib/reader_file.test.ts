@@ -1,5 +1,5 @@
 import { statSync } from 'fs';
-import getFileReader from './reader_file';
+import getFileReader from './reader_file.js';
 
 const TESTFILE = new URL('../../testdata/island.versatiles', import.meta.url).pathname;
 

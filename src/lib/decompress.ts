@@ -1,5 +1,5 @@
 import zlib from 'zlib';
-import type { Compression } from './interfaces';
+import type { Compression } from './interfaces.js';
 
 /**
  * Decompresses a buffer using the specified compression algorithm. Currently supports 'br' for Brotli and 'gzip' for GZIP.

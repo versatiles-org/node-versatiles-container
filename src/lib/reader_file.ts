@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import type { Reader } from './interfaces';
+import type { Reader } from './interfaces.js';
 
 /**
  * Creates a file reader function for reading chunks of data from a file. This reader abstracts

@@ -1,7 +1,7 @@
 import https from 'https';
 import http from 'http';
 import type { IncomingMessage, Agent } from 'http';
-import type { Reader } from './interfaces';
+import type { Reader } from './interfaces.js';
 
 const DEFAULT_TIMEOUT = 10000;
 

@@ -1,4 +1,4 @@
-import { decompress } from './decompress';
+import { decompress } from './decompress.js';
 import { brotliCompressSync, gzipSync } from 'zlib';
 
 describe('decompress', () => {
