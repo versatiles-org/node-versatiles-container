@@ -5,12 +5,12 @@ A client library for [VersaTiles containers](https://github.com/versatiles-org/v
 
 # Install
 
-`npm i @versatiles/container"`
+`npm i @versatiles/container`
 
 # Usage Example
 
 ```js
-import VersaTiles from '@versatiles/container"';
+import VersaTiles from '@versatiles/container';
 import fs from 'fs';
 
 const container = new VersaTiles('https://example.org/planet.versatiles');
