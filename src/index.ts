@@ -265,7 +265,6 @@ export class Container {
 
 		return this.#blockIndex;
 
-		// eslint-disable-next-line @typescript-eslint/max-params
 		function addBlock(buffer: Buffer, blockOffset: bigint, tileIndexOffset: bigint, tileIndexLength: bigint | number): void {
 			const block = {
 				level: buffer.readUInt8(0),

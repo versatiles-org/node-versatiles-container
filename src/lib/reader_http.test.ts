@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import http from 'http';
 import getHTTPReader from './reader_http.js';
 import type { Reader } from './interfaces.js';

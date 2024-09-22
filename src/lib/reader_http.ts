@@ -53,7 +53,6 @@ export default function getHTTPReader(url: string): Reader {
 		}
 
 		const headers = {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'user-agent': 'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
 			'range': `bytes=${position}-${position + length - 1}`,
 		};
@@ -93,7 +92,7 @@ export default function getHTTPReader(url: string): Reader {
 		const contentRange = message.headers['content-range'];
 		if (contentRange == null) throw Error('The response header does not contain "content-range"');
 
-		const parts = /^bytes (\d+)\-(\d+)\/(\d+)/i.exec(contentRange);
+		const parts = /^bytes (\d+)-(\d+)\/(\d+)/i.exec(contentRange);
 		if (parts == null) throw Error('"content-range" in response header is malformed');
 
 		if (position !== parseInt(parts[1], 10)) throw Error(`requestet position (${position}) and returned offset (${parts[1]}) must be equal`);

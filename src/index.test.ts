@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { createHash } from 'node:crypto';
 import { Container } from './index.js';
 
