@@ -1,0 +1,15 @@
+{
+	"name": "@versatiles/container",
+	"version": "1.2.2",
+	"description": "A client library for reading VersaTiles containers",
+	"exports": "./src/index.ts",
+	"publish": {
+		"include": [
+			"src",
+			"README.md"
+		],
+		"exclude": [
+			"**/*.test.ts"
+		]
+	}
+}
