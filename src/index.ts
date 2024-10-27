@@ -1,3 +1,47 @@
+/**
+ * Module: VersaTiles Container Reader
+ *
+ * This module provides functionality to interact with and retrieve data from `.versatiles` container files,
+ * typically used for storing geospatial tile data in a compressed, optimized format. The module supports
+ * multiple file and compression formats, enabling flexibility in handling vector and raster tile data.
+ *
+ * Dependencies:
+ * - `HttpReader` and `FileReader`: Adapters for reading data from HTTP/HTTPS URLs or local files, respectively.
+ * - `decompress`: Utility for decompressing tile data in supported formats.
+ * - Type definitions (`Block`, `Compression`, `Format`, `Header`, `OpenOptions`, `Reader`, and `TileIndex`)
+ *   from the module's `interfaces.js` file to ensure type safety and consistency.
+ *
+ * Exported Constants:
+ * - `FORMATS`: Supported formats organized by version for different tile data, including image formats (e.g., PNG, JPG)
+ *   and vector formats (e.g., PBF).
+ * - `COMPRESSIONS`: Available compression types, including 'raw' (no compression), 'gzip', and 'br' (Brotli).
+ * - `MIMETYPES`: Maps supported tile formats to their respective MIME types for handling and delivery.
+ *
+ * Exported Types:
+ * - The module re-exports `Compression`, `Format`, `Header`, `OpenOptions`, and `Reader` types for use in other modules.
+ *
+ * Primary Class:
+ * - `Container`: A main wrapper class that provides methods to access tile data, metadata, and configuration settings
+ *   for `.versatiles` containers. Methods include `getHeader`, `getMetadata`, `getTile`, and `getTileUncompressed`,
+ *   which enable detailed control and retrieval of tile information, metadata, and decompressed content.
+ *
+ * Usage:
+ * - Create a `Container` instance by providing a data source (URL, file path, or custom Reader function)
+ *   and optional configurations. Call class methods to retrieve container metadata, specific tile data, or
+ *   uncompressed tile content.
+ *
+ * Example:
+ * ```javascript
+ * import { Container } from './versatiles-container.js';
+ * const container = new Container('path/to/versatiles-file');
+ * const metadata = await container.getMetadata();
+ * const tile = await container.getTile(1, 0, 0);
+ * ```
+ *
+ * Error Handling:
+ * - The module includes error handling for unsupported data sources, invalid formats, and other boundary cases
+ *   encountered while reading or decompressing tiles.
+ */
 
 import HttpReader from './lib/reader_http.js';
 import FileReader from './lib/reader_file.js';
