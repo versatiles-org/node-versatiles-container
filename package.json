@@ -1,6 +1,6 @@
 {
   "name": "@versatiles/container",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "A client library for reading VersaTiles containers",
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
