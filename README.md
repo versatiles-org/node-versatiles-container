@@ -10,13 +10,13 @@ A client library for [VersaTiles containers](https://github.com/versatiles-org/v
 # Usage Example
 
 ```js
-import VersaTiles from '@versatiles/container';
-import fs from 'fs';
+import { Container } from "@versatiles/container";
+import fs from "fs";
 
-const container = new VersaTiles('https://example.org/planet.versatiles');
+const container = new Container("https://example.org/planet.versatiles");
 const header = await container.getHeader();
-const tile = await container.getTileUncompressed(z,x,y);
-fs.writeFileSync('tile.' + header.tile_format, tile);
+const tile = await container.getTileUncompressed(z, x, y);
+fs.writeFileSync("tile." + header.tileFormat, tile);
 ```
 
 # API
@@ -36,10 +36,10 @@ Constructs a new instance of the VersaTiles class. <sup><a href="https://github.
 
 **Parameters:**
 
-* <code>source: string | [Reader](#type_reader)</code>\
+- <code>source: string | [Reader](#type_reader)</code>\
   The data source for the tiles. This can be a URL starting with `http://` or `https://`,
   a path to a local file, or a custom `Reader` function that reads data chunks based on offset and length.
-* <code>options: [OpenOptions](#interface_openoptions)</code> (optional)\
+- <code>options: [OpenOptions](#interface_openoptions)</code> (optional)\
   Optional settings that configure tile handling.
 
 #### Method: `getHeader()`
@@ -65,11 +65,11 @@ If the specified tile does not exist, the method returns `null`. <sup><a href="h
 
 **Parameters:**
 
-* <code>z: number</code>\
+- <code>z: number</code>\
   The zoom level of the tile.
-* <code>x: number</code>\
+- <code>x: number</code>\
   The x coordinate of the tile within its zoom level.
-* <code>y: number</code>\
+- <code>y: number</code>\
   The y coordinate of the tile within its zoom level.
 
 **Returns:** <code>Promise\<null | Buffer></code>
@@ -83,11 +83,11 @@ If the specified tile does not exist, the method returns `null`. <sup><a href="h
 
 **Parameters:**
 
-* <code>z: number</code>\
+- <code>z: number</code>\
   The zoom level of the tile.
-* <code>x: number</code>\
+- <code>x: number</code>\
   The x coordinate of the tile within its zoom level.
-* <code>y: number</code>\
+- <code>y: number</code>\
   The y coordinate of the tile within its zoom level.
 
 **Returns:** <code>Promise\<null | Buffer></code>
