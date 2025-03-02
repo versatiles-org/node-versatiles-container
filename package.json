@@ -3,15 +3,17 @@
   "version": "1.2.4",
   "description": "A client library for reading VersaTiles containers",
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && npm run doc-graph",
     "check": "npm run lint && npm run build && npm run test",
-    "doc": "npx vrt ts2md src/index.ts tsconfig.build.json | npx vrt insertmd README.md '# API' true",
+    "doc": "npm run doc-typescript && npm run doc-graph",
+    "doc-typescript": "vrt doc-typescript -f html",
+    "doc-graph": "vrt deps-graph | vrt doc-insert README.md '## Dependency Graph'",
     "lint": "eslint . --color",
-    "prepack": "npm run build && npm run doc",
-    "release": "npx vrt release-npm",
+    "prepack": "npm run build",
+    "release": "vrt release-npm",
     "test-coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "upgrade": "npm-check-updates -u && rm -f package-lock.json; rm -rf node_modules; npm i && npm update"
+    "upgrade": "vrt deps-upgrade"
   },
   "files": [
     "dist/**/*.js",
