@@ -1,4 +1,4 @@
-[![Code Coverage](https://codecov.io/gh/versatiles-org/node-versatiles/branch/main/graph/badge.svg?token=IDHAI13M0K)](https://codecov.io/gh/versatiles-org/node-versatiles)
+[![Code Coverage](https://codecov.io/gh/versatiles-org/node-versatiles-container/branch/main/graph/badge.svg?token=IDHAI13M0K)](https://codecov.io/gh/versatiles-org/node-versatiles-container)
 [![GitHub Workflow Status)](https://img.shields.io/github/actions/workflow/status/versatiles-org/node-versatiles-container/ci.yml)](https://github.com/versatiles-org/node-versatiles-container/actions/workflows/ci.yml)
 
 A client library for [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec).
@@ -20,6 +20,9 @@ fs.writeFileSync("tile." + header.tileFormat, tile);
 ```
 
 # API
+
+You can find a complete documentation of the API at
+<https://versatiles.org/node-versatiles-container/>
 
 ## Dependency Graph
 
@@ -48,7 +51,3 @@ style 2 fill-opacity:0.2
 # License
 
 [Unlicense](./LICENSE.md)
-
-# Future work
-
-This library could be extended to run in a web browser to read VersaTiles containers via `fetch`.
