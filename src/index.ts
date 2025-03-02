@@ -38,7 +38,7 @@ import HttpReader from './lib/reader_http.js';
 import FileReader from './lib/reader_file.js';
 import { decompress } from './lib/decompress.js';
 import type { Block, Compression, Format, Header, OpenOptions, Reader, TileIndex } from './lib/interfaces.js';
-export type { Compression, Format, Header, OpenOptions, Reader } from './lib/interfaces.js';
+export type { Block, Compression, Format, Header, OpenOptions, Reader, TileIndex } from './lib/interfaces.js';
 
 
 
