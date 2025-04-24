@@ -50,4 +50,4 @@ style 2 fill-opacity:0.2
 
 # License
 
-[Unlicense](./LICENSE.md)
+[Unlicense](./LICENSE)
