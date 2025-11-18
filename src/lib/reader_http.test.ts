@@ -2,7 +2,6 @@ import http from 'http';
 import getHTTPReader from './reader_http.js';
 import type { Reader } from './interfaces.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { resolve } from 'path';
 
 describe('getHTTPReader', () => {
 	let server: http.Server;
@@ -32,9 +31,7 @@ describe('getHTTPReader', () => {
 		});
 
 		// Start your server
-		await new Promise<void>(res => server.listen(() => {
-			res();
-		}));
+		await new Promise(r => server.listen(r));
 
 		// Extract the port assigned by the OS
 		const address = server.address();
