@@ -1,6 +1,8 @@
 import http from 'http';
 import getHTTPReader from './reader_http.js';
 import type { Reader } from './interfaces.js';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { resolve } from 'path';
 
 describe('getHTTPReader', () => {
 	let server: http.Server;
@@ -43,11 +45,9 @@ describe('getHTTPReader', () => {
 		read = getHTTPReader(`http://localhost:${port}`);
 	});
 
-	afterAll(done => {
+	afterAll(async () => {
 		// Close the server after the tests
-		server.close(() => {
-			done();
-		});
+		await new Promise(r => server.close(r));
 	});
 
 	it('reads a chunk of data', async () => {

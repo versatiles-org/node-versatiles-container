@@ -1,5 +1,6 @@
 import { decompress } from './decompress.js';
 import { brotliCompressSync, gzipSync } from 'zlib';
+import { describe, expect, it } from 'vitest';
 
 describe('decompress', () => {
 	// Create a sample buffer to work with

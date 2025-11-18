@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Container } from './index.js';
+import { describe, expect, it } from 'vitest';
 
 const TESTFILE = new URL('../testdata/island.versatiles', import.meta.url).pathname;
 
