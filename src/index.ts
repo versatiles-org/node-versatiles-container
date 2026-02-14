@@ -265,7 +265,7 @@ export class Container {
 			case 'c01':
 			case 'v01':
 
-				// check blog index length
+				// check block index length
 				if (data.length % 29 !== 0) throw new Error('invalid block index');
 
 				for (let i = 0; i < data.length; i += 29) {
@@ -280,7 +280,7 @@ export class Container {
 				break;
 			case 'v02':
 
-				// check blog index length
+				// check block index length
 				if (data.length % 33 !== 0) throw new Error('invalid block index');
 
 				for (let i = 0; i < data.length; i += 33) {
