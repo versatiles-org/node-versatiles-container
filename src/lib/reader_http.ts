@@ -35,6 +35,11 @@ const clients: Record<string, ClientInfo> = {
  */
 export default function getHTTPReader(url: string): Reader {
 
+	const protocol = new URL(url).protocol.slice(0, -1);
+	if (!(protocol in clients)) {
+		throw new Error(`Unsupported protocol: ${protocol}`);
+	}
+
 	/**
 	 * Asynchronously reads a data chunk from the provided URL based on the specified range.
 	 *
@@ -56,11 +61,6 @@ export default function getHTTPReader(url: string): Reader {
 			'user-agent': 'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
 			'range': `bytes=${position}-${position + length - 1}`,
 		};
-
-		const protocol = new URL(url).protocol.slice(0, -1);
-		if (!(protocol in clients)) {
-			throw new Error(`Unsupported protocol: ${protocol}`);
-		}
 
 		/**
 		 * Performs the HTTP request and retrieves the response.
