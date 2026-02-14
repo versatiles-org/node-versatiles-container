@@ -95,7 +95,7 @@ export default function getHTTPReader(url: string): Reader {
 		const parts = /^bytes (\d+)-(\d+)\/(\d+)/i.exec(contentRange);
 		if (parts == null) throw Error('"content-range" in response header is malformed');
 
-		if (position !== parseInt(parts[1], 10)) throw Error(`requestet position (${position}) and returned offset (${parts[1]}) must be equal`);
+		if (position !== parseInt(parts[1], 10)) throw Error(`requested position (${position}) and returned offset (${parts[1]}) must be equal`);
 
 		if (position + length > parseInt(parts[3], 10)) {
 			throw new RangeError(`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${parts[3]} bytes.`);
