@@ -14,7 +14,7 @@ describe('decompress', () => {
 
 	it('throw Error on wrong Brotli', async () => {
 		await expect(decompress(bufferGzip, 'br')).rejects
-			.toBe(`Can not decompress buffer (length=${bufferGzip.length}) with "br"`);
+			.toThrow(`Can not decompress buffer (length=${bufferGzip.length}) with "br"`);
 	});
 
 	it('decompress Gzip', async () => {
@@ -23,6 +23,6 @@ describe('decompress', () => {
 
 	it('throw Error on wrong Gzip', async () => {
 		await expect(decompress(bufferBrotli, 'gzip')).rejects
-			.toBe(`Can not decompress buffer (length=${bufferBrotli.length}) with "gzip"`);
+			.toThrow(`Can not decompress buffer (length=${bufferBrotli.length}) with "gzip"`);
 	});
 });
