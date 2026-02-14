@@ -31,7 +31,7 @@ export async function decompress(buffer: Buffer, compression: Compression): Prom
 		 */
 		function handle(error: Error | null, result: Buffer): void {
 			if (error) {
-				reject(`Can not decompress buffer (length=${buffer.length}) with "${compression}"`); return;
+				reject(new Error(`Can not decompress buffer (length=${buffer.length}) with "${compression}": ${error.message}`)); return;
 			} else {
 				resolve(result);
 			}
