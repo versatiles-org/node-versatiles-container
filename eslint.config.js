@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import ts from 'typescript-eslint';
 import parser from '@typescript-eslint/parser';
 import eslint_plugin from '@typescript-eslint/eslint-plugin';
+import prettier from 'eslint-config-prettier';
 
 export default [
 	js.configs.recommended,
@@ -50,5 +51,6 @@ export default [
 				}
 			]
 		}
-	}
+	},
+	prettier,
 ]
