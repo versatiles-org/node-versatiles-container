@@ -68,10 +68,11 @@ export default function getHTTPReader(url: string): Reader {
 		 */
 		const message: IncomingMessage = await new Promise((resolve, reject) => {
 			const watchdog = setTimeout(() => {
+				req.destroy();
 				reject(new Error('Request timed out'));
 			}, DEFAULT_TIMEOUT);
 
-			clients[protocol].client
+			const req = clients[protocol].client
 				.request(url, {
 					method: 'GET',
 					agent: clients[protocol].agent,
@@ -84,6 +85,7 @@ export default function getHTTPReader(url: string): Reader {
 				})
 				.on('error', err => {
 					clearTimeout(watchdog);
+					req.destroy();
 					reject(err);
 				})
 				.end();
