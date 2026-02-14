@@ -4,29 +4,35 @@
  */
 export type Compression = 'br' | 'gzip' | 'raw';
 
-
 /**
  * Supported tile formats.
  */
-export type Format = 'avif' | 'bin' | 'geojson' | 'jpg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
-
+export type Format =
+	| 'avif'
+	| 'bin'
+	| 'geojson'
+	| 'jpg'
+	| 'json'
+	| 'pbf'
+	| 'png'
+	| 'svg'
+	| 'topojson'
+	| 'webp';
 
 /**
  * Type definition for a function that decompresses data.
- * 
+ *
  * @param {Buffer} data - The compressed data.
  * @param {Compression} compression - The type of compression used.
  * @returns {Promise<Buffer>} - The decompressed data.
  */
 export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
 
-
-
 /**
  * Type definition for reading content from a VersaTiles container.
- * 
+ *
  * This is useful for implementing new container readers, e.g. reading over other network protocols.
- * 
+ *
  * @param {number} position - The byte offset at which to start reading.
  * @param {number} length - The number of bytes to read.
  * @returns {Promise<Buffer>} A promise that resolves with the data read as a Buffer.
@@ -36,11 +42,9 @@ export type Decompressor = (data: Buffer, compression: Compression) => Promise<B
  */
 export type Reader = (position: number, length: number) => Promise<Buffer>;
 
-
-
 /**
  * Interface for the metadata header of a `*.Versatiles` container.
- * 
+ *
  * @property {string} magic - Identifier for the container format, usually "versatiles_v02".
  * @property {string} version - Version of the container format, typically "v02".
  * @property {Format} tileFormat - The format used for storing tiles.
@@ -69,12 +73,10 @@ export interface Header {
 	blockIndexLength: number;
 }
 
-
-
 /**
  * Interface for a block of tiles including necessary metadata.
  * For more details, refer to [spec v02](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#block_index).
- * 
+ *
  * @property {number} level - The zoom level for this block.
  * @property {number} column - The column position of this block at the current zoom level.
  * @property {number} row - The row position of this block at the current zoom level.
@@ -103,11 +105,9 @@ export interface Block {
 	tileIndex?: TileIndex;
 }
 
-
-
 /**
  * Interface for the index structure used for tiles within a block.
- * 
+ *
  * @property {Float64Array} offsets - Array indicating the start byte positions of tiles within the block.
  * @property {Float64Array} lengths - Array specifying the byte lengths of the tiles. A length of 0 means the tile is not stored.
  */
@@ -115,8 +115,6 @@ export interface TileIndex {
 	offsets: Float64Array;
 	lengths: Float64Array;
 }
-
-
 
 /**
  * Interface for defining the options available for reading a container.

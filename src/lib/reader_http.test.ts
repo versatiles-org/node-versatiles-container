@@ -31,7 +31,7 @@ describe('getHTTPReader', () => {
 		});
 
 		// Start your server
-		await new Promise(r => server.listen(r));
+		await new Promise((r) => server.listen(r));
 
 		// Extract the port assigned by the OS
 		const address = server.address();
@@ -44,7 +44,7 @@ describe('getHTTPReader', () => {
 
 	afterAll(async () => {
 		// Close the server after the tests
-		await new Promise(r => server.close(r));
+		await new Promise((r) => server.close(r));
 	});
 
 	it('reads a chunk of data', async () => {
@@ -60,17 +60,23 @@ describe('getHTTPReader', () => {
 	});
 
 	it('position < 0', async () => {
-		await expect(read(-1, 7)).rejects.toThrow('Invalid read position: -1. The read position must be a non-negative integer.');
+		await expect(read(-1, 7)).rejects.toThrow(
+			'Invalid read position: -1. The read position must be a non-negative integer.',
+		);
 		await expect(read(-1, 7)).rejects.toThrow(RangeError);
 	});
 
 	it('length < 0', async () => {
-		await expect(read(15, -1)).rejects.toThrow('Invalid read length: -1. The read length must be a non-negative integer.');
+		await expect(read(15, -1)).rejects.toThrow(
+			'Invalid read length: -1. The read length must be a non-negative integer.',
+		);
 		await expect(read(15, -1)).rejects.toThrow(RangeError);
 	});
 
 	it('position + length > size', async () => {
-		await expect(read(23, 8)).rejects.toThrow('Read range out of bounds: The requested range ends at position 31, which exceeds the file\'s limit of 26 bytes.');
+		await expect(read(23, 8)).rejects.toThrow(
+			"Read range out of bounds: The requested range ends at position 31, which exceeds the file's limit of 26 bytes.",
+		);
 		await expect(read(23, 8)).rejects.toThrow(RangeError);
 	});
 });

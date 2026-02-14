@@ -9,7 +9,6 @@ const DEFAULT_TIMEOUT = 10000;
  * Defines the structure for client and agent information specific to HTTP and HTTPS protocols.
  */
 interface ClientInfo {
-
 	/** HTTP or HTTPS client module. */
 	client: typeof http | typeof https;
 
@@ -34,7 +33,6 @@ const clients: Record<string, ClientInfo> = {
  * @returns A `Reader` function that asynchronously reads a specified chunk of data from the URL.
  */
 export default function getHTTPReader(url: string): Reader {
-
 	const protocol = new URL(url).protocol.slice(0, -1);
 	if (!(protocol in clients)) {
 		throw new Error(`Unsupported protocol: ${protocol}`);
@@ -51,15 +49,20 @@ export default function getHTTPReader(url: string): Reader {
 	 */
 	return async function read(position: number, length: number): Promise<Buffer> {
 		if (position < 0) {
-			throw new RangeError(`Invalid read position: ${position}. The read position must be a non-negative integer.`);
+			throw new RangeError(
+				`Invalid read position: ${position}. The read position must be a non-negative integer.`,
+			);
 		}
 		if (length < 0) {
-			throw new RangeError(`Invalid read length: ${length}. The read length must be a non-negative integer.`);
+			throw new RangeError(
+				`Invalid read length: ${length}. The read length must be a non-negative integer.`,
+			);
 		}
 
 		const headers = {
-			'user-agent': 'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
-			'range': `bytes=${position}-${position + length - 1}`,
+			'user-agent':
+				'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
+			range: `bytes=${position}-${position + length - 1}`,
 		};
 
 		/**
@@ -79,11 +82,11 @@ export default function getHTTPReader(url: string): Reader {
 					headers,
 					timeout: DEFAULT_TIMEOUT,
 				})
-				.on('response', response => {
+				.on('response', (response) => {
 					clearTimeout(watchdog);
 					resolve(response);
 				})
-				.on('error', err => {
+				.on('error', (err) => {
 					clearTimeout(watchdog);
 					req.destroy();
 					reject(err);
@@ -91,7 +94,7 @@ export default function getHTTPReader(url: string): Reader {
 				.end();
 		});
 
-		if ((message.statusCode == null) || Math.floor(message.statusCode / 100) !== 2) {
+		if (message.statusCode == null || Math.floor(message.statusCode / 100) !== 2) {
 			message.destroy();
 			throw new Error(`Server responded with status code: ${message.statusCode} `);
 		}
@@ -102,10 +105,15 @@ export default function getHTTPReader(url: string): Reader {
 		const parts = /^bytes (\d+)-(\d+)\/(\d+)/i.exec(contentRange);
 		if (parts == null) throw Error('"content-range" in response header is malformed');
 
-		if (position !== parseInt(parts[1], 10)) throw Error(`requested position (${position}) and returned offset (${parts[1]}) must be equal`);
+		if (position !== parseInt(parts[1], 10))
+			throw Error(
+				`requested position (${position}) and returned offset (${parts[1]}) must be equal`,
+			);
 
 		if (position + length > parseInt(parts[3], 10)) {
-			throw new RangeError(`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${parts[3]} bytes.`);
+			throw new RangeError(
+				`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${parts[3]} bytes.`,
+			);
 		}
 
 		const returnedLength = parseInt(parts[2], 10) + 1 - position;
@@ -121,7 +129,7 @@ export default function getHTTPReader(url: string): Reader {
 			const buffers: Buffer[] = [];
 			message
 				.on('data', (chunk: Buffer) => buffers.push(chunk))
-				.on('error', err => {
+				.on('error', (err) => {
 					message.destroy();
 					reject(err);
 				})

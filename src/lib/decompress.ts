@@ -15,9 +15,15 @@ import type { Compression } from './interfaces.js';
 export async function decompress(buffer: Buffer, compression: Compression): Promise<Buffer> {
 	return new Promise((resolve, reject) => {
 		switch (compression) {
-			case 'br': zlib.brotliDecompress(buffer, handle); break;
-			case 'gzip': zlib.gunzip(buffer, handle); break;
-			default: resolve(buffer); break;
+			case 'br':
+				zlib.brotliDecompress(buffer, handle);
+				break;
+			case 'gzip':
+				zlib.gunzip(buffer, handle);
+				break;
+			default:
+				resolve(buffer);
+				break;
 		}
 
 		/**
@@ -31,7 +37,12 @@ export async function decompress(buffer: Buffer, compression: Compression): Prom
 		 */
 		function handle(error: Error | null, result: Buffer): void {
 			if (error) {
-				reject(new Error(`Can not decompress buffer (length=${buffer.length}) with "${compression}": ${error.message}`)); return;
+				reject(
+					new Error(
+						`Can not decompress buffer (length=${buffer.length}) with "${compression}": ${error.message}`,
+					),
+				);
+				return;
 			} else {
 				resolve(result);
 			}

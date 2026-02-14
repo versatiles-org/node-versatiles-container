@@ -42,26 +42,37 @@ export default function getFileReader(filename: string): Reader {
 	 */
 	return async function read(position: number, length: number): Promise<Buffer> {
 		if (position < 0) {
-			throw new RangeError(`Invalid read position: ${position}. The read position must be a non-negative integer.`);
+			throw new RangeError(
+				`Invalid read position: ${position}. The read position must be a non-negative integer.`,
+			);
 		}
 		if (length < 0) {
-			throw new RangeError(`Invalid read length: ${length}. The read length must be a non-negative integer.`);
+			throw new RangeError(
+				`Invalid read length: ${length}. The read length must be a non-negative integer.`,
+			);
 		}
 		if (position + length > size) {
-			throw new RangeError(`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${size} bytes.`);
+			throw new RangeError(
+				`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${size} bytes.`,
+			);
 		}
 
 		return new Promise((resolve, reject) => {
-			fs.read(fd, {
-				buffer: Buffer.alloc(length),
-				position,
-				length,
-			}, (err, _, buf) => {
-				if (err) {
-					reject(err); return;
-				}
-				resolve(buf);
-			});
+			fs.read(
+				fd,
+				{
+					buffer: Buffer.alloc(length),
+					position,
+					length,
+				},
+				(err, _, buf) => {
+					if (err) {
+						reject(err);
+						return;
+					}
+					resolve(buf);
+				},
+			);
 		});
 	};
 }

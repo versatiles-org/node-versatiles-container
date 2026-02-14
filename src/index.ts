@@ -37,34 +37,98 @@
 import HttpReader from './lib/reader_http.js';
 import FileReader from './lib/reader_file.js';
 import { decompress } from './lib/decompress.js';
-import type { Block, Compression, Format, Header, OpenOptions, Reader, TileIndex } from './lib/interfaces.js';
-export type { Block, Compression, Format, Header, OpenOptions, Reader, TileIndex } from './lib/interfaces.js';
-
-
+import type {
+	Block,
+	Compression,
+	Format,
+	Header,
+	OpenOptions,
+	Reader,
+	TileIndex,
+} from './lib/interfaces.js';
+export type {
+	Block,
+	Compression,
+	Format,
+	Header,
+	OpenOptions,
+	Reader,
+	TileIndex,
+} from './lib/interfaces.js';
 
 const FORMATS: Record<string, (Format | null)[]> = {
-	'c01': ['png', 'jpg', 'webp', null, null, null, null, null, null, null, null, null, null, null, null, null, 'pbf'],
-	'v01': ['png', 'jpg', 'webp', 'pbf'],
-	'v02': [
-		'bin', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-		'png', 'jpg', 'webp', 'avif', 'svg', null, null, null, null, null, null, null, null, null, null, null,
-		'pbf', 'geojson', 'topojson', 'json',
+	c01: [
+		'png',
+		'jpg',
+		'webp',
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		'pbf',
+	],
+	v01: ['png', 'jpg', 'webp', 'pbf'],
+	v02: [
+		'bin',
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		'png',
+		'jpg',
+		'webp',
+		'avif',
+		'svg',
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		'pbf',
+		'geojson',
+		'topojson',
+		'json',
 	],
 };
 const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br'];
 const MIMETYPES: Record<Format, string> = {
-	'avif': 'image/avif',
-	'bin': 'application/octet-stream',
-	'geojson': 'application/geo+json; charset=utf-8',
-	'jpg': 'image/jpeg',
-	'json': 'application/json; charset=utf-8',
-	'pbf': 'application/x-protobuf',
-	'png': 'image/png',
-	'svg': 'image/svg+xml; charset=utf-8',
-	'topojson': 'application/topo+json; charset=utf-8',
-	'webp': 'image/webp',
+	avif: 'image/avif',
+	bin: 'application/octet-stream',
+	geojson: 'application/geo+json; charset=utf-8',
+	jpg: 'image/jpeg',
+	json: 'application/json; charset=utf-8',
+	pbf: 'application/x-protobuf',
+	png: 'image/png',
+	svg: 'image/svg+xml; charset=utf-8',
+	topojson: 'application/topo+json; charset=utf-8',
+	webp: 'image/webp',
 };
-
 
 /**
  * The `VersaTiles` class is a wrapper around a `.versatiles` container file. It provides methods
@@ -85,7 +149,7 @@ export class Container {
 
 	/**
 	 * Constructs a new instance of the VersaTiles class.
-	 * 
+	 *
 	 * @param source - The data source for the tiles. This can be a URL starting with `http://` or `https://`,
 	 * a path to a local file, or a custom `Reader` function that reads data chunks based on offset and length.
 	 * @param options - Optional settings that configure tile handling.
@@ -109,7 +173,7 @@ export class Container {
 
 	/**
 	 * Asynchronously retrieves the header information from the `.versatiles` container.
-	 * 
+	 *
 	 * @returns A promise that resolves with the header object.
 	 * @throws Will throw an error if the container does not start with expected magic bytes indicating a valid format.
 	 */
@@ -139,16 +203,39 @@ export class Container {
 
 		switch (version) {
 			case 'v01':
-				bbox = [data.readFloatBE(18), data.readFloatBE(22), data.readFloatBE(26), data.readFloatBE(30)];
+				bbox = [
+					data.readFloatBE(18),
+					data.readFloatBE(22),
+					data.readFloatBE(26),
+					data.readFloatBE(30),
+				];
 				break;
 			case 'v02':
-				bbox = [data.readInt32BE(18) / 1e7, data.readInt32BE(22) / 1e7, data.readInt32BE(26) / 1e7, data.readInt32BE(30) / 1e7];
+				bbox = [
+					data.readInt32BE(18) / 1e7,
+					data.readInt32BE(22) / 1e7,
+					data.readInt32BE(26) / 1e7,
+					data.readInt32BE(30) / 1e7,
+				];
 				break;
 			default:
 				throw new Error('Invalid Container');
 		}
 
-		this.#header = { magic, version, tileFormat, tileMime, tileCompression, zoomMin, zoomMax, bbox, metaOffset, metaLength, blockIndexOffset, blockIndexLength };
+		this.#header = {
+			magic,
+			version,
+			tileFormat,
+			tileMime,
+			tileCompression,
+			zoomMin,
+			zoomMax,
+			bbox,
+			metaOffset,
+			metaLength,
+			blockIndexOffset,
+			blockIndexLength,
+		};
 
 		return this.#header;
 	}
@@ -157,7 +244,7 @@ export class Container {
 	 * Asynchronously retrieves the metadata associated with the `.versatiles` container.
 	 * Metadata typically includes information about `vector_layers` for vector tiles.
 	 * If the container does not include metadata, this method returns `null`.
-	 * 
+	 *
 	 * @returns A promise that resolves with an object representing the metadata.
 	 */
 	public async getMetadata(): Promise<string | undefined> {
@@ -181,7 +268,7 @@ export class Container {
 	 * defined in the container header, the returned Buffer will contain the compressed data.
 	 * To obtain uncompressed data, use the `getTileUncompressed` method.
 	 * If the specified tile does not exist, the method returns `null`.
-	 * 
+	 *
 	 * @param z - The zoom level of the tile.
 	 * @param x - The x coordinate of the tile within its zoom level.
 	 * @param y - The y coordinate of the tile within its zoom level.
@@ -199,8 +286,8 @@ export class Container {
 		const by = y >> 8;
 
 		// tile xy (within block)
-		const tx = x & 0xFF;
-		const ty = y & 0xFF;
+		const tx = x & 0xff;
+		const ty = y & 0xff;
 
 		// check if block containing tile is within bounds
 		const blockKey = `${z},${bx},${by}`;
@@ -229,7 +316,7 @@ export class Container {
 	 * retrieves the compressed tile data using `getTile` and then decompresses it based on the
 	 * compression setting in the container header.
 	 * If the specified tile does not exist, the method returns `null`.
-	 * 
+	 *
 	 * @param z - The zoom level of the tile.
 	 * @param x - The x coordinate of the tile within its zoom level.
 	 * @param y - The y coordinate of the tile within its zoom level.
@@ -245,7 +332,7 @@ export class Container {
 	/**
 	 * Asynchronously retrieves a mapping of tile block indices. The map's keys are formatted as "{z},{x},{y}".
 	 * This method is for internal use to manage tile lookup within the container.
-	 * 
+	 *
 	 * @returns A promise that resolves with the block index map.
 	 * @protected
 	 */
@@ -264,22 +351,15 @@ export class Container {
 		switch (header.version) {
 			case 'c01':
 			case 'v01':
-
 				// check block index length
 				if (data.length % 29 !== 0) throw new Error('invalid block index');
 
 				for (let i = 0; i < data.length; i += 29) {
 					const slice = data.subarray(i, i + 29);
-					addBlock(
-						slice,
-						0n,
-						slice.readBigUInt64BE(13),
-						slice.readBigUInt64BE(21),
-					);
+					addBlock(slice, 0n, slice.readBigUInt64BE(13), slice.readBigUInt64BE(21));
 				}
 				break;
 			case 'v02':
-
 				// check block index length
 				if (data.length % 33 !== 0) throw new Error('invalid block index');
 
@@ -296,11 +376,16 @@ export class Container {
 		}
 
 		// build map
-		this.#blockIndex = new Map(blocks.map(b => [`${b.level},${b.column},${b.row}`, b]));
+		this.#blockIndex = new Map(blocks.map((b) => [`${b.level},${b.column},${b.row}`, b]));
 
 		return this.#blockIndex;
 
-		function addBlock(buffer: Buffer, blockOffset: bigint, tileIndexOffset: bigint, tileIndexLength: bigint | number): void {
+		function addBlock(
+			buffer: Buffer,
+			blockOffset: bigint,
+			tileIndexOffset: bigint,
+			tileIndexLength: bigint | number,
+		): void {
 			const block = {
 				level: buffer.readUInt8(0),
 				column: buffer.readUInt32BE(1),
@@ -320,9 +405,9 @@ export class Container {
 	}
 
 	/**
-	 * Asynchronously retrieves the tile index for a specified block. This is an internal method used to 
+	 * Asynchronously retrieves the tile index for a specified block. This is an internal method used to
 	 * maintain a lookup for every tile within a block.
-	 * 
+	 *
 	 * @param block - The block for which to retrieve the tile index.
 	 * @returns A promise that resolves with the tile index.
 	 * @protected
@@ -348,7 +433,7 @@ export class Container {
 
 	/**
 	 * A protected method to read a chunk of data from the source based on the specified offset and length.
-	 * 
+	 *
 	 * @param offset - The offset from the start of the source data to begin reading.
 	 * @param length - The number of bytes to read from the source.
 	 * @returns A promise that resolves with the read data as a Buffer.
