@@ -89,6 +89,11 @@ export default function getHTTPReader(url: string): Reader {
 				.end();
 		});
 
+		if ((message.statusCode == null) || Math.floor(message.statusCode / 100) !== 2) {
+			message.destroy();
+			throw new Error(`Server responded with status code: ${message.statusCode} `);
+		}
+
 		const contentRange = message.headers['content-range'];
 		if (contentRange == null) throw Error('The response header does not contain "content-range"');
 
@@ -104,11 +109,6 @@ export default function getHTTPReader(url: string): Reader {
 		const returnedLength = parseInt(parts[2], 10) + 1 - position;
 		if (length !== returnedLength) {
 			throw new Error(`Returned length (${returnedLength}) is not requested length (${length}).`);
-		}
-
-		if ((message.statusCode == null) || Math.floor(message.statusCode / 100) !== 2) {
-			message.destroy();
-			throw new Error(`Server responded with status code: ${message.statusCode} `);
 		}
 
 		/**
