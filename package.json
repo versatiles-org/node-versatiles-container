@@ -23,7 +23,7 @@
     "type": "git",
     "url": "git+https://github.com/versatiles-org/node-versatiles-container.git"
   },
-  "homepage": "https://github.com/versatiles-org/node-versatiles-container/blob/main/versatiles-container/README.md",
+  "homepage": "https://github.com/versatiles-org/node-versatiles-container",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
