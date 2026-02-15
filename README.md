@@ -1,5 +1,8 @@
-[![Code Coverage](https://codecov.io/gh/versatiles-org/node-versatiles-container/branch/main/graph/badge.svg?token=IDHAI13M0K)](https://codecov.io/gh/versatiles-org/node-versatiles-container)
-[![GitHub Workflow Status)](https://img.shields.io/github/actions/workflow/status/versatiles-org/node-versatiles-container/ci.yml)](https://github.com/versatiles-org/node-versatiles-container/actions/workflows/ci.yml)
+[![NPM version](https://img.shields.io/npm/v/%40versatiles%2Fcontainer)](https://www.npmjs.com/package/@versatiles/container)
+[![NPM downloads](https://img.shields.io/npm/dt/%40versatiles%2Fcontainer)](https://www.npmjs.com/package/@versatiles/container)
+[![Code coverage](https://codecov.io/gh/versatiles-org/node-versatiles-container/branch/main/graph/badge.svg?token=IDHAI13M0K)](https://codecov.io/gh/versatiles-org/node-versatiles-container)
+[![CI status](https://img.shields.io/github/actions/workflow/status/versatiles-org/node-versatiles-container/ci.yml)](https://github.com/versatiles-org/node-versatiles-container/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A client library for [VersaTiles containers](https://github.com/versatiles-org/versatiles-spec).
 
