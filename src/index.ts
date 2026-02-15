@@ -336,7 +336,7 @@ export class Container {
 	 * @returns A promise that resolves with the block index map.
 	 * @protected
 	 */
-	protected async getBlockIndex(): Promise<Map<string, Block>> {
+	public async getBlockIndex(): Promise<Map<string, Block>> {
 		if (this.#blockIndex) return this.#blockIndex;
 
 		const header = await this.getHeader();
@@ -412,7 +412,7 @@ export class Container {
 	 * @returns A promise that resolves with the tile index.
 	 * @protected
 	 */
-	protected async getTileIndex(block: Block): Promise<TileIndex> {
+	public async getTileIndex(block: Block): Promise<TileIndex> {
 		if (block.tileIndex) return block.tileIndex;
 
 		let buffer = await this.read(block.tileIndexOffset, block.tileIndexLength);
