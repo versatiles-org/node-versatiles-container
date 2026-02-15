@@ -3,6 +3,9 @@
 		"lib": [
 			"ESNext"
 		],
+		"types": [
+			"node"
+		],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"target": "ES2022",
