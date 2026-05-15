@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-05-15
+
+### Bug Fixes
+
+- add rootDir to compilerOptions in tsconfig.build.json ([254d234](https://github.com/versatiles-org/node-versatiles-container/commit/254d2342b50f63494e2592e4b26e55f9aefb042a))
+
+### Build System
+
+- **deps:** bump the action group with 2 updates ([46a5006](https://github.com/versatiles-org/node-versatiles-container/commit/46a5006df207b9c6a62414cf92a246396c0fed45))
+- **deps:** bump actions/upload-pages-artifact in the action group ([c56c0d0](https://github.com/versatiles-org/node-versatiles-container/commit/c56c0d0ae8b6a65d764257e3d11f2315ff78abd4))
+
+### Chores
+
+- update devDependencies to latest versions ([f4a8970](https://github.com/versatiles-org/node-versatiles-container/commit/f4a8970d237a65266b7b79cbc899e11fe7152bf0))
+
 ## [1.4.1] - 2026-03-01
 
 ### Bug Fixes
