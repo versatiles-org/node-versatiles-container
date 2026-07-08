@@ -10,9 +10,11 @@ A client library for [VersaTiles containers](https://github.com/versatiles-org/v
 
 `npm i @versatiles/container`
 
-# Usage Example
+# Usage Examples
 
-```js
+## Basic: read a tile and write to disk
+
+```ts
 import { Container } from "@versatiles/container";
 import fs from "fs";
 
@@ -20,7 +22,95 @@ const container = new Container("https://example.org/planet.versatiles");
 const header = await container.getHeader();
 const tile = await container.getTileUncompressed(z, x, y);
 fs.writeFileSync("tile." + header.tileFormat, tile);
+
+// don't forget to close file-backed containers
+await container.close();
 ```
+
+## Inspect tile metadata
+
+VersaTiles containers can carry JSON metadata describing vector tile layers:
+
+```ts
+import { Container } from "@versatiles/container";
+
+const container = new Container("/path/to/layers.versatiles");
+
+const header = await container.getHeader();
+console.log("Format:", header.tileFormat);  // e.g. "pbf"
+console.log("Compression:", header.tileCompression);
+console.log("Zoom range:", header.zoomMin, "â", header.zoomMax);
+console.log("Bounding box:", header.bbox);
+
+const metadata = await container.getMetadata();
+if (metadata) {
+  const parsed = JSON.parse(metadata);
+  console.log("Vector layers:", parsed.vector_layers?.length);
+}
+
+await container.close();
+```
+
+## Iterate tiles in a zoom level
+
+Loop over the block index to discover which blocks exist, then iterate their internal tile grid:
+
+```ts
+import { Container } from "@versatiles/container";
+
+const container = new Container("https://example.org/planet.versatiles");
+const header = await container.getHeader();
+const blockIndex = await container["getBlockIndex"]();
+
+for (const [key, block] of blockIndex) {
+  const [z, bx, by] = key.split(",").map(Number);
+  console.log(`Block z=${z} (${bx},${by}): [${block.colMin}â${block.colMax}, ${block.rowMin}â${block.rowMax}]`);
+
+  // Loop over every tile inside this block
+  for (let tx = block.colMin; tx <= block.colMax; tx++) {
+    for (let ty = block.rowMin; ty <= block.rowMax; ty++) {
+      const tileX = bx * 256 + tx;
+      const tileY = by * 256 + ty;
+      const tile = await container.getTile(z, tileX, tileY);
+      // process tileâ¦
+    }
+  }
+}
+
+await container.close();
+```
+
+## Handle missing tiles
+
+```ts
+const tile = await container.getTileUncompressed(12, 9999, 9999);
+if (!tile) {
+  console.log("Tile does not exist in this container");
+}
+```
+
+## Custom reader (e.g. S3, in-memory)
+
+For custom storage backends, implement the `Reader` interface:
+
+```ts
+import type { Reader } from "@versatiles/container";
+import { Container } from "@versatiles/container";
+
+const myReader: Reader = async (offset, length) => {
+  // e.g. fetch from an S3 bucket or read from a typed array
+  const buffer = Buffer.alloc(length);
+  // â¦ fill buffer with data starting at offset â¦
+  return buffer;
+};
+
+const container = new Container(myReader);
+const header = await container.getHeader();
+```
+
+> **Note:** `getBlockIndex` is a protected method. The examples above use TypeScript
+> bracket access for illustration. In production code, subclass `Container` if you
+> need direct block-index access.
 
 # API
 
