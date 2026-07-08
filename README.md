@@ -82,8 +82,10 @@ await container.close();
 
 ## Handle missing tiles
 
+Coordinates must lie within the zoom level's grid (`0 <= x, y < 2 ** z`), otherwise `getTile` throws a `RangeError`. For a valid coordinate that simply has no data, the container returns `null`:
+
 ```ts
-const tile = await container.getTileUncompressed(12, 9999, 9999);
+const tile = await container.getTileUncompressed(12, 100, 4000);
 if (!tile) {
   console.log("Tile does not exist in this container");
 }
