@@ -275,19 +275,36 @@ export class Container {
 	 * @returns A promise that resolves with the tile data as a Buffer, or null if the tile cannot be found.
 	 */
 	public async getTile(z: number, x: number, y: number): Promise<Buffer | null> {
+		// validate coordinates: must be non-negative integers within the zoom level
+		if (!Number.isInteger(z) || !Number.isInteger(x) || !Number.isInteger(y)) {
+			throw new RangeError(`Tile coordinates must be integers, got z=${z}, x=${x}, y=${y}`);
+		}
+		// zoom is capped at 30: a tile coordinate at higher zoom would exceed 2^30
+		// and no longer be an exact integer under the arithmetic below
+		if (z < 0 || z > 30) {
+			throw new RangeError(`Zoom level must be between 0 and 30, got z=${z}`);
+		}
+		// x and y must lie inside the 2^z × 2^z tile grid for this zoom level
+		const size = 2 ** z;
+		if (x < 0 || x >= size || y < 0 || y >= size) {
+			throw new RangeError(
+				`Tile coordinates out of range for zoom ${z}: x and y must be in [0, ${size}), got x=${x}, y=${y}`,
+			);
+		}
+
 		// when y index is inverted
-		if (this.#options.tms) y = Math.pow(2, z) - y - 1;
+		if (this.#options.tms) y = size - y - 1;
 
 		// ensure block index is loaded
 		const blockIndex = await this.getBlockIndex();
 
-		// block xy
-		const bx = x >> 8;
-		const by = y >> 8;
+		// block xy (avoid bitwise ops: they coerce to int32 and break above zoom 30)
+		const bx = Math.floor(x / 256);
+		const by = Math.floor(y / 256);
 
 		// tile xy (within block)
-		const tx = x & 0xff;
-		const ty = y & 0xff;
+		const tx = x % 256;
+		const ty = y % 256;
 
 		// check if block containing tile is within bounds
 		const blockKey = `${z},${bx},${by}`;

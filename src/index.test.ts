@@ -360,6 +360,30 @@ describe('VersaTiles', () => {
 		it('should return null if the tile cannot be found', async () => {
 			expect(await versatiles.getTile(14, 3750, 4505)).toBeNull();
 		});
+
+		it('should reject non-integer coordinates', async () => {
+			await expect(versatiles.getTile(8, 55.5, 67)).rejects.toThrow(RangeError);
+			await expect(versatiles.getTile(8, 55, 67)).resolves.not.toBeNull();
+		});
+
+		it('should reject negative coordinates', async () => {
+			await expect(versatiles.getTile(8, -1, 67)).rejects.toThrow(RangeError);
+			await expect(versatiles.getTile(-1, 55, 67)).rejects.toThrow(RangeError);
+			await expect(versatiles.getTile(8, 55, -1)).rejects.toThrow(RangeError);
+		});
+
+		it('should reject zoom levels above 30', async () => {
+			await expect(versatiles.getTile(31, 0, 0)).rejects.toThrow(RangeError);
+			await expect(versatiles.getTile(30, 0, 0)).resolves.toBeNull();
+		});
+
+		it('should reject coordinates outside the 2^z grid', async () => {
+			// at zoom 8 the grid is 256×256, so index 256 is out of range
+			await expect(versatiles.getTile(8, 256, 0)).rejects.toThrow(RangeError);
+			await expect(versatiles.getTile(8, 0, 256)).rejects.toThrow(RangeError);
+			// the last valid index (255) must not throw
+			await expect(versatiles.getTile(8, 255, 255)).resolves.toBeNull();
+		});
 	});
 
 	describe('getTileUncompressed', () => {
