@@ -10,9 +10,11 @@ A client library for [VersaTiles containers](https://github.com/versatiles-org/v
 
 `npm i @versatiles/container`
 
-# Usage Example
+# Usage Examples
 
-```js
+## Basic: read a tile and write to disk
+
+```ts
 import { Container } from "@versatiles/container";
 import fs from "fs";
 
@@ -20,6 +22,63 @@ const container = new Container("https://example.org/planet.versatiles");
 const header = await container.getHeader();
 const tile = await container.getTileUncompressed(z, x, y);
 fs.writeFileSync("tile." + header.tileFormat, tile);
+
+// don't forget to close file-backed containers
+await container.close();
+```
+
+## Inspect tile metadata
+
+VersaTiles containers can carry JSON metadata describing vector tile layers:
+
+```ts
+import { Container } from "@versatiles/container";
+
+const container = new Container("/path/to/layers.versatiles");
+
+const header = await container.getHeader();
+console.log("Format:", header.tileFormat);  // e.g. "pbf"
+console.log("Compression:", header.tileCompression);
+console.log("Zoom range:", header.zoomMin, "→", header.zoomMax);
+console.log("Bounding box:", header.bbox);
+
+const metadata = await container.getMetadata();
+if (metadata) {
+  const parsed = JSON.parse(metadata);
+  console.log("Vector layers:", parsed.vector_layers?.length);
+}
+
+await container.close();
+```
+
+## Handle missing tiles
+
+Coordinates must lie within the zoom level's grid (`0 <= x, y < 2 ** z`), otherwise `getTile` throws a `RangeError`. For a valid coordinate that simply has no data, the container returns `null`:
+
+```ts
+const tile = await container.getTileUncompressed(12, 100, 4000);
+if (!tile) {
+  console.log("Tile does not exist in this container");
+}
+```
+
+## Custom reader (e.g. S3, in-memory)
+
+For custom storage backends, implement the `Reader` interface:
+
+```ts
+import type { Reader } from "@versatiles/container";
+import { Container } from "@versatiles/container";
+
+const myReader: Reader = async (offset, length) => {
+  // e.g. fetch from an S3 bucket or read from a typed array
+  const buffer = Buffer.alloc(length);
+  // … fill buffer with data starting at offset …
+  return buffer;
+};
+
+const container = new Container(myReader);
+const header = await container.getHeader();
 ```
 
 # API
