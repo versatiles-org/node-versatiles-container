@@ -118,3 +118,44 @@ describe('getHTTPReader body timeout', () => {
 		await expect(read(0, 5)).rejects.toThrow('Request timed out');
 	});
 });
+
+describe('getHTTPReader error handling', () => {
+	let server: http.Server;
+	let read: Reader;
+
+	beforeAll(async () => {
+		// Server that ignores the Range header and always returns the full body
+		// with a 200 status and no Content-Range header.
+		server = http.createServer((req, res) => {
+			res.writeHead(200, { 'Content-Type': 'text/plain' });
+			res.end('abcdefghijklmnopqrstuvwxyz');
+		});
+
+		await new Promise((r) => server.listen(r));
+		const address = server.address();
+		if (address == null) throw Error();
+		const port =
+			typeof address === 'string' ? parseInt(address.replace(/.*:/, ''), 10) : address.port;
+		read = getHTTPReader(`http://localhost:${port}`);
+	});
+
+	afterAll(async () => {
+		await new Promise((r) => server.close(r));
+	});
+
+	it('rejects a response without "content-range"', async () => {
+		await expect(read(5, 7)).rejects.toThrow(
+			'The response header does not contain "content-range"',
+		);
+	});
+
+	it('does not leak connections across repeated failures', async () => {
+		// If the socket were left undrained, keep-alive would pin it open; each
+		// read must reject promptly instead of hanging or exhausting the pool.
+		for (let i = 0; i < 8; i++) {
+			await expect(read(0, 5)).rejects.toThrow(
+				'The response header does not contain "content-range"',
+			);
+		}
+	});
+});
