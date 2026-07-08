@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
+import { brotliCompressSync } from 'node:zlib';
 import { Container } from './index.js';
+import type { Block } from './index.js';
 import { describe, expect, it } from 'vitest';
 
 const TESTFILE = new URL('../testdata/island.versatiles', import.meta.url).pathname;
@@ -407,6 +409,29 @@ describe('VersaTiles', () => {
 
 		it('should return null if the tile cannot be found', async () => {
 			expect(await versatiles.getTileUncompressed(8, 50, 67)).toBeNull();
+		});
+	});
+
+	describe('getTileIndex', () => {
+		it('throws a descriptive error on a truncated tile index', async () => {
+			// a brotli payload that decompresses to fewer bytes than tileCount * 12
+			const payload = brotliCompressSync(Buffer.alloc(4));
+			const container = new Container(async () => payload);
+			const block = {
+				level: 0,
+				column: 0,
+				row: 0,
+				colMin: 0,
+				rowMin: 0,
+				colMax: 0,
+				rowMax: 0,
+				blockOffset: 0,
+				tileIndexOffset: 1,
+				tileIndexLength: payload.length,
+				tileCount: 5, // needs 5 * 12 = 60 bytes, but only 4 are available
+			} satisfies Block;
+
+			await expect(container.getTileIndex(block)).rejects.toThrow('invalid tile index');
 		});
 	});
 

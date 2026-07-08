@@ -435,6 +435,12 @@ export class Container {
 		let buffer = await this.read(block.tileIndexOffset, block.tileIndexLength);
 		buffer = await decompress(buffer, 'br');
 
+		// each tile entry is 12 bytes (8-byte offset + 4-byte length); guard against
+		// a truncated/corrupt index before indexing into the buffer below
+		if (buffer.length < block.tileCount * 12) {
+			throw new Error('invalid tile index');
+		}
+
 		const offsets = new Float64Array(block.tileCount);
 		const lengths = new Float64Array(block.tileCount);
 
