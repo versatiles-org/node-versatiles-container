@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-08
+
+### Features
+
+- add idle timeout support to getHTTPReader function and enhance tests ([182762a](https://github.com/versatiles-org/node-versatiles-container/commit/182762a89996541ee1976e401a16413ea1754f7c))
+- enhance error handling in getHTTPReader function and add corresponding tests ([b5ad8dc](https://github.com/versatiles-org/node-versatiles-container/commit/b5ad8dc4c9a17d8ef16893f7493ed89bc5845fea))
+- implement close method for Container and Reader, add tests for functionality ([7f18bc6](https://github.com/versatiles-org/node-versatiles-container/commit/7f18bc67aab339a32e43d58bae5133957d4e8100))
+- add validation for tile coordinates in getTile method ([b32e637](https://github.com/versatiles-org/node-versatiles-container/commit/b32e63776b700e9551cf38d1689a3f7e53b4044a))
+- add error handling for truncated tile index in getTileIndex method ([5ea83c8](https://github.com/versatiles-org/node-versatiles-container/commit/5ea83c8127de2c34fc60471008e1435e4f075bc7))
+- add validation for tile offsets exceeding safe integer range in getTileIndex method ([0b7b05d](https://github.com/versatiles-org/node-versatiles-container/commit/0b7b05da26cdd72c6be048850f653e44f03b1552))
+- add clarification on byte offsets storage in Block interface documentation ([6168986](https://github.com/versatiles-org/node-versatiles-container/commit/616898633446dcd2a0aa4b0087e2dda4ab03c1ec))
+- remove ts-node dependency from package.json ([61bc7ba](https://github.com/versatiles-org/node-versatiles-container/commit/61bc7ba116b244d2f003149a038948322224bc0b))
+- remove deprecated 'c01' format from formats definition in index.ts ([5a7c533](https://github.com/versatiles-org/node-versatiles-container/commit/5a7c5338fe37135dd4d580a22884ccf0b41be9a7))
+- expose getTileIndex method in TestContainer and update access modifier in Container ([b0b2bc6](https://github.com/versatiles-org/node-versatiles-container/commit/b0b2bc6c9c0fd0c41bb45765b783fa5e66995d34))
+- update package.json to allow scripts for esbuild@0.28.1 ([66b62d6](https://github.com/versatiles-org/node-versatiles-container/commit/66b62d6ae731f7951a556a0809bdee4dc4400695))
+
+### Tests
+
+- add tests for handling non-2xx HTTP responses and invalid magic bytes ([7cd2a90](https://github.com/versatiles-org/node-versatiles-container/commit/7cd2a90b0c7f225247fd8d733ef406f23d596a95))
+
+### Build System
+
+- **deps-dev:** bump the npm group with 8 updates ([a03e507](https://github.com/versatiles-org/node-versatiles-container/commit/a03e50790cdf50399a98fad7f8b0e625ce821ed4))
+- **deps:** bump the action group with 2 updates ([1d0c6c3](https://github.com/versatiles-org/node-versatiles-container/commit/1d0c6c343182b54b3839bdf464e671bef3d9b0c5))
+
+### Chores
+
+- update devDependencies to latest versions ([650114f](https://github.com/versatiles-org/node-versatiles-container/commit/650114f5fb3666208f32f83cb0bb4fd97dd0418b))
+- update devDependencies to latest versions ([9a2c3ec](https://github.com/versatiles-org/node-versatiles-container/commit/9a2c3ec1cf576e6656b0dd3ebe8af7011215e8cd))
+
+### Styles
+
+- update code formatting ([ce25fdb](https://github.com/versatiles-org/node-versatiles-container/commit/ce25fdb9aa7d49dae2e4e34788b73fd9269c4795))
+
 ## [1.4.2] - 2026-05-15
 
 ### Bug Fixes
