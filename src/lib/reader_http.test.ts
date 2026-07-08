@@ -159,3 +159,30 @@ describe('getHTTPReader error handling', () => {
 		}
 	});
 });
+
+describe('getHTTPReader non-2xx status', () => {
+	let server: http.Server;
+	let read: Reader;
+
+	beforeAll(async () => {
+		server = http.createServer((req, res) => {
+			res.writeHead(404, { 'Content-Type': 'text/plain' });
+			res.end('not found');
+		});
+
+		await new Promise((r) => server.listen(r));
+		const address = server.address();
+		if (address == null) throw Error();
+		const port =
+			typeof address === 'string' ? parseInt(address.replace(/.*:/, ''), 10) : address.port;
+		read = getHTTPReader(`http://localhost:${port}`);
+	});
+
+	afterAll(async () => {
+		await new Promise((r) => server.close(r));
+	});
+
+	it('rejects with the status code on a non-2xx response', async () => {
+		await expect(read(0, 5)).rejects.toThrow('Server responded with status code: 404');
+	});
+});

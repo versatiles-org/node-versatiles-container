@@ -33,6 +33,12 @@ describe('VersaTiles', () => {
 				blockIndexLength: 158,
 			});
 		});
+
+		it('should throw on invalid magic bytes', async () => {
+			// a reader that yields 66 zero-bytes -> magic check fails
+			const container = new Container(async (_, length) => Buffer.alloc(length));
+			await expect(container.getHeader()).rejects.toThrow('Invalid Container');
+		});
 	});
 
 	describe('getMetadata', () => {
@@ -392,6 +398,17 @@ describe('VersaTiles', () => {
 			await expect(versatiles.getTile(8, 0, 256)).rejects.toThrow(RangeError);
 			// the last valid index (255) must not throw
 			await expect(versatiles.getTile(8, 255, 255)).resolves.toBeNull();
+		});
+
+		it('should flip the y coordinate when the tms option is set', async () => {
+			// tms flips y: for z=14 the internal y = 2^14 - y - 1, so the tms
+			// request for y=11878 must resolve to the same tile as plain y=4505.
+			const plain = await versatiles.getTile(14, 3740, 4505);
+			const tmsContainer = new Container(TESTFILE, { tms: true });
+			const flipped = await tmsContainer.getTile(14, 3740, 2 ** 14 - 4505 - 1);
+			expect(flipped).not.toBeNull();
+			expect(hash(flipped)).toEqual(hash(plain));
+			await tmsContainer.close();
 		});
 	});
 
