@@ -30,9 +30,11 @@ const clients: Record<string, ClientInfo> = {
  * operations such as streaming or handling large data in segments.
  *
  * @param url - The URL from which data will be read.
+ * @param timeout - Idle timeout in milliseconds applied both while waiting for the
+ *   response headers and between body chunks. Defaults to {@link DEFAULT_TIMEOUT}.
  * @returns A `Reader` function that asynchronously reads a specified chunk of data from the URL.
  */
-export default function getHTTPReader(url: string): Reader {
+export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIMEOUT): Reader {
 	const protocol = new URL(url).protocol.slice(0, -1);
 	if (!(protocol in clients)) {
 		throw new Error(`Unsupported protocol: ${protocol}`);
@@ -73,14 +75,14 @@ export default function getHTTPReader(url: string): Reader {
 			const watchdog = setTimeout(() => {
 				req.destroy();
 				reject(new Error('Request timed out'));
-			}, DEFAULT_TIMEOUT);
+			}, timeout);
 
 			const req = clients[protocol].client
 				.request(url, {
 					method: 'GET',
 					agent: clients[protocol].agent,
 					headers,
-					timeout: DEFAULT_TIMEOUT,
+					timeout,
 				})
 				.on('response', (response) => {
 					clearTimeout(watchdog);
@@ -123,17 +125,34 @@ export default function getHTTPReader(url: string): Reader {
 
 		/**
 		 * Collects and concatenates response data chunks into a buffer.
+		 *
+		 * An idle watchdog guards the download: it aborts the request if no data
+		 * chunk arrives within `DEFAULT_TIMEOUT`. The timer is reset on every chunk,
+		 * so a slow-but-progressing transfer is not killed, while a stalled socket is.
 		 * @type {Buffer}
 		 */
 		const body: Buffer = await new Promise((resolve, reject) => {
 			const buffers: Buffer[] = [];
+
+			const watchdog = setTimeout(onTimeout, timeout);
+
+			function onTimeout(): void {
+				message.destroy();
+				reject(new Error('Request timed out'));
+			}
+
 			message
-				.on('data', (chunk: Buffer) => buffers.push(chunk))
+				.on('data', (chunk: Buffer) => {
+					watchdog.refresh();
+					buffers.push(chunk);
+				})
 				.on('error', (err) => {
+					clearTimeout(watchdog);
 					message.destroy();
 					reject(err);
 				})
 				.once('end', () => {
+					clearTimeout(watchdog);
 					resolve(Buffer.concat(buffers));
 				});
 		});

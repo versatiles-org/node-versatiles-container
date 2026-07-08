@@ -80,3 +80,41 @@ describe('getHTTPReader', () => {
 		await expect(read(23, 8)).rejects.toThrow(RangeError);
 	});
 });
+
+describe('getHTTPReader body timeout', () => {
+	let server: http.Server;
+	let port: number;
+
+	beforeAll(async () => {
+		// Server that sends valid range headers and a partial chunk, then stalls
+		// forever without ending the response, simulating a hung download.
+		server = http.createServer((req, res) => {
+			const data = 'abcdefghijklmnopqrstuvwxyz';
+			const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
+			const start = parseInt(range[0], 10);
+			const end = parseInt(range[1], 10);
+			res.writeHead(206, {
+				'Content-Range': `bytes ${start}-${end}/${data.length}`,
+				'Content-Length': end - start + 1,
+				'Content-Type': 'text/plain',
+			});
+			// send one byte, then never finish
+			res.write(data.substring(start, start + 1));
+		});
+
+		await new Promise((r) => server.listen(r));
+		const address = server.address();
+		if (address == null) throw Error();
+		port = typeof address === 'string' ? parseInt(address.replace(/.*:/, ''), 10) : address.port;
+	});
+
+	afterAll(async () => {
+		await new Promise((r) => server.close(r));
+	});
+
+	it('rejects when the body stalls beyond the idle timeout', async () => {
+		// short timeout so the test stays fast
+		const read = getHTTPReader(`http://localhost:${port}`, 200);
+		await expect(read(0, 5)).rejects.toThrow('Request timed out');
+	});
+});
