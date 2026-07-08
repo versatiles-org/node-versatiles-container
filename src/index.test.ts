@@ -1,10 +1,17 @@
 import { createHash } from 'node:crypto';
 import { brotliCompressSync } from 'node:zlib';
 import { Container } from './index.js';
-import type { Block } from './index.js';
+import type { Block, TileIndex } from './index.js';
 import { describe, expect, it } from 'vitest';
 
 const TESTFILE = new URL('../testdata/island.versatiles', import.meta.url).pathname;
+
+// exposes the protected internal methods for testing
+class TestContainer extends Container {
+	public getTileIndex(block: Block): Promise<TileIndex> {
+		return super.getTileIndex(block);
+	}
+}
 
 describe('VersaTiles', () => {
 	const versatiles = new Container(TESTFILE);
@@ -416,7 +423,7 @@ describe('VersaTiles', () => {
 		it('throws a descriptive error on a truncated tile index', async () => {
 			// a brotli payload that decompresses to fewer bytes than tileCount * 12
 			const payload = brotliCompressSync(Buffer.alloc(4));
-			const container = new Container(async () => payload);
+			const container = new TestContainer(async () => payload);
 			const block = {
 				level: 0,
 				column: 0,
@@ -440,7 +447,7 @@ describe('VersaTiles', () => {
 			raw.writeBigUInt64BE(2n ** 53n, 0);
 			raw.writeUInt32BE(10, 8);
 			const payload = brotliCompressSync(raw);
-			const container = new Container(async () => payload);
+			const container = new TestContainer(async () => payload);
 			const block = {
 				level: 0,
 				column: 0,
