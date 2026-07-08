@@ -39,7 +39,7 @@ const container = new Container("/path/to/layers.versatiles");
 const header = await container.getHeader();
 console.log("Format:", header.tileFormat);  // e.g. "pbf"
 console.log("Compression:", header.tileCompression);
-console.log("Zoom range:", header.zoomMin, "â", header.zoomMax);
+console.log("Zoom range:", header.zoomMin, "→", header.zoomMax);
 console.log("Bounding box:", header.bbox);
 
 const metadata = await container.getMetadata();
@@ -64,7 +64,7 @@ const blockIndex = await container["getBlockIndex"]();
 
 for (const [key, block] of blockIndex) {
   const [z, bx, by] = key.split(",").map(Number);
-  console.log(`Block z=${z} (${bx},${by}): [${block.colMin}â${block.colMax}, ${block.rowMin}â${block.rowMax}]`);
+  console.log(`Block z=${z} (${bx},${by}): [${block.colMin}–${block.colMax}, ${block.rowMin}–${block.rowMax}]`);
 
   // Loop over every tile inside this block
   for (let tx = block.colMin; tx <= block.colMax; tx++) {
@@ -72,7 +72,7 @@ for (const [key, block] of blockIndex) {
       const tileX = bx * 256 + tx;
       const tileY = by * 256 + ty;
       const tile = await container.getTile(z, tileX, tileY);
-      // process tileâ¦
+      // process tile…
     }
   }
 }
@@ -100,7 +100,7 @@ import { Container } from "@versatiles/container";
 const myReader: Reader = async (offset, length) => {
   // e.g. fetch from an S3 bucket or read from a typed array
   const buffer = Buffer.alloc(length);
-  // â¦ fill buffer with data starting at offset â¦
+  // … fill buffer with data starting at offset …
   return buffer;
 };
 
