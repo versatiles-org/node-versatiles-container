@@ -433,6 +433,30 @@ describe('VersaTiles', () => {
 
 			await expect(container.getTileIndex(block)).rejects.toThrow('invalid tile index');
 		});
+
+		it('throws when a tile offset exceeds the safe integer range', async () => {
+			// one 12-byte entry whose 8-byte offset is 2^53 (just past MAX_SAFE_INTEGER)
+			const raw = Buffer.alloc(12);
+			raw.writeBigUInt64BE(2n ** 53n, 0);
+			raw.writeUInt32BE(10, 8);
+			const payload = brotliCompressSync(raw);
+			const container = new Container(async () => payload);
+			const block = {
+				level: 0,
+				column: 0,
+				row: 0,
+				colMin: 0,
+				rowMin: 0,
+				colMax: 0,
+				rowMax: 0,
+				blockOffset: 0,
+				tileIndexOffset: 1,
+				tileIndexLength: payload.length,
+				tileCount: 1,
+			} satisfies Block;
+
+			await expect(container.getTileIndex(block)).rejects.toThrow('safe integer range');
+		});
 	});
 
 	describe('close', () => {

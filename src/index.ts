@@ -445,7 +445,13 @@ export class Container {
 		const lengths = new Float64Array(block.tileCount);
 
 		for (let i = 0; i < block.tileCount; i++) {
-			offsets[i] = Number(buffer.readBigUInt64BE(12 * i)) + block.blockOffset;
+			const offset = Number(buffer.readBigUInt64BE(12 * i)) + block.blockOffset;
+			// offsets are addressed as `number`; beyond 2^53 they can no longer be
+			// represented exactly, so surface it instead of reading corrupt data
+			if (!Number.isSafeInteger(offset)) {
+				throw new Error('invalid tile index: tile offset exceeds safe integer range (2^53)');
+			}
+			offsets[i] = offset;
 			lengths[i] = buffer.readUInt32BE(12 * i + 8);
 		}
 
