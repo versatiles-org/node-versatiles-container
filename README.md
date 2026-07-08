@@ -51,35 +51,6 @@ if (metadata) {
 await container.close();
 ```
 
-## Iterate tiles in a zoom level
-
-Loop over the block index to discover which blocks exist, then iterate their internal tile grid:
-
-```ts
-import { Container } from "@versatiles/container";
-
-const container = new Container("https://example.org/planet.versatiles");
-const header = await container.getHeader();
-const blockIndex = await container["getBlockIndex"]();
-
-for (const [key, block] of blockIndex) {
-  const [z, bx, by] = key.split(",").map(Number);
-  console.log(`Block z=${z} (${bx},${by}): [${block.colMin}–${block.colMax}, ${block.rowMin}–${block.rowMax}]`);
-
-  // Loop over every tile inside this block
-  for (let tx = block.colMin; tx <= block.colMax; tx++) {
-    for (let ty = block.rowMin; ty <= block.rowMax; ty++) {
-      const tileX = bx * 256 + tx;
-      const tileY = by * 256 + ty;
-      const tile = await container.getTile(z, tileX, tileY);
-      // process tile…
-    }
-  }
-}
-
-await container.close();
-```
-
 ## Handle missing tiles
 
 Coordinates must lie within the zoom level's grid (`0 <= x, y < 2 ** z`), otherwise `getTile` throws a `RangeError`. For a valid coordinate that simply has no data, the container returns `null`:
@@ -109,10 +80,6 @@ const myReader: Reader = async (offset, length) => {
 const container = new Container(myReader);
 const header = await container.getHeader();
 ```
-
-> **Note:** `getBlockIndex` is a protected method. The examples above use TypeScript
-> bracket access for illustration. In production code, subclass `Container` if you
-> need direct block-index access.
 
 # API
 
