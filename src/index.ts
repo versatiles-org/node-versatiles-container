@@ -57,25 +57,6 @@ export type {
 } from './lib/interfaces.js';
 
 const FORMATS: Record<string, (Format | null)[]> = {
-	c01: [
-		'png',
-		'jpg',
-		'webp',
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		'pbf',
-	],
 	v01: ['png', 'jpg', 'webp', 'pbf'],
 	v02: [
 		'bin',
@@ -366,7 +347,6 @@ export class Container {
 		const blocks: Block[] = [];
 
 		switch (header.version) {
-			case 'c01':
 			case 'v01':
 				// check block index length
 				if (data.length % 29 !== 0) throw new Error('invalid block index');
