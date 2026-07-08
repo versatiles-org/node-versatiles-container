@@ -8,16 +8,7 @@ export type Compression = 'br' | 'gzip' | 'raw';
  * Supported tile formats.
  */
 export type Format =
-	| 'avif'
-	| 'bin'
-	| 'geojson'
-	| 'jpg'
-	| 'json'
-	| 'pbf'
-	| 'png'
-	| 'svg'
-	| 'topojson'
-	| 'webp';
+	'avif' | 'bin' | 'geojson' | 'jpg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
 
 /**
  * Type definition for a function that decompresses data.
