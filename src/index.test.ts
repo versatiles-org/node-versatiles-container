@@ -385,6 +385,20 @@ describe('VersaTiles', () => {
 			expect(await versatiles.getTileUncompressed(8, 50, 67)).toBeNull();
 		});
 	});
+
+	describe('close', () => {
+		it('closes the underlying file reader', async () => {
+			const container = new Container(TESTFILE);
+			expect((await container.getHeader()).version).toEqual('v02');
+			await expect(container.close()).resolves.toBeUndefined();
+		});
+
+		it('is a no-op for readers without a close method', async () => {
+			// a custom Reader function that holds no resources
+			const container = new Container(async () => Buffer.alloc(0));
+			await expect(container.close()).resolves.toBeUndefined();
+		});
+	});
 });
 
 function hash(buffer: Buffer | null): string {

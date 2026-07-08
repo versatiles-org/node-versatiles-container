@@ -40,7 +40,7 @@ export default function getFileReader(filename: string): Reader {
 	 *                            the file descriptor becomes invalid due to the file being closed, the
 	 *                            promise will be rejected with an error.
 	 */
-	return async function read(position: number, length: number): Promise<Buffer> {
+	const read: Reader = async function read(position: number, length: number): Promise<Buffer> {
 		if (position < 0) {
 			throw new RangeError(
 				`Invalid read position: ${position}. The read position must be a non-negative integer.`,
@@ -75,4 +75,16 @@ export default function getFileReader(filename: string): Reader {
 			);
 		});
 	};
+
+	/**
+	 * Closes the underlying file descriptor. After this resolves, the reader
+	 * must not be called again.
+	 */
+	read.close = async function close(): Promise<void> {
+		await new Promise<void>((resolve, reject) => {
+			fs.close(fd, (err) => (err ? reject(err) : resolve()));
+		});
+	};
+
+	return read;
 }

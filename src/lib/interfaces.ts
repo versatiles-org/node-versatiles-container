@@ -24,6 +24,9 @@ export type Decompressor = (data: Buffer, compression: Compression) => Promise<B
  *
  * This is useful for implementing new container readers, e.g. reading over other network protocols.
  *
+ * A reader may optionally expose a `close` method to release any underlying
+ * resources (e.g. a file descriptor). {@link Container.close} calls it if present.
+ *
  * @param {number} position - The byte offset at which to start reading.
  * @param {number} length - The number of bytes to read.
  * @returns {Promise<Buffer>} A promise that resolves with the data read as a Buffer.
@@ -31,7 +34,16 @@ export type Decompressor = (data: Buffer, compression: Compression) => Promise<B
  * @throws {RangeError} If the sum of `position` and `length` exceeds the size of the content (filesize).
  * @throws {Error} If there is any filesystem or network error such as the content not being accessible or readable.
  */
-export type Reader = (position: number, length: number) => Promise<Buffer>;
+export interface Reader {
+	(position: number, length: number): Promise<Buffer>;
+
+	/**
+	 * Releases any underlying resources held by the reader (e.g. an open file
+	 * descriptor). Optional; readers that hold no resources may omit it.
+	 * After `close` resolves, the reader must not be called again.
+	 */
+	close?: () => Promise<void>;
+}
 
 /**
  * Interface for the metadata header of a `*.Versatiles` container.

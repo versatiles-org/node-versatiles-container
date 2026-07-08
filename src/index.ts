@@ -432,6 +432,19 @@ export class Container {
 	}
 
 	/**
+	 * Releases any resources held by the underlying reader, such as an open file
+	 * descriptor when reading from a local file. Readers that hold no resources
+	 * (e.g. the HTTP reader or a custom `Reader` function without a `close`
+	 * method) are unaffected. After calling `close`, no further methods should
+	 * be called on this container.
+	 *
+	 * @returns A promise that resolves once the reader has been closed.
+	 */
+	public async close(): Promise<void> {
+		await this.#reader.close?.();
+	}
+
+	/**
 	 * A protected method to read a chunk of data from the source based on the specified offset and length.
 	 *
 	 * @param offset - The offset from the start of the source data to begin reading.

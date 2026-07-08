@@ -46,4 +46,20 @@ describe('getFileReader', () => {
 			getFileReader('non_existing_file.txt');
 		}).toThrow("ENOENT: no such file or directory, open 'non_existing_file.txt'");
 	});
+
+	describe('close', () => {
+		it('exposes a close method', () => {
+			const reader = getFileReader(TESTFILE);
+			expect(typeof reader.close).toBe('function');
+		});
+
+		it('closes the file descriptor so later reads fail', async () => {
+			const reader = getFileReader(TESTFILE);
+			// works before closing
+			expect((await reader(0, 4)).length).toEqual(4);
+			await reader.close!();
+			// the descriptor is gone -> reading rejects with EBADF
+			await expect(reader(0, 4)).rejects.toThrow(/EBADF/);
+		});
+	});
 });
