@@ -111,6 +111,14 @@ export interface Block {
 /**
  * Interface for the index structure used for tiles within a block.
  *
+ * Byte offsets are stored as `Float64Array`, which represents integers exactly
+ * up to `Number.MAX_SAFE_INTEGER` (2^53 − 1, ~9 PB). This is not a limitation of
+ * this type specifically: the {@link Reader} contract addresses data by `number`
+ * position, and both `fs.read` and HTTP byte-range requests are likewise
+ * `Number`-based, so 2^53 is the effective addressing limit of the whole reader
+ * pipeline. Storing offsets as `BigInt` here would therefore not extend the
+ * reachable range.
+ *
  * @property {Float64Array} offsets - Array indicating the start byte positions of tiles within the block.
  * @property {Float64Array} lengths - Array specifying the byte lengths of the tiles. A length of 0 means the tile is not stored.
  */
