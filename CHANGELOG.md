@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-08-18
+
+### Documentation
+
+- expand usage examples with multiple real-world scenarios (#46) ([467a20c](https://github.com/versatiles-org/node-versatiles-container/commit/467a20c7dc617491d9962adebed9f5b17ab56eb7))
+
+### Build System
+
+- **deps:** bump actions/setup-node from 6 to 7 in the action group ([8f77d50](https://github.com/versatiles-org/node-versatiles-container/commit/8f77d50cc74308fd9cc5c5447a5bb349ccfb1bc7))
+
+### Chores
+
+- update funding information to reflect new organization details ([5cd21e1](https://github.com/versatiles-org/node-versatiles-container/commit/5cd21e12cc38731700a1eab98b6246c7e4b7007b))
+- update devDependencies to latest versions ([2f44e36](https://github.com/versatiles-org/node-versatiles-container/commit/2f44e364272ea604c5a351d3bdeea305c1b1d19b))
+- add security update groups for GitHub Actions and npm in dependabot configuration ([ede3d85](https://github.com/versatiles-org/node-versatiles-container/commit/ede3d85014a7b8f754de21becf9f185bc0a2b79f))
+- update devDependencies to latest versions ([523e70e](https://github.com/versatiles-org/node-versatiles-container/commit/523e70efefec40ae63a4dfeb2c281b1b2d1790ed))
+
 ## [1.5.0] - 2026-07-08
 
 ### Features
