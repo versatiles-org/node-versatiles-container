@@ -7,48 +7,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2026-08-21
 
-### Breaking Changes
+This release makes the library strict about containers it cannot read correctly, adds Zstandard support, and drops the obsolete v01 format. It requires Node.js 22.15 or newer.
 
-- update Node.js version requirement to 22.15 and add requirement note in README ([9d46a7a](https://github.com/versatiles-org/node-versatiles-container/commit/9d46a7a9b8a6d54ff1c78c568541aeca25446df5))
+The headline fix is that a container the library could not actually decode used to be reported as readable, with its tile data handed back mislabelled. That now fails loudly. If `getHeader()` starts throwing on a file that "worked" in 1.x, the 1.x behaviour was returning corrupt data.
 
-### Features
+### Breaking changes
 
-- enhance container header validation and decompression error handling, close #50 ([6092948](https://github.com/versatiles-org/node-versatiles-container/commit/6092948840aa00eaef1041a1c0e7e565476463c7))
-- add support for Zstandard compression in decompression logic and update related documentation ([aba8975](https://github.com/versatiles-org/node-versatiles-container/commit/aba8975a5b4d7ceb21cf9d1c5fbb01d616621d7f))
-- add options for timeout and TMS ordering in Container and update documentation ([2f74448](https://github.com/versatiles-org/node-versatiles-container/commit/2f74448dc6393167973245c8a108f67f707e998d))
-- enhance HTTP reader with close method and update documentation for resource management ([24bc3e8](https://github.com/versatiles-org/node-versatiles-container/commit/24bc3e81d3d0faddd112eb80336508a7bd1f0ed1))
-- add exports field to package.json for improved module resolution ([c94a89e](https://github.com/versatiles-org/node-versatiles-container/commit/c94a89e48c577c7dc7f6ea5ad7a93d0f470be551))
-- enhance HTTP reader close method to ensure proper promise resolution ([91b7f58](https://github.com/versatiles-org/node-versatiles-container/commit/91b7f5857ad23c06c7ad41137298b67810fa2b99))
-- add protocol handling and malformed range response tests for getHTTPReader ([418ce56](https://github.com/versatiles-org/node-versatiles-container/commit/418ce5671da01925d2fc26647fa8aa59bbddfb84))
+#### Node.js 22.15 or newer is required
 
-### Bug Fixes
+Previously `>= 18`. Zstandard decompression uses the `node:zlib` zstd bindings, added in Node 22.15. Node 18 and 20 are both past end-of-life.
 
-- replace parseInt with Number for range parsing in HTTP reader tests and implementation ([2b3730b](https://github.com/versatiles-org/node-versatiles-container/commit/2b3730b4b3151498e45af5d9302b7f8adbc69f3d))
+#### Containers with unknown header values are rejected (#50)
 
-### Code Refactoring
+`tile_format` and `precompression` values the library did not recognise fell back to `bin` and `raw`. Reading a zstd container this way reported `tileCompression: 'raw'`, and `getTileUncompressed()` returned the **still-compressed** zstd frame — with no error raised anywhere. The failure surfaced far from its cause, usually as a protobuf parse error.
 
-- improve metadata handling and error reporting in file readers ([e524dc6](https://github.com/versatiles-org/node-versatiles-container/commit/e524dc61b84639f97408591b38a467f434f7e5cf))
-- remove Decompressor type definition from interfaces ([701b914](https://github.com/versatiles-org/node-versatiles-container/commit/701b91444845a04f6073bf0f2a2f2ba59c157651))
-- remove v01 support ([3bbd617](https://github.com/versatiles-org/node-versatiles-container/commit/3bbd617df2cd168a9c3ee7d6a36dbcbbbab0d284))
+Both now throw:
 
-### Documentation
+```
+Unsupported tile_format value 5 in v02 container header
+Unsupported precompression value 7 in v02 container header
+```
 
-- update license badge in README to reflect Unlicense ([ffe6c84](https://github.com/versatiles-org/node-versatiles-container/commit/ffe6c84485ad185dc7d61ed72ac0b1f8973933a7))
+This is what the container spec requires: a reader must reject a reserved value, not substitute a default.
 
-### Tests
+#### `versatiles_v01` containers can no longer be read
 
-- add test data for Zstandard support with example container ([dd62455](https://github.com/versatiles-org/node-versatiles-container/commit/dd62455295ef01ac9740d18a75f624a17eca9982))
-- add Zstandard compression support in decompression tests and enhance test coverage ([e9a1c1c](https://github.com/versatiles-org/node-versatiles-container/commit/e9a1c1c4c7415be64d850e0fd266b4263316b90e))
+The v01 format is obsolete. Opening one throws:
 
-### CI/CD
+```
+versatiles_v01 containers are no longer supported. Convert it to v02 with: versatiles convert <input> <output>
+```
 
-- update CI workflow to support multiple Node.js versions and adjust coverage upload condition ([280720b](https://github.com/versatiles-org/node-versatiles-container/commit/280720b888ffacfb4a42d3b2fd65f8f0c464fde9))
+`Header.version` is therefore always `'v02'`.
 
-### Chores
+#### `Compression` gained a `'zstd'` member
 
-- update @versatiles/release-tool to version 2.9.1 ([5e49cee](https://github.com/versatiles-org/node-versatiles-container/commit/5e49ceef8376964f8851a6c5f48bf53ef3c019a9))
-- remove unused bin directory ([4ed83cf](https://github.com/versatiles-org/node-versatiles-container/commit/4ed83cf1bab54992aa2b763d68ba3cc489cc6b1b))
-- update TypeScript configuration to target ES2023 and adjust library version ([4fd4e09](https://github.com/versatiles-org/node-versatiles-container/commit/4fd4e09108f7c874d629c0a39bf0b11318c2c2fc))
+```ts
+export type Compression = 'br' | 'gzip' | 'raw' | 'zstd';
+```
+
+Exhaustive `switch` statements over this type need a `zstd` branch.
+
+#### `decompress()` rejects unknown compression instead of passing data through
+
+It previously resolved with the input buffer unchanged for anything it did not recognise, which is how mislabelled data reached callers unnoticed. It now rejects.
+
+#### Deep imports are blocked
+
+The package declares an `exports` map. `@versatiles/container` and `@versatiles/container/package.json` resolve; anything else — for example `@versatiles/container/dist/lib/decompress.js` — fails with `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+
+#### The unused `Decompressor` type was removed
+
+It was exported from the internal interfaces module, but never used and never re-exported from the package entry point.
+
+#### HTTP connections are pooled per container, not per process
+
+Each reader now owns its keep-alive agent, so `close()` can release exactly the sockets that reader opened. A process creating many short-lived containers against the same host no longer shares connections between them.
+
+### Added
+
+#### Zstandard containers (#51)
+
+`precompression = 3` containers — written by versatiles-rs since v3.2.0 via `versatiles convert -c zstd` — are now read and decompressed.
+
+#### `timeout` option
+
+```ts
+new Container("https://example.org/planet.versatiles", { timeout: 30000 });
+```
+
+Idle timeout in milliseconds for HTTP(S) sources, applied while waiting for response headers and between body chunks, so a slow but progressing download is not aborted. Defaults to 10000. The HTTP reader always supported this; there was previously no way to set it through `Container`.
+
+#### `close()` now releases HTTP connections
+
+`Container.close()` previously only closed file descriptors and was a no-op for HTTP sources, despite documenting otherwise. It now destroys the reader's connection agent as well.
+
+#### `OpenOptions.tms` is optional
+
+`new Container(url, { timeout: 5000 })` type-checks. `tms` was previously a required property, so any options object had to include it.
+
+### Fixed
+
+- The README license badge showed MIT; the project is Unlicense.
+- `getMetadata()` was documented as returning `null` and "an object". It returns a `string`, or `undefined` when the container holds no metadata.
+- The file reader was documented as returning empty or short buffers past end-of-file. It throws a `RangeError`.
+- The HTTP user-agent advertised an unrelated npm package.
+
+### Internal
+
+- Type-aware ESLint rules and `noUncheckedIndexedAccess` enabled; `target`/`lib` aligned to the Node baseline.
+- CI runs on Node 22 and 24 instead of Node 20 alone.
+- Test coverage raised to 96.8% of statements and 99.0% of lines, including the HTTP reader's error paths.
+- Removed the dead `bin/probe.js` helper.
+
+### Migration
+
+1. Upgrade to Node.js 22.15 or newer.
+2. Convert any v01 containers: `versatiles convert old.versatiles new.versatiles`.
+3. Add a `zstd` branch to any exhaustive `switch` over `Compression`.
+4. Replace deep imports into `dist/` with imports from the package entry point.
+5. Expect `getHeader()` to throw for containers 1.x accepted silently — see the first breaking change above.
+
+---
+
+[Full commit list](https://github.com/versatiles-org/node-versatiles-container/compare/v1.5.1...v2.0.0)
 
 ## [1.5.1] - 2026-08-18
 
