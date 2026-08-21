@@ -1,20 +1,19 @@
 {
 	"compilerOptions": {
 		"lib": [
-			"ESNext"
+			"ES2023"
 		],
 		"types": [
 			"node"
 		],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"target": "ES2022",
+		"target": "ES2023",
 		"strict": true,
 		"noUncheckedIndexedAccess": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"declaration": true,
-		"allowJs": true,
 		"noEmit": true,
 		"forceConsistentCasingInFileNames": true,
 		"isolatedModules": true
