@@ -14,7 +14,7 @@
  * Exported Constants:
  * - `FORMATS`: Supported formats organized by version for different tile data, including image formats (e.g., PNG, JPG)
  *   and vector formats (e.g., PBF).
- * - `COMPRESSIONS`: Available compression types, including 'raw' (no compression), 'gzip', and 'br' (Brotli).
+ * - `COMPRESSIONS`: Available compression types, including 'raw' (no compression), 'gzip', 'br' (Brotli) and 'zstd' (Zstandard).
  * - `MIMETYPES`: Maps supported tile formats to their respective MIME types for handling and delivery.
  *
  * Exported Types:
@@ -97,7 +97,7 @@ const FORMATS: Record<string, (Format | null)[]> = {
 		'json',
 	],
 };
-const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br'];
+const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br', 'zstd'];
 const MIMETYPES: Record<Format, string> = {
 	avif: 'image/avif',
 	bin: 'application/octet-stream',

@@ -2,12 +2,12 @@ import zlib from 'zlib';
 import type { Compression } from './interfaces.js';
 
 /**
- * Decompresses a buffer using the specified compression algorithm. Currently supports 'br' for Brotli and 'gzip' for GZIP.
- * For 'raw' the buffer is passed through unchanged. Any other value is rejected rather than passed through, so that
+ * Decompresses a buffer using the specified compression algorithm. Currently supports 'br' for Brotli, 'gzip' for GZIP
+ * and 'zstd' for Zstandard. For 'raw' the buffer is passed through unchanged. Any other value is rejected rather than passed through, so that
  * data the library cannot decompress is never handed back mislabelled as uncompressed.
  *
  * @param {Buffer} buffer - The buffer to be decompressed.
- * @param {Compression} compression - The compression algorithm to use. Supported values are 'br' for Brotli, 'gzip' for GZIP and 'raw' for uncompressed data.
+ * @param {Compression} compression - The compression algorithm to use. Supported values are 'br' for Brotli, 'gzip' for GZIP, 'zstd' for Zstandard and 'raw' for uncompressed data.
  * @returns {Promise<Buffer>} A promise that, when resolved, provides the decompressed buffer. If decompression fails,
  * the promise will be rejected with an error message.
  * @throws {Error} Throws an error if the compression algorithm is unsupported, or if the decompression process encounters
@@ -21,6 +21,9 @@ export async function decompress(buffer: Buffer, compression: Compression): Prom
 				break;
 			case 'gzip':
 				zlib.gunzip(buffer, handle);
+				break;
+			case 'zstd':
+				zlib.zstdDecompress(buffer, handle);
 				break;
 			case 'raw':
 				resolve(buffer);
