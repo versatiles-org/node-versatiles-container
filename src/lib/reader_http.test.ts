@@ -15,8 +15,8 @@ describe('getHTTPReader', () => {
 			const data = 'abcdefghijklmnopqrstuvwxyz';
 			if (req.headers.range != null) {
 				const range = req.headers.range.replace('bytes=', '').split('-');
-				const start = parseInt(range[0], 10);
-				const end = parseInt(range[1], 10);
+				const start = Number(range[0]);
+				const end = Number(range[1]);
 				const chunk = data.substring(start, end + 1);
 				res.writeHead(206, {
 					'Content-Range': `bytes ${start}-${end}/${data.length}`,
@@ -91,8 +91,8 @@ describe('getHTTPReader body timeout', () => {
 		server = http.createServer((req, res) => {
 			const data = 'abcdefghijklmnopqrstuvwxyz';
 			const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
-			const start = parseInt(range[0], 10);
-			const end = parseInt(range[1], 10);
+			const start = Number(range[0]);
+			const end = Number(range[1]);
 			res.writeHead(206, {
 				'Content-Range': `bytes ${start}-${end}/${data.length}`,
 				'Content-Length': end - start + 1,
@@ -195,8 +195,8 @@ describe('getHTTPReader close', () => {
 		server = http.createServer((req, res) => {
 			const data = 'abcdefghijklmnopqrstuvwxyz';
 			const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
-			const start = parseInt(range[0], 10);
-			const end = parseInt(range[1], 10);
+			const start = Number(range[0]);
+			const end = Number(range[1]);
 			const chunk = data.substring(start, end + 1);
 			res.writeHead(206, {
 				'Content-Range': `bytes ${start}-${end}/${data.length}`,

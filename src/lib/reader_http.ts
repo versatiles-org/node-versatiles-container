@@ -44,11 +44,12 @@ const clients: Record<string, ClientInfo> = {
  */
 export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIMEOUT): Reader {
 	const protocol = new URL(url).protocol.slice(0, -1);
-	if (!(protocol in clients)) {
+	const clientInfo = clients[protocol];
+	if (clientInfo == null) {
 		throw new Error(`Unsupported protocol: ${protocol}`);
 	}
 
-	const { client, createAgent } = clients[protocol];
+	const { client, createAgent } = clientInfo;
 	const agent = createAgent();
 
 	/**
@@ -129,22 +130,28 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 		const parts = /^bytes (\d+)-(\d+)\/(\d+)/i.exec(contentRange);
 		if (parts == null) fail(new Error('"content-range" in response header is malformed'));
 
-		if (position !== parseInt(parts[1], 10))
+		// The pattern matches digits only, so these are finite numbers whenever it
+		// matched; Number() of a missing group would be NaN, which fails the same checks.
+		const returnedOffset = Number(parts[1]);
+		const returnedLast = Number(parts[2]);
+		const totalSize = Number(parts[3]);
+
+		if (position !== returnedOffset)
 			fail(
 				new Error(
-					`requested position (${position}) and returned offset (${parts[1]}) must be equal`,
+					`requested position (${position}) and returned offset (${returnedOffset}) must be equal`,
 				),
 			);
 
-		if (position + length > parseInt(parts[3], 10)) {
+		if (position + length > totalSize) {
 			fail(
 				new RangeError(
-					`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${parts[3]} bytes.`,
+					`Read range out of bounds: The requested range ends at position ${position + length}, which exceeds the file's limit of ${totalSize} bytes.`,
 				),
 			);
 		}
 
-		const returnedLength = parseInt(parts[2], 10) + 1 - position;
+		const returnedLength = returnedLast + 1 - position;
 		if (length !== returnedLength) {
 			fail(new Error(`Returned length (${returnedLength}) is not requested length (${length}).`));
 		}

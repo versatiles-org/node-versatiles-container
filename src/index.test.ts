@@ -554,8 +554,8 @@ describe('VersaTiles', () => {
 			// so the reader's idle timeout is what ends the request.
 			server = http.createServer((req, res) => {
 				const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
-				const start = parseInt(range[0], 10);
-				const end = parseInt(range[1], 10);
+				const start = Number(range[0]);
+				const end = Number(range[1]);
 				res.writeHead(206, {
 					'Content-Range': `bytes ${start}-${end}/1000`,
 					'Content-Length': end - start + 1,

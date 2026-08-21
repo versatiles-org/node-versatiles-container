@@ -177,7 +177,7 @@ export class Container {
 		const magic: string = data.toString('utf8', 0, 14);
 		const version: string = data.toString('utf8', 11, 14);
 		const tileFormatValue: number = data.readUInt8(14);
-		const tileFormat: Format | null = FORMATS[version][tileFormatValue] ?? null;
+		const tileFormat: Format | null = FORMATS[version]?.[tileFormatValue] ?? null;
 		if (tileFormat === null) {
 			throw new Error(
 				`Unsupported tile_format value ${tileFormatValue} in ${version} container header`,
@@ -320,8 +320,8 @@ export class Container {
 
 		// get tile index
 		const tileIndex = await this.getTileIndex(block);
-		const offset = tileIndex.offsets[j];
-		const length = tileIndex.lengths[j];
+		const offset = tileIndex.offsets[j] ?? 0;
+		const length = tileIndex.lengths[j] ?? 0;
 
 		if (length === 0) return null;
 

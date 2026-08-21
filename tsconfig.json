@@ -10,6 +10,7 @@
 		"moduleResolution": "NodeNext",
 		"target": "ES2022",
 		"strict": true,
+		"noUncheckedIndexedAccess": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"declaration": true,
