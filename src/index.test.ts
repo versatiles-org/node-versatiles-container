@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { brotliCompressSync } from 'node:zlib';
 import { Container } from './index.js';
 import type { Block, TileIndex } from './index.js';
-import { describe, expect, it } from 'vitest';
+import http from 'node:http';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const TESTFILE = new URL('../testdata/island.versatiles', import.meta.url).pathname;
 // a small zstd-compressed container; see testdata/README.md for how it was generated
@@ -541,6 +542,48 @@ describe('VersaTiles', () => {
 			// a custom Reader function that holds no resources
 			const container = new Container(async () => Buffer.alloc(0));
 			await expect(container.close()).resolves.toBeUndefined();
+		});
+	});
+
+	describe('options', () => {
+		let server: http.Server;
+		let port: number;
+
+		beforeAll(async () => {
+			// Server that starts a valid range response and then stalls forever,
+			// so the reader's idle timeout is what ends the request.
+			server = http.createServer((req, res) => {
+				const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
+				const start = parseInt(range[0], 10);
+				const end = parseInt(range[1], 10);
+				res.writeHead(206, {
+					'Content-Range': `bytes ${start}-${end}/1000`,
+					'Content-Length': end - start + 1,
+				});
+				res.write('x'); // one byte, then never end
+			});
+			await new Promise((r) => server.listen(r));
+			const address = server.address();
+			if (address == null) throw Error();
+			port = typeof address === 'string' ? parseInt(address.replace(/.*:/, ''), 10) : address.port;
+		});
+
+		afterAll(async () => {
+			await new Promise((r) => server.close(r));
+		});
+
+		// The 2s test timeout is the actual assertion here: if the option did not reach
+		// the reader, the request would stall for the 10s default and blow past it.
+		it('should pass the timeout option to the HTTP reader', { timeout: 2000 }, async () => {
+			const container = new Container(`http://localhost:${port}`, { timeout: 200 });
+			await expect(container.getHeader()).rejects.toThrow('Request timed out');
+		});
+
+		it('should accept options without tms', async () => {
+			// tms is optional, so a timeout-only object has to type-check and work
+			const container = new Container(TESTFILE, { timeout: 5000 });
+			expect((await container.getHeader()).version).toBe('v02');
+			await container.close();
 		});
 	});
 

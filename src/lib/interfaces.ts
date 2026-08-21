@@ -120,8 +120,15 @@ export interface TileIndex {
 
 /**
  * Interface for defining the options available for reading a container.
- * @property {boolean} tms - If set to true, uses the [TMS (Tile Map Service) tile ordering](https://wiki.openstreetmap.org/wiki/TMS) where y=0 is the southernmost point.
+ *
+ * All properties are optional; omitted ones fall back to the documented default.
+ *
+ * @property {boolean} tms - If set to true, uses the [TMS (Tile Map Service) tile ordering](https://wiki.openstreetmap.org/wiki/TMS) where y=0 is the southernmost point. Defaults to `false`.
+ * @property {number} timeout - Idle timeout in milliseconds for HTTP(S) sources, applied both while
+ *   waiting for the response headers and between body chunks. Has no effect on local files or on a
+ *   custom {@link Reader}, which manages its own timeouts. Defaults to 10000.
  */
 export interface OpenOptions {
-	tms: boolean;
+	tms?: boolean;
+	timeout?: number;
 }

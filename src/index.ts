@@ -133,15 +133,17 @@ export class Container {
 	 *
 	 * @param source - The data source for the tiles. This can be a URL starting with `http://` or `https://`,
 	 * a path to a local file, or a custom `Reader` function that reads data chunks based on offset and length.
-	 * @param options - Optional settings that configure tile handling.
+	 * @param options - Optional settings that configure tile handling. See {@link OpenOptions}; `timeout`
+	 * only applies when `source` is an HTTP(S) URL.
 	 * @throws Will throw an error if the provided source is neither a string nor a Reader function.
+	 * @throws Will throw an error if `source` is a path to a file that cannot be opened.
 	 */
 	public constructor(source: Reader | string, options?: OpenOptions) {
 		if (options) Object.assign(this.#options, options);
 
 		if (typeof source === 'string') {
 			if (source.startsWith('https://') || source.startsWith('http://')) {
-				this.#reader = HttpReader(source);
+				this.#reader = HttpReader(source, this.#options.timeout);
 			} else {
 				this.#reader = FileReader(source);
 			}

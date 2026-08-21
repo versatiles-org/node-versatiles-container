@@ -53,6 +53,20 @@ if (metadata) {
 await container.close();
 ```
 
+## Options
+
+Both options are optional:
+
+```ts
+const container = new Container("https://example.org/planet.versatiles", {
+  tms: true, // read y=0 as the southernmost row (TMS ordering); default false
+  timeout: 30000, // idle timeout in ms for HTTP(S) sources; default 10000
+});
+```
+
+`timeout` applies while waiting for response headers and between body chunks, so a slow but
+progressing download is not aborted. It has no effect on local files or on a custom reader.
+
 ## Handle missing tiles
 
 Coordinates must lie within the zoom level's grid (`0 <= x, y < 2 ** z`), otherwise `getTile` throws a `RangeError`. For a valid coordinate that simply has no data, the container returns `null`:
