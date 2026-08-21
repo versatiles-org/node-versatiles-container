@@ -63,7 +63,7 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 
 		const headers = {
 			'user-agent':
-				'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/versatiles)',
+				'Mozilla/5.0 (compatible; versatiles; +https://www.npmjs.com/package/@versatiles/container)',
 			range: `bytes=${position}-${position + length - 1}`,
 		};
 

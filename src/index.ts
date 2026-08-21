@@ -238,10 +238,12 @@ export class Container {
 
 	/**
 	 * Asynchronously retrieves the metadata associated with the `.versatiles` container.
-	 * Metadata typically includes information about `vector_layers` for vector tiles.
-	 * If the container does not include metadata, this method returns `null`.
+	 * Metadata is stored as a string, usually TileJSON, and typically includes information
+	 * about `vector_layers` for vector tiles.
+	 * If the container does not include metadata, this method returns `undefined`.
 	 *
-	 * @returns A promise that resolves with an object representing the metadata.
+	 * @returns A promise that resolves with the metadata string, or `undefined` if the
+	 *   container holds no metadata.
 	 */
 	public async getMetadata(): Promise<string | undefined> {
 		if (this.#metadata !== undefined) return this.#metadata;

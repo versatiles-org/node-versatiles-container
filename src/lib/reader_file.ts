@@ -13,10 +13,9 @@ import type { Reader } from './interfaces.js';
  * @returns {Reader} A reader function that when called, returns a promise. This promise resolves with a
  *                   Buffer containing the read bytes from the file. The function reads `length` bytes of data
  *                   from the file starting at `position`. If an error occurs during the read operation,
- *                   the promise is rejected with the error. If `position` is beyond the end of the file,
- *                   the promise resolves to an empty buffer. If the read operation attempts to read beyond
- *                   the end of the file, the promise resolves with a buffer that contains only the bytes
- *                   that could be read.
+ *                   the promise is rejected with the error. Reads are bounds-checked against the file size
+ *                   captured when the reader was created: a range that ends beyond the end of the file is
+ *                   rejected with a `RangeError` rather than returning a short buffer.
  */
 export default function getFileReader(filename: string): Reader {
 	const fd = fs.openSync(filename, 'r');
@@ -29,16 +28,15 @@ export default function getFileReader(filename: string): Reader {
 	 * that are not being concurrently modified, as it relies on consistent file state to
 	 * function correctly.
 	 *
-	 * @param {number} position - The starting position in the file to read from. If this position
-	 *                            is beyond the end of the file, the function will resolve to an
-	 *                            empty buffer.
+	 * @param {number} position - The starting position in the file to read from. Must be non-negative.
 	 * @param {number} length   - The number of bytes to read from the file starting at `position`.
-	 *                            If `length` extends beyond the end of the file, the returned buffer
-	 *                            will only include the bytes that could be read up to the end of the file.
+	 *                            Must be non-negative.
 	 * @returns {Promise<Buffer>} A promise that resolves with the buffer containing the read bytes. If
-	 *                            an error occurs during the read, such as if the position is invalid or
-	 *                            the file descriptor becomes invalid due to the file being closed, the
-	 *                            promise will be rejected with an error.
+	 *                            an error occurs during the read, such as the file descriptor becoming
+	 *                            invalid due to the file being closed, the promise will be rejected with
+	 *                            an error.
+	 * @throws {RangeError} If `position` or `length` is negative, or if `position + length` exceeds the
+	 *                      size of the file.
 	 */
 	const read: Reader = async function read(position: number, length: number): Promise<Buffer> {
 		if (position < 0) {
