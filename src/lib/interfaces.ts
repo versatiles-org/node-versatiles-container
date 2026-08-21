@@ -11,15 +11,6 @@ export type Format =
 	'avif' | 'bin' | 'geojson' | 'jpg' | 'json' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
 
 /**
- * Type definition for a function that decompresses data.
- *
- * @param {Buffer} data - The compressed data.
- * @param {Compression} compression - The type of compression used.
- * @returns {Promise<Buffer>} - The decompressed data.
- */
-export type Decompressor = (data: Buffer, compression: Compression) => Promise<Buffer>;
-
-/**
  * Type definition for reading content from a VersaTiles container.
  *
  * This is useful for implementing new container readers, e.g. reading over other network protocols.
