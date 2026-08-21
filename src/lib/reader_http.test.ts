@@ -186,3 +186,67 @@ describe('getHTTPReader non-2xx status', () => {
 		await expect(read(0, 5)).rejects.toThrow('Server responded with status code: 404');
 	});
 });
+
+describe('getHTTPReader close', () => {
+	let server: http.Server;
+	let port: number;
+
+	beforeAll(async () => {
+		server = http.createServer((req, res) => {
+			const data = 'abcdefghijklmnopqrstuvwxyz';
+			const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
+			const start = parseInt(range[0], 10);
+			const end = parseInt(range[1], 10);
+			const chunk = data.substring(start, end + 1);
+			res.writeHead(206, {
+				'Content-Range': `bytes ${start}-${end}/${data.length}`,
+				'Content-Length': chunk.length,
+			});
+			res.end(chunk);
+		});
+
+		await new Promise((r) => server.listen(r));
+		const address = server.address();
+		if (address == null) throw Error();
+		port = typeof address === 'string' ? parseInt(address.replace(/.*:/, ''), 10) : address.port;
+	});
+
+	afterAll(async () => {
+		await new Promise((r) => server.close(r));
+	});
+
+	/** Number of sockets the test server currently has open. */
+	async function connectionCount(): Promise<number> {
+		return new Promise((resolve, reject) => {
+			server.getConnections((err, count) => (err ? reject(err) : resolve(count)));
+		});
+	}
+
+	it('exposes a close method', () => {
+		const read = getHTTPReader(`http://localhost:${port}`);
+		expect(typeof read.close).toBe('function');
+	});
+
+	it('releases pooled keep-alive connections', async () => {
+		const read = getHTTPReader(`http://localhost:${port}`);
+		expect(await read(0, 5)).toHaveLength(5);
+
+		// the agent keeps the socket around for the next range request
+		expect(await connectionCount()).toBe(1);
+
+		await read.close?.();
+
+		// the socket teardown is asynchronous, so give it a moment to settle
+		for (let i = 0; i < 100 && (await connectionCount()) > 0; i++) {
+			await new Promise((r) => setTimeout(r, 10));
+		}
+		expect(await connectionCount()).toBe(0);
+	});
+
+	it('can be closed twice', async () => {
+		const read = getHTTPReader(`http://localhost:${port}`);
+		await read(0, 5);
+		await read.close?.();
+		await expect(read.close?.()).resolves.toBeUndefined();
+	});
+});

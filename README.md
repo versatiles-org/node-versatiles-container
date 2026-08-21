@@ -25,7 +25,7 @@ const header = await container.getHeader();
 const tile = await container.getTileUncompressed(z, x, y);
 fs.writeFileSync("tile." + header.tileFormat, tile);
 
-// don't forget to close file-backed containers
+// release the file descriptor (or pooled HTTP connections) when done
 await container.close();
 ```
 

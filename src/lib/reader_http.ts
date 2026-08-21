@@ -12,22 +12,30 @@ interface ClientInfo {
 	/** HTTP or HTTPS client module. */
 	client: typeof http | typeof https;
 
-	/** Connection agent with the keep-alive setting for persistent connections. */
-	agent: Agent;
+	/**
+	 * Creates a fresh connection agent with keep-alive enabled. Each reader owns its
+	 * own agent rather than sharing a module-level one, so that closing a reader can
+	 * release exactly the sockets that reader pooled, without affecting other readers.
+	 */
+	createAgent: () => Agent;
 }
 
 /**
  * A collection mapping protocol names to their respective `ClientInfo`.
  */
 const clients: Record<string, ClientInfo> = {
-	https: { client: https, agent: new https.Agent({ keepAlive: true }) },
-	http: { client: http, agent: new http.Agent({ keepAlive: true }) },
+	https: { client: https, createAgent: (): Agent => new https.Agent({ keepAlive: true }) },
+	http: { client: http, createAgent: (): Agent => new http.Agent({ keepAlive: true }) },
 };
 
 /**
  * Creates a function capable of reading data from a specified URL, which can be used
  * to read data chunks in an HTTP GET request. This is particularly useful for
  * operations such as streaming or handling large data in segments.
+ *
+ * The returned reader keeps HTTP connections alive between reads, which matters because
+ * reading a container issues many small range requests. Call its `close` method when done
+ * to release those pooled sockets.
  *
  * @param url - The URL from which data will be read.
  * @param timeout - Idle timeout in milliseconds applied both while waiting for the
@@ -40,6 +48,9 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 		throw new Error(`Unsupported protocol: ${protocol}`);
 	}
 
+	const { client, createAgent } = clients[protocol];
+	const agent = createAgent();
+
 	/**
 	 * Asynchronously reads a data chunk from the provided URL based on the specified range.
 	 *
@@ -49,7 +60,7 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 	 *          If the request fails or the server responds with a non-successful status code,
 	 *          the promise is rejected with an error.
 	 */
-	return async function read(position: number, length: number): Promise<Buffer> {
+	const read: Reader = async function read(position: number, length: number): Promise<Buffer> {
 		if (position < 0) {
 			throw new RangeError(
 				`Invalid read position: ${position}. The read position must be a non-negative integer.`,
@@ -77,10 +88,10 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 				reject(new Error('Request timed out'));
 			}, timeout);
 
-			const req = clients[protocol].client
+			const req = client
 				.request(url, {
 					method: 'GET',
-					agent: clients[protocol].agent,
+					agent,
 					headers,
 					timeout,
 				})
@@ -174,4 +185,14 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 
 		return body;
 	};
+
+	/**
+	 * Destroys this reader's connection agent, closing any sockets it is holding
+	 * open for keep-alive. After this resolves, the reader must not be called again.
+	 */
+	read.close = async function close(): Promise<void> {
+		agent.destroy();
+	};
+
+	return read;
 }

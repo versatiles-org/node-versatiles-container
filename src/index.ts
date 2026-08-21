@@ -460,11 +460,11 @@ export class Container {
 	}
 
 	/**
-	 * Releases any resources held by the underlying reader, such as an open file
-	 * descriptor when reading from a local file. Readers that hold no resources
-	 * (e.g. the HTTP reader or a custom `Reader` function without a `close`
-	 * method) are unaffected. After calling `close`, no further methods should
-	 * be called on this container.
+	 * Releases any resources held by the underlying reader: the open file descriptor
+	 * when reading from a local file, or the pooled keep-alive sockets when reading
+	 * over HTTP(S). A custom `Reader` function without a `close` method is left
+	 * untouched. After calling `close`, no further methods should be called on this
+	 * container.
 	 *
 	 * @returns A promise that resolves once the reader has been closed.
 	 */
