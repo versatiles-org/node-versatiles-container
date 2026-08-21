@@ -190,8 +190,9 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 	 * Destroys this reader's connection agent, closing any sockets it is holding
 	 * open for keep-alive. After this resolves, the reader must not be called again.
 	 */
-	read.close = async function close(): Promise<void> {
+	read.close = function close(): Promise<void> {
 		agent.destroy();
+		return Promise.resolve();
 	};
 
 	return read;

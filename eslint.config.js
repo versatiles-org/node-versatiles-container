@@ -7,6 +7,13 @@ import prettier from 'eslint-config-prettier';
 export default [
 	js.configs.recommended,
 	...ts.configs.recommended,
+	// Type-aware rules. They need a TypeScript program, so they are scoped to the
+	// files covered by tsconfig.json - applying them repo-wide would make ESLint
+	// fail on config files that are not part of the project.
+	...ts.configs.recommendedTypeChecked.map((config) => ({
+		...config,
+		files: ['src/**/*.ts'],
+	})),
 	{
 		ignores: [
 			'coverage/**/*.*',
@@ -49,6 +56,16 @@ export default [
 					caughtErrorsIgnorePattern: '^_'
 				}
 			]
+		}
+	},
+	{
+		files: [
+			'src/**/*.test.ts',
+		],
+		rules: {
+			// Test doubles implement the Promise-returning Reader interface with data
+			// that is already in memory, so `async` without `await` is intentional here.
+			'@typescript-eslint/require-await': 'off',
 		}
 	},
 	prettier,
