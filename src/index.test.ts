@@ -5,6 +5,8 @@ import type { Block, TileIndex } from './index.js';
 import { describe, expect, it } from 'vitest';
 
 const TESTFILE = new URL('../testdata/island.versatiles', import.meta.url).pathname;
+// a small zstd-compressed container; see testdata/README.md for how it was generated
+const TESTFILE_ZSTD = new URL('../testdata/dummy-zstd.versatiles', import.meta.url).pathname;
 
 // exposes the protected internal methods for testing
 class TestContainer extends Container {
@@ -73,9 +75,15 @@ describe('VersaTiles', () => {
 		});
 
 		it('should throw on an unsupported precompression value', async () => {
-			// 3 is zstd, which this library cannot decompress; it must not fall back to 'raw'
-			await expect(containerWithHeaderBytes('v02', 16, 3).getHeader()).rejects.toThrow(
-				'Unsupported precompression value 3 in v02 container header',
+			// 0-3 are raw/gzip/br/zstd; anything above must not fall back to 'raw'
+			await expect(containerWithHeaderBytes('v02', 16, 4).getHeader()).rejects.toThrow(
+				'Unsupported precompression value 4 in v02 container header',
+			);
+		});
+
+		it('should read precompression 3 as zstd', async () => {
+			expect((await containerWithHeaderBytes('v02', 16, 3).getHeader()).tileCompression).toBe(
+				'zstd',
 			);
 		});
 	});
@@ -533,6 +541,34 @@ describe('VersaTiles', () => {
 			// a custom Reader function that holds no resources
 			const container = new Container(async () => Buffer.alloc(0));
 			await expect(container.close()).resolves.toBeUndefined();
+		});
+	});
+
+	describe('zstd containers', () => {
+		const container = new Container(TESTFILE_ZSTD);
+
+		it('should report zstd in the header', async () => {
+			const header = await container.getHeader();
+			expect(header.tileCompression).toBe('zstd');
+			expect(header.tileFormat).toBe('pbf');
+		});
+
+		it('should return tiles still zstd-compressed', async () => {
+			const tile = await container.getTile(1, 0, 0);
+			// zstd frame magic number
+			expect(tile?.subarray(0, 4).toString('hex')).toBe('28b52ffd');
+		});
+
+		it('should decompress tiles', async () => {
+			expect((await container.getTileUncompressed(0, 0, 0))?.toString('utf8')).toBe('tile 0/0/0');
+			expect((await container.getTileUncompressed(1, 1, 1))?.toString('utf8')).toBe('tile 1/1/1');
+		});
+
+		it('should read metadata', async () => {
+			const metadata = JSON.parse((await container.getMetadata()) ?? '{}') as {
+				tilejson: string;
+			};
+			expect(metadata.tilejson).toBe('3.0.0');
 		});
 	});
 });
