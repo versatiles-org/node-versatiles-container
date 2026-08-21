@@ -250,3 +250,119 @@ describe('getHTTPReader close', () => {
 		await expect(read.close?.()).resolves.toBeUndefined();
 	});
 });
+
+describe('getHTTPReader protocol handling', () => {
+	it('rejects an unsupported protocol', () => {
+		expect(() => getHTTPReader('ftp://example.org/file')).toThrow('Unsupported protocol: ftp');
+	});
+
+	it('accepts https URLs', async () => {
+		// no request is made here; this covers building the https keep-alive agent
+		const read = getHTTPReader('https://example.org/file');
+		expect(typeof read.close).toBe('function');
+		await read.close?.();
+	});
+});
+
+describe('getHTTPReader malformed range responses', () => {
+	/** Starts a server with the given handler and returns its port plus a stop function. */
+	async function startServer(
+		handler: http.RequestListener,
+	): Promise<{ port: number; stop: () => Promise<void> }> {
+		const server = http.createServer(handler);
+		await new Promise((r) => server.listen(r));
+		const address = server.address();
+		if (address == null) throw Error();
+		const port =
+			typeof address === 'string' ? parseInt(address.replace(/.*:/, ''), 10) : address.port;
+		return {
+			port,
+			stop: async (): Promise<void> => {
+				await new Promise((r) => server.close(r));
+			},
+		};
+	}
+
+	it('rejects a malformed content-range header', async () => {
+		const { port, stop } = await startServer((_, res) => {
+			res.writeHead(206, { 'Content-Range': 'bytes nonsense', 'Content-Length': 5 });
+			res.end('abcde');
+		});
+		const read = getHTTPReader(`http://localhost:${port}`);
+		await expect(read(0, 5)).rejects.toThrow('"content-range" in response header is malformed');
+		await read.close?.();
+		await stop();
+	});
+
+	it('rejects when the server returns a different offset', async () => {
+		const { port, stop } = await startServer((_, res) => {
+			res.writeHead(206, { 'Content-Range': 'bytes 5-9/100', 'Content-Length': 5 });
+			res.end('fghij');
+		});
+		const read = getHTTPReader(`http://localhost:${port}`);
+		await expect(read(0, 5)).rejects.toThrow(
+			'requested position (0) and returned offset (5) must be equal',
+		);
+		await read.close?.();
+		await stop();
+	});
+
+	it('rejects when the server returns a different length', async () => {
+		const { port, stop } = await startServer((_, res) => {
+			res.writeHead(206, { 'Content-Range': 'bytes 0-3/100', 'Content-Length': 4 });
+			res.end('abcd');
+		});
+		const read = getHTTPReader(`http://localhost:${port}`);
+		await expect(read(0, 5)).rejects.toThrow('Returned length (4) is not requested length (5).');
+		await read.close?.();
+		await stop();
+	});
+
+	it('rejects when the response headers never arrive', async () => {
+		// accepts the connection but never replies, so the header watchdog fires
+		const { port, stop } = await startServer(() => {
+			// intentionally empty
+		});
+		const read = getHTTPReader(`http://localhost:${port}`, 200);
+		await expect(read(0, 5)).rejects.toThrow('Request timed out');
+		await read.close?.();
+		await stop();
+	});
+
+	it('rejects when the connection cannot be established', async () => {
+		// take a port, then release it so nothing is listening there.
+		// 127.0.0.1 rather than localhost: the latter resolves to both IPv4 and IPv6,
+		// so the failure surfaces as an AggregateError with an empty message.
+		const { port, stop } = await startServer((_, res) => res.end());
+		await stop();
+		const read = getHTTPReader(`http://127.0.0.1:${port}`);
+		await expect(read(0, 5)).rejects.toThrow('ECONNREFUSED');
+		await read.close?.();
+	});
+
+	it('rejects when the socket hangs up before the response arrives', async () => {
+		const { port, stop } = await startServer((_, res) => {
+			// destroyed immediately, so the client never sees the headers
+			res.writeHead(206, { 'Content-Range': 'bytes 0-4/100', 'Content-Length': 5 });
+			res.socket?.destroy();
+		});
+		const read = getHTTPReader(`http://127.0.0.1:${port}`);
+		await expect(read(0, 5)).rejects.toThrow('socket hang up');
+		await read.close?.();
+		await stop();
+	});
+
+	it('rejects when the connection drops mid-body', async () => {
+		const { port, stop } = await startServer((_, res) => {
+			res.writeHead(206, { 'Content-Range': 'bytes 0-4/100', 'Content-Length': 5 });
+			res.write('ab');
+			// let the headers and first chunk reach the client, so the failure happens
+			// while the body is streaming rather than during the request itself
+			setTimeout(() => res.socket?.destroy(), 50);
+		});
+		const read = getHTTPReader(`http://127.0.0.1:${port}`);
+		await expect(read(0, 5)).rejects.toThrow('aborted');
+		await read.close?.();
+		await stop();
+	});
+});
