@@ -69,9 +69,17 @@ describe('VersaTiles', () => {
 		});
 
 		it('should throw on a tile_format value beyond the known list', async () => {
-			// v01 only defines bytes 0-3
-			await expect(containerWithHeaderBytes('v01', 4, 0).getHeader()).rejects.toThrow(
-				'Unsupported tile_format value 4 in v01 container header',
+			// the format table ends at byte 35
+			await expect(containerWithHeaderBytes('v02', 200, 0).getHeader()).rejects.toThrow(
+				'Unsupported tile_format value 200 in v02 container header',
+			);
+		});
+
+		it('should reject v01 containers with an actionable error', async () => {
+			// v01 is obsolete: it must be named explicitly rather than reported as
+			// a generic invalid container, so users know the file needs converting
+			await expect(containerWithHeaderBytes('v01', 3, 0).getHeader()).rejects.toThrow(
+				'versatiles_v01 containers are no longer supported',
 			);
 		});
 

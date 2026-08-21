@@ -12,8 +12,7 @@
  *   from the module's `interfaces.js` file to ensure type safety and consistency.
  *
  * Exported Constants:
- * - `FORMATS`: Supported formats organized by version for different tile data, including image formats (e.g., PNG, JPG)
- *   and vector formats (e.g., PBF).
+ * - `FORMATS`: Supported tile formats, including image formats (e.g., PNG, JPG) and vector formats (e.g., PBF).
  * - `COMPRESSIONS`: Available compression types, including 'raw' (no compression), 'gzip', 'br' (Brotli) and 'zstd' (Zstandard).
  * - `MIMETYPES`: Maps supported tile formats to their respective MIME types for handling and delivery.
  *
@@ -56,47 +55,44 @@ export type {
 	TileIndex,
 } from './lib/interfaces.js';
 
-const FORMATS: Record<string, (Format | null)[]> = {
-	v01: ['png', 'jpg', 'webp', 'pbf'],
-	v02: [
-		'bin',
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		'png',
-		'jpg',
-		'webp',
-		'avif',
-		'svg',
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		null,
-		'pbf',
-		'geojson',
-		'topojson',
-		'json',
-	],
-};
+const FORMATS: (Format | null)[] = [
+	'bin',
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	'png',
+	'jpg',
+	'webp',
+	'avif',
+	'svg',
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	null,
+	'pbf',
+	'geojson',
+	'topojson',
+	'json',
+];
 const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br', 'zstd'];
 const MIMETYPES: Record<Format, string> = {
 	avif: 'image/avif',
@@ -159,6 +155,8 @@ export class Container {
 	 *
 	 * @returns A promise that resolves with the header object.
 	 * @throws Will throw an error if the container does not start with expected magic bytes indicating a valid format.
+	 * @throws Will throw an error if the container is a `versatiles_v01` file. That format is obsolete and
+	 *   no longer readable by this library; convert such containers to v02 first.
 	 * @throws Will throw an error if `tile_format` or `precompression` holds a value this library does not support.
 	 *   Such a container is rejected rather than read with a substituted default, as required by the
 	 *   [container spec](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#2-general-guidelines).
@@ -170,14 +168,19 @@ export class Container {
 		const data = await this.read(0, 66);
 
 		// check magic bytes
-		if (!/^versatiles_v0[12]$/.test(data.toString('utf8', 0, 14))) {
+		const magic: string = data.toString('utf8', 0, 14);
+		if (magic === 'versatiles_v01') {
+			throw new Error(
+				'versatiles_v01 containers are no longer supported. Convert it to v02 with: versatiles convert <input> <output>',
+			);
+		}
+		if (magic !== 'versatiles_v02') {
 			throw new Error('Invalid Container');
 		}
 
-		const magic: string = data.toString('utf8', 0, 14);
 		const version: string = data.toString('utf8', 11, 14);
 		const tileFormatValue: number = data.readUInt8(14);
-		const tileFormat: Format | null = FORMATS[version]?.[tileFormatValue] ?? null;
+		const tileFormat: Format | null = FORMATS[tileFormatValue] ?? null;
 		if (tileFormat === null) {
 			throw new Error(
 				`Unsupported tile_format value ${tileFormatValue} in ${version} container header`,
@@ -193,32 +196,18 @@ export class Container {
 		}
 		const zoomMin: number = data.readUInt8(16);
 		const zoomMax: number = data.readUInt8(17);
-		let bbox: [number, number, number, number];
 		const metaOffset = Number(data.readBigUInt64BE(34));
 		const metaLength = Number(data.readBigUInt64BE(42));
 		const blockIndexOffset = Number(data.readBigUInt64BE(50));
 		const blockIndexLength = Number(data.readBigUInt64BE(58));
 
-		switch (version) {
-			case 'v01':
-				bbox = [
-					data.readFloatBE(18),
-					data.readFloatBE(22),
-					data.readFloatBE(26),
-					data.readFloatBE(30),
-				];
-				break;
-			case 'v02':
-				bbox = [
-					data.readInt32BE(18) / 1e7,
-					data.readInt32BE(22) / 1e7,
-					data.readInt32BE(26) / 1e7,
-					data.readInt32BE(30) / 1e7,
-				];
-				break;
-			default:
-				throw new Error('Invalid Container');
-		}
+		// bbox coordinates are stored as int32, scaled by 1e7
+		const bbox: [number, number, number, number] = [
+			data.readInt32BE(18) / 1e7,
+			data.readInt32BE(22) / 1e7,
+			data.readInt32BE(26) / 1e7,
+			data.readInt32BE(30) / 1e7,
+		];
 
 		this.#header = {
 			magic,
@@ -365,30 +354,17 @@ export class Container {
 		// read index from buffer
 		const blocks: Block[] = [];
 
-		switch (header.version) {
-			case 'v01':
-				// check block index length
-				if (data.length % 29 !== 0) throw new Error('invalid block index');
+		// check block index length
+		if (data.length % 33 !== 0) throw new Error('invalid block index');
 
-				for (let i = 0; i < data.length; i += 29) {
-					const slice = data.subarray(i, i + 29);
-					addBlock(slice, 0n, slice.readBigUInt64BE(13), slice.readBigUInt64BE(21));
-				}
-				break;
-			case 'v02':
-				// check block index length
-				if (data.length % 33 !== 0) throw new Error('invalid block index');
-
-				for (let i = 0; i < data.length; i += 33) {
-					const slice = data.subarray(i, i + 33);
-					addBlock(
-						slice,
-						slice.readBigUInt64BE(13),
-						slice.readBigUInt64BE(13) + slice.readBigUInt64BE(21), // block_offset + tile_blobs_length
-						slice.readUInt32BE(29),
-					);
-				}
-				break;
+		for (let i = 0; i < data.length; i += 33) {
+			const slice = data.subarray(i, i + 33);
+			addBlock(
+				slice,
+				slice.readBigUInt64BE(13),
+				slice.readBigUInt64BE(13) + slice.readBigUInt64BE(21), // block_offset + tile_blobs_length
+				slice.readUInt32BE(29),
+			);
 		}
 
 		// build map
@@ -400,7 +376,7 @@ export class Container {
 			buffer: Buffer,
 			blockOffset: bigint,
 			tileIndexOffset: bigint,
-			tileIndexLength: bigint | number,
+			tileIndexLength: number,
 		): void {
 			const block = {
 				level: buffer.readUInt8(0),
@@ -412,7 +388,7 @@ export class Container {
 				rowMax: buffer.readUInt8(12),
 				blockOffset: Number(blockOffset),
 				tileIndexOffset: Number(tileIndexOffset),
-				tileIndexLength: Number(tileIndexLength),
+				tileIndexLength,
 				tileCount: 0,
 			};
 			block.tileCount = (block.colMax - block.colMin + 1) * (block.rowMax - block.rowMin + 1);
