@@ -10,6 +10,8 @@ A client library for [VersaTiles containers](https://github.com/versatiles-org/v
 
 `npm i @versatiles/container`
 
+Requires Node.js 22.15 or newer, since Zstandard decompression uses the built-in `node:zlib` zstd support.
+
 # Usage Examples
 
 ## Basic: read a tile and write to disk
