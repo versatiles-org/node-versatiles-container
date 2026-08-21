@@ -9,7 +9,6 @@ export default [
 	...ts.configs.recommended,
 	{
 		ignores: [
-			'bin/**/*.*',
 			'coverage/**/*.*',
 			'dist/**/*.*',
 			'docs/**/*.*',
