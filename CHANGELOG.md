@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-08-21
+
+### Breaking Changes
+
+- update Node.js version requirement to 22.15 and add requirement note in README ([9d46a7a](https://github.com/versatiles-org/node-versatiles-container/commit/9d46a7a9b8a6d54ff1c78c568541aeca25446df5))
+
+### Features
+
+- enhance container header validation and decompression error handling, close #50 ([6092948](https://github.com/versatiles-org/node-versatiles-container/commit/6092948840aa00eaef1041a1c0e7e565476463c7))
+- add support for Zstandard compression in decompression logic and update related documentation ([aba8975](https://github.com/versatiles-org/node-versatiles-container/commit/aba8975a5b4d7ceb21cf9d1c5fbb01d616621d7f))
+- add options for timeout and TMS ordering in Container and update documentation ([2f74448](https://github.com/versatiles-org/node-versatiles-container/commit/2f74448dc6393167973245c8a108f67f707e998d))
+- enhance HTTP reader with close method and update documentation for resource management ([24bc3e8](https://github.com/versatiles-org/node-versatiles-container/commit/24bc3e81d3d0faddd112eb80336508a7bd1f0ed1))
+- add exports field to package.json for improved module resolution ([c94a89e](https://github.com/versatiles-org/node-versatiles-container/commit/c94a89e48c577c7dc7f6ea5ad7a93d0f470be551))
+- enhance HTTP reader close method to ensure proper promise resolution ([91b7f58](https://github.com/versatiles-org/node-versatiles-container/commit/91b7f5857ad23c06c7ad41137298b67810fa2b99))
+- add protocol handling and malformed range response tests for getHTTPReader ([418ce56](https://github.com/versatiles-org/node-versatiles-container/commit/418ce5671da01925d2fc26647fa8aa59bbddfb84))
+
+### Bug Fixes
+
+- replace parseInt with Number for range parsing in HTTP reader tests and implementation ([2b3730b](https://github.com/versatiles-org/node-versatiles-container/commit/2b3730b4b3151498e45af5d9302b7f8adbc69f3d))
+
+### Code Refactoring
+
+- improve metadata handling and error reporting in file readers ([e524dc6](https://github.com/versatiles-org/node-versatiles-container/commit/e524dc61b84639f97408591b38a467f434f7e5cf))
+- remove Decompressor type definition from interfaces ([701b914](https://github.com/versatiles-org/node-versatiles-container/commit/701b91444845a04f6073bf0f2a2f2ba59c157651))
+- remove v01 support ([3bbd617](https://github.com/versatiles-org/node-versatiles-container/commit/3bbd617df2cd168a9c3ee7d6a36dbcbbbab0d284))
+
+### Documentation
+
+- update license badge in README to reflect Unlicense ([ffe6c84](https://github.com/versatiles-org/node-versatiles-container/commit/ffe6c84485ad185dc7d61ed72ac0b1f8973933a7))
+
+### Tests
+
+- add test data for Zstandard support with example container ([dd62455](https://github.com/versatiles-org/node-versatiles-container/commit/dd62455295ef01ac9740d18a75f624a17eca9982))
+- add Zstandard compression support in decompression tests and enhance test coverage ([e9a1c1c](https://github.com/versatiles-org/node-versatiles-container/commit/e9a1c1c4c7415be64d850e0fd266b4263316b90e))
+
+### CI/CD
+
+- update CI workflow to support multiple Node.js versions and adjust coverage upload condition ([280720b](https://github.com/versatiles-org/node-versatiles-container/commit/280720b888ffacfb4a42d3b2fd65f8f0c464fde9))
+
+### Chores
+
+- update @versatiles/release-tool to version 2.9.1 ([5e49cee](https://github.com/versatiles-org/node-versatiles-container/commit/5e49ceef8376964f8851a6c5f48bf53ef3c019a9))
+- remove unused bin directory ([4ed83cf](https://github.com/versatiles-org/node-versatiles-container/commit/4ed83cf1bab54992aa2b763d68ba3cc489cc6b1b))
+- update TypeScript configuration to target ES2023 and adjust library version ([4fd4e09](https://github.com/versatiles-org/node-versatiles-container/commit/4fd4e09108f7c874d629c0a39bf0b11318c2c2fc))
+
 ## [1.5.1] - 2026-08-18
 
 ### Documentation
