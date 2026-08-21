@@ -3,14 +3,15 @@ import type { Compression } from './interfaces.js';
 
 /**
  * Decompresses a buffer using the specified compression algorithm. Currently supports 'br' for Brotli and 'gzip' for GZIP.
- * If the specified algorithm is not supported, the function resolves the promise with the original buffer.
+ * For 'raw' the buffer is passed through unchanged. Any other value is rejected rather than passed through, so that
+ * data the library cannot decompress is never handed back mislabelled as uncompressed.
  *
  * @param {Buffer} buffer - The buffer to be decompressed.
- * @param {Compression} compression - The compression algorithm to use. Supported values are 'br' for Brotli and 'gzip' for GZIP.
- * @returns {Promise<Buffer>} A promise that, when resolved, provides the decompressed buffer. If the compression type is not recognized,
- * the promise will resolve with the original buffer. If decompression fails, the promise will be rejected with an error message.
- * @throws {Error} Throws an error if the decompression process encounters an error. The error includes the buffer's length and
- * the compression algorithm that was attempted.
+ * @param {Compression} compression - The compression algorithm to use. Supported values are 'br' for Brotli, 'gzip' for GZIP and 'raw' for uncompressed data.
+ * @returns {Promise<Buffer>} A promise that, when resolved, provides the decompressed buffer. If decompression fails,
+ * the promise will be rejected with an error message.
+ * @throws {Error} Throws an error if the compression algorithm is unsupported, or if the decompression process encounters
+ * an error. The error includes the buffer's length and the compression algorithm that was attempted.
  */
 export async function decompress(buffer: Buffer, compression: Compression): Promise<Buffer> {
 	return new Promise((resolve, reject) => {
@@ -21,8 +22,15 @@ export async function decompress(buffer: Buffer, compression: Compression): Prom
 			case 'gzip':
 				zlib.gunzip(buffer, handle);
 				break;
-			default:
+			case 'raw':
 				resolve(buffer);
+				break;
+			default:
+				reject(
+					new Error(
+						`Can not decompress buffer (length=${buffer.length}): unsupported compression "${String(compression)}"`,
+					),
+				);
 				break;
 		}
 

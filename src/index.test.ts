@@ -39,6 +39,45 @@ describe('VersaTiles', () => {
 			const container = new Container(async (_, length) => Buffer.alloc(length));
 			await expect(container.getHeader()).rejects.toThrow('Invalid Container');
 		});
+
+		/**
+		 * Builds a container whose header uses the given `tile_format` and `precompression` bytes.
+		 * Everything else stays zero, which is enough to get past the magic byte check.
+		 */
+		function containerWithHeaderBytes(
+			version: 'v01' | 'v02',
+			tileFormat: number,
+			precompression: number,
+		): Container {
+			const header = Buffer.alloc(66);
+			header.write(`versatiles_${version}`, 0, 'utf8');
+			header.writeUInt8(tileFormat, 14);
+			header.writeUInt8(precompression, 15);
+			return new Container(async (position, length) =>
+				header.subarray(position, position + length),
+			);
+		}
+
+		it('should throw on a reserved tile_format value', async () => {
+			// v02 reserves byte 1; it must not fall back to 'bin'
+			await expect(containerWithHeaderBytes('v02', 1, 0).getHeader()).rejects.toThrow(
+				'Unsupported tile_format value 1 in v02 container header',
+			);
+		});
+
+		it('should throw on a tile_format value beyond the known list', async () => {
+			// v01 only defines bytes 0-3
+			await expect(containerWithHeaderBytes('v01', 4, 0).getHeader()).rejects.toThrow(
+				'Unsupported tile_format value 4 in v01 container header',
+			);
+		});
+
+		it('should throw on an unsupported precompression value', async () => {
+			// 3 is zstd, which this library cannot decompress; it must not fall back to 'raw'
+			await expect(containerWithHeaderBytes('v02', 16, 3).getHeader()).rejects.toThrow(
+				'Unsupported precompression value 3 in v02 container header',
+			);
+		});
 	});
 
 	describe('getMetadata', () => {

@@ -157,6 +157,9 @@ export class Container {
 	 *
 	 * @returns A promise that resolves with the header object.
 	 * @throws Will throw an error if the container does not start with expected magic bytes indicating a valid format.
+	 * @throws Will throw an error if `tile_format` or `precompression` holds a value this library does not support.
+	 *   Such a container is rejected rather than read with a substituted default, as required by the
+	 *   [container spec](https://github.com/versatiles-org/versatiles-spec/blob/main/v02/readme.md#2-general-guidelines).
 	 */
 	public async getHeader(): Promise<Header> {
 		// deliver if known
@@ -171,9 +174,21 @@ export class Container {
 
 		const magic: string = data.toString('utf8', 0, 14);
 		const version: string = data.toString('utf8', 11, 14);
-		const tileFormat: Format = FORMATS[version][data.readUInt8(14)] ?? 'bin';
+		const tileFormatValue: number = data.readUInt8(14);
+		const tileFormat: Format | null = FORMATS[version][tileFormatValue] ?? null;
+		if (tileFormat === null) {
+			throw new Error(
+				`Unsupported tile_format value ${tileFormatValue} in ${version} container header`,
+			);
+		}
 		const tileMime: string = MIMETYPES[tileFormat];
-		const tileCompression: Compression = COMPRESSIONS[data.readUInt8(15)] ?? 'raw';
+		const compressionValue: number = data.readUInt8(15);
+		const tileCompression: Compression | undefined = COMPRESSIONS[compressionValue];
+		if (tileCompression === undefined) {
+			throw new Error(
+				`Unsupported precompression value ${compressionValue} in ${version} container header`,
+			);
+		}
 		const zoomMin: number = data.readUInt8(16);
 		const zoomMax: number = data.readUInt8(17);
 		let bbox: [number, number, number, number];

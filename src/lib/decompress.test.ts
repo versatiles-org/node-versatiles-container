@@ -1,4 +1,5 @@
 import { decompress } from './decompress.js';
+import type { Compression } from './interfaces.js';
 import { brotliCompressSync, gzipSync } from 'zlib';
 import { describe, expect, it } from 'vitest';
 
@@ -25,6 +26,16 @@ describe('decompress', () => {
 	it('throw Error on wrong Gzip', async () => {
 		await expect(decompress(bufferBrotli, 'gzip')).rejects.toThrow(
 			`Can not decompress buffer (length=${bufferBrotli.length}) with "gzip"`,
+		);
+	});
+
+	it('pass through raw data', async () => {
+		expect((await decompress(sampleBuffer, 'raw')).equals(sampleBuffer)).toBeTruthy();
+	});
+
+	it('throw Error on unsupported compression instead of passing the buffer through', async () => {
+		await expect(decompress(sampleBuffer, 'zstd' as Compression)).rejects.toThrow(
+			`Can not decompress buffer (length=${sampleBuffer.length}): unsupported compression "zstd"`,
 		);
 	});
 });
