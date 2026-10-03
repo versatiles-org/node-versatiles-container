@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-10-03
+
+### Breaking Changes
+
+- update changelog for v2.0.0 release, detailing breaking changes and new features ([eec47f9](https://github.com/versatiles-org/node-versatiles-container/commit/eec47f993894604ca2f9d22e19fc1fc76d10d9c0))
+
+### Chores
+
+- update dependabot configuration to ignore TypeScript major version updates ([6ea898c](https://github.com/versatiles-org/node-versatiles-container/commit/6ea898c5f347799543ca1262790aa6ce1e80fcb3))
+- update devDependencies to latest versions ([c48296d](https://github.com/versatiles-org/node-versatiles-container/commit/c48296d4233933862a506011a1b5049f5c61c75b))
+
 ## [2.0.0] - 2026-08-21
 
 This release makes the library strict about containers it cannot read correctly, adds Zstandard support, and drops the obsolete v01 format. It requires Node.js 22.15 or newer.
