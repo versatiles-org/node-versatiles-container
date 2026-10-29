@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-29
+
+### Features
+
+- enhance tile format support and improve block index validation ([0a96fde](https://github.com/versatiles-org/node-versatiles-container/commit/0a96fde425f7b8461110a6c0ec16a1e6f789346c))
+- update tile format from pbf to mvt across documentation and tests ([a3db91f](https://github.com/versatiles-org/node-versatiles-container/commit/a3db91f1b332a5bfe08801b65b7203fccf16132d))
+
+### Build System
+
+- **deps-dev:** bump markdown-it ([b29a226](https://github.com/versatiles-org/node-versatiles-container/commit/b29a226c0a040336d6a879d4fc44fd4638835d58))
+
+### Chores
+
+- update devDependencies to latest versions ([cd3cca4](https://github.com/versatiles-org/node-versatiles-container/commit/cd3cca4c8886ef7f9738b4eb83fda737d0c2c0c1))
+
 ## [2.0.2] - 2026-10-12
 
 ### Chores
