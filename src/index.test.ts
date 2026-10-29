@@ -11,6 +11,10 @@ const TESTFILE_ZSTD = new URL('../testdata/dummy-zstd.versatiles', import.meta.u
 
 // exposes the protected internal methods for testing
 class TestContainer extends Container {
+	public getBlockIndex(): Promise<Map<string, Block>> {
+		return super.getBlockIndex();
+	}
+
 	public getTileIndex(block: Block): Promise<TileIndex> {
 		return super.getTileIndex(block);
 	}
@@ -25,7 +29,7 @@ describe('VersaTiles', () => {
 				magic: 'versatiles_v02',
 				version: 'v02',
 				tileFormat: 'pbf',
-				tileMime: 'application/x-protobuf',
+				tileMime: 'application/vnd.mapbox-vector-tile',
 				tileCompression: 'br',
 				zoomMin: 8,
 				zoomMax: 14,
@@ -69,10 +73,16 @@ describe('VersaTiles', () => {
 		});
 
 		it('should throw on a tile_format value beyond the known list', async () => {
-			// the format table ends at byte 35
+			// the format table ends at byte 36
 			await expect(containerWithHeaderBytes('v02', 200, 0).getHeader()).rejects.toThrow(
 				'Unsupported tile_format value 200 in v02 container header',
 			);
+		});
+
+		it('should read tile_format 0x24 as MLT', async () => {
+			const header = await containerWithHeaderBytes('v02', 0x24, 0).getHeader();
+			expect(header.tileFormat).toBe('mlt');
+			expect(header.tileMime).toBe('application/vnd.maplibre-tile');
 		});
 
 		it('should reject v01 containers with an actionable error', async () => {
@@ -489,6 +499,66 @@ describe('VersaTiles', () => {
 
 		it('should return null if the tile cannot be found', async () => {
 			expect(await versatiles.getTileUncompressed(8, 50, 67)).toBeNull();
+		});
+	});
+
+	describe('getBlockIndex', () => {
+		/**
+		 * Builds a container that holds only a header and a brotli-compressed block index
+		 * made of the given entries. Tile indexes are never read, so their offsets stay zero.
+		 */
+		function containerWithBlocks(
+			blocks: {
+				level: number;
+				column: number;
+				row: number;
+				range: [number, number, number, number];
+			}[],
+		): TestContainer {
+			const index = Buffer.alloc(33 * blocks.length);
+			blocks.forEach(({ level, column, row, range }, i) => {
+				index.writeUInt8(level, 33 * i);
+				index.writeUInt32BE(column, 33 * i + 1);
+				index.writeUInt32BE(row, 33 * i + 5);
+				range.forEach((v, j) => index.writeUInt8(v, 33 * i + 9 + j));
+			});
+			const compressed = brotliCompressSync(index);
+			const header = Buffer.alloc(66);
+			header.write('versatiles_v02', 0, 'utf8');
+			header.writeBigUInt64BE(66n, 50);
+			header.writeBigUInt64BE(BigInt(compressed.length), 58);
+			const file = Buffer.concat([header, compressed]);
+			return new TestContainer(async (position, length) =>
+				file.subarray(position, position + length),
+			);
+		}
+
+		it('accepts distinct blocks', async () => {
+			const container = containerWithBlocks([
+				{ level: 0, column: 0, row: 0, range: [0, 0, 0, 0] },
+				{ level: 1, column: 0, row: 0, range: [0, 0, 1, 1] },
+			]);
+			expect((await container.getBlockIndex()).size).toBe(2);
+		});
+
+		it('rejects duplicate block entries', async () => {
+			const container = containerWithBlocks([
+				{ level: 1, column: 0, row: 0, range: [0, 0, 1, 1] },
+				{ level: 1, column: 0, row: 0, range: [0, 0, 0, 0] },
+			]);
+			await expect(container.getBlockIndex()).rejects.toThrow(
+				'invalid block index: duplicate entry for block 1,0,0',
+			);
+		});
+
+		it('rejects col_min > col_max', async () => {
+			const container = containerWithBlocks([{ level: 2, column: 0, row: 0, range: [3, 0, 2, 3] }]);
+			await expect(container.getBlockIndex()).rejects.toThrow('col_min > col_max');
+		});
+
+		it('rejects row_min > row_max', async () => {
+			const container = containerWithBlocks([{ level: 2, column: 0, row: 0, range: [0, 3, 3, 2] }]);
+			await expect(container.getBlockIndex()).rejects.toThrow('row_min > row_max');
 		});
 	});
 

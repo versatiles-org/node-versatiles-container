@@ -12,7 +12,7 @@
  *   from the module's `interfaces.js` file to ensure type safety and consistency.
  *
  * Exported Constants:
- * - `FORMATS`: Supported tile formats, including image formats (e.g., PNG, JPG) and vector formats (e.g., PBF).
+ * - `FORMATS`: Supported tile formats, including image formats (e.g., PNG, JPG) and vector formats (e.g., MVT, MLT).
  * - `COMPRESSIONS`: Available compression types, including 'raw' (no compression), 'gzip', 'br' (Brotli) and 'zstd' (Zstandard).
  * - `MIMETYPES`: Maps supported tile formats to their respective MIME types for handling and delivery.
  *
@@ -92,6 +92,7 @@ const FORMATS: (Format | null)[] = [
 	'geojson',
 	'topojson',
 	'json',
+	'mlt',
 ];
 const COMPRESSIONS: Compression[] = ['raw', 'gzip', 'br', 'zstd'];
 const MIMETYPES: Record<Format, string> = {
@@ -100,7 +101,9 @@ const MIMETYPES: Record<Format, string> = {
 	geojson: 'application/geo+json; charset=utf-8',
 	jpg: 'image/jpeg',
 	json: 'application/json; charset=utf-8',
-	pbf: 'application/x-protobuf',
+	// MapLibre has not registered a media type yet; this is the one used by MapLibre tools
+	mlt: 'application/vnd.maplibre-tile',
+	pbf: 'application/vnd.mapbox-vector-tile',
 	png: 'image/png',
 	svg: 'image/svg+xml; charset=utf-8',
 	topojson: 'application/topo+json; charset=utf-8',
@@ -367,8 +370,16 @@ export class Container {
 			);
 		}
 
-		// build map
-		this.#blockIndex = new Map(blocks.map((b) => [`${b.level},${b.column},${b.row}`, b]));
+		// build map; each block may appear at most once
+		const blockIndex = new Map<string, Block>();
+		for (const b of blocks) {
+			const key = `${b.level},${b.column},${b.row}`;
+			if (blockIndex.has(key)) {
+				throw new Error(`invalid block index: duplicate entry for block ${key}`);
+			}
+			blockIndex.set(key, b);
+		}
+		this.#blockIndex = blockIndex;
 
 		return this.#blockIndex;
 
@@ -391,6 +402,11 @@ export class Container {
 				tileIndexLength,
 				tileCount: 0,
 			};
+			if (block.colMin > block.colMax || block.rowMin > block.rowMax) {
+				throw new Error(
+					`invalid block index: block ${block.level},${block.column},${block.row} has col_min > col_max or row_min > row_max`,
+				);
+			}
 			block.tileCount = (block.colMax - block.colMin + 1) * (block.rowMax - block.rowMin + 1);
 			blocks.push(block);
 		}
