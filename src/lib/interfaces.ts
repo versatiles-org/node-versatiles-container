@@ -6,10 +6,10 @@ export type Compression = 'br' | 'gzip' | 'raw' | 'zstd';
 
 /**
  * Supported tile formats.
- * `'pbf'` is Mapbox Vector Tile (MVT), `'mlt'` is MapLibre Tile.
+ * `'mvt'` is Mapbox Vector Tile (named `'pbf'` before v3), `'mlt'` is MapLibre Tile.
  */
 export type Format =
-	'avif' | 'bin' | 'geojson' | 'jpg' | 'json' | 'mlt' | 'pbf' | 'png' | 'svg' | 'topojson' | 'webp';
+	'avif' | 'bin' | 'geojson' | 'jpg' | 'json' | 'mlt' | 'mvt' | 'png' | 'svg' | 'topojson' | 'webp';
 
 /**
  * Type definition for reading content from a VersaTiles container.

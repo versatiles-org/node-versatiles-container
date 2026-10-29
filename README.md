@@ -39,7 +39,7 @@ import { Container } from "@versatiles/container";
 const container = new Container("/path/to/layers.versatiles");
 
 const header = await container.getHeader();
-console.log("Format:", header.tileFormat);  // e.g. "pbf"
+console.log("Format:", header.tileFormat);  // e.g. "mvt"
 console.log("Compression:", header.tileCompression);
 console.log("Zoom range:", header.zoomMin, "→", header.zoomMax);
 console.log("Bounding box:", header.bbox);

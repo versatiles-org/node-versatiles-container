@@ -28,7 +28,7 @@ describe('VersaTiles', () => {
 			expect(await versatiles.getHeader()).toEqual({
 				magic: 'versatiles_v02',
 				version: 'v02',
-				tileFormat: 'pbf',
+				tileFormat: 'mvt',
 				tileMime: 'application/vnd.mapbox-vector-tile',
 				tileCompression: 'br',
 				zoomMin: 8,
@@ -671,7 +671,7 @@ describe('VersaTiles', () => {
 		it('should report zstd in the header', async () => {
 			const header = await container.getHeader();
 			expect(header.tileCompression).toBe('zstd');
-			expect(header.tileFormat).toBe('pbf');
+			expect(header.tileFormat).toBe('mvt');
 		});
 
 		it('should return tiles still zstd-compressed', async () => {

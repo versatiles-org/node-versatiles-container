@@ -2,7 +2,7 @@
 
 ## `island.versatiles`
 
-A real-world v02 container (Brotli-compressed `pbf` tiles, zoom 8-14) used for most tests.
+A real-world v02 container (Brotli-compressed `mvt` tiles, zoom 8-14) used for most tests.
 
 ## `dummy-zstd.versatiles`
 

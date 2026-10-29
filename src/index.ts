@@ -88,7 +88,7 @@ const FORMATS: (Format | null)[] = [
 	null,
 	null,
 	null,
-	'pbf',
+	'mvt',
 	'geojson',
 	'topojson',
 	'json',
@@ -103,7 +103,7 @@ const MIMETYPES: Record<Format, string> = {
 	json: 'application/json; charset=utf-8',
 	// MapLibre has not registered a media type yet; this is the one used by MapLibre tools
 	mlt: 'application/vnd.maplibre-tile',
-	pbf: 'application/vnd.mapbox-vector-tile',
+	mvt: 'application/vnd.mapbox-vector-tile',
 	png: 'image/png',
 	svg: 'image/svg+xml; charset=utf-8',
 	topojson: 'application/topo+json; charset=utf-8',
