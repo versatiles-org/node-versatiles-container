@@ -1,82 +1,92 @@
 {
-  "name": "@versatiles/container",
-  "version": "2.1.1",
-  "description": "A client library for reading VersaTiles containers",
-  "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && npm run doc-graph",
-    "check": "npm run format:check && npm run lint && npm run build && npm run test",
-    "doc": "npm run doc-typescript && npm run doc-graph",
-    "doc-typescript": "vrt doc-typescript -f html",
-    "doc-graph": "vrt deps-graph | vrt doc-insert README.md '## Dependency Graph'",
-    "format": "prettier --write 'src/**/*.ts'",
-    "format:check": "prettier --check 'src/**/*.ts'",
-    "lint": "eslint . --color",
-    "prepack": "npm run build",
-    "release": "vrt release-npm",
-    "test-coverage": "vitest --run --coverage",
-    "test": "vitest --run",
-    "upgrade": "vrt deps-upgrade"
-  },
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/versatiles-org/node-versatiles-container.git"
-  },
-  "homepage": "https://github.com/versatiles-org/node-versatiles-container",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "type": "module",
-  "sideEffects": false,
-  "author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
-  "license": "Unlicense",
-  "engines": {
-    "node": ">= 22.15"
-  },
-  "keywords": [
-    "cloudtiles",
-    "geo",
-    "gis",
-    "map",
-    "maps",
-    "mapserver",
-    "maptiles",
-    "mvt",
-    "opencloudtiles",
-    "osm",
-    "pbf",
-    "tile",
-    "tiles",
-    "tileserver",
-    "vectortiles",
-    "versatiles"
-  ],
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^26.6.6",
-    "@typescript-eslint/eslint-plugin": "^8.72.1",
-    "@typescript-eslint/parser": "^8.72.1",
-    "@versatiles/release-tool": "^2.21.0",
-    "@vitest/coverage-v8": "^5.1.0",
-    "eslint": "^10.14.0",
-    "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.9.10",
-    "tsx": "^4.23.15",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.1",
-    "vitest": "^5.1.0"
-  },
-  "allowScripts": {
-    "esbuild": true,
-    "fsevents": true
-  }
+	"name": "@versatiles/container",
+	"version": "2.1.1",
+	"description": "A client library for reading VersaTiles containers",
+	"scripts": {
+		"build": "rm -rf dist && tsc -p tsconfig.build.json && npm run doc-graph",
+		"check": "npm run format:check && npm run lint && npm run build && npm run test",
+		"doc": "npm run doc-typescript && npm run doc-graph",
+		"doc-typescript": "vrt doc-typescript -f html",
+		"doc-graph": "vrt deps-graph | vrt doc-insert README.md '## Dependency Graph'",
+		"format": "prettier --write 'src/**/*.ts'",
+		"format:check": "prettier --check 'src/**/*.ts'",
+		"lint": "eslint . --color",
+		"prepack": "npm run build",
+		"release": "vrt release-npm",
+		"test-coverage": "vitest --run --coverage",
+		"test": "vitest --run",
+		"upgrade": "vrt deps-upgrade"
+	},
+	"files": [
+		"dist/**/*.js",
+		"dist/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/versatiles-org/node-versatiles-container.git"
+	},
+	"homepage": "https://github.com/versatiles-org/node-versatiles-container",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"author": "yetzt <node@yetzt.me>, Michael Kreil <versatiles@michael-kreil.de>",
+	"license": "Unlicense",
+	"funding": [
+		{
+			"type": "github",
+			"url": "https://github.com/sponsors/versatiles-org"
+		},
+		{
+			"type": "opencollective",
+			"url": "https://opencollective.com/versatiles"
+		}
+	],
+	"engines": {
+		"node": ">= 22.15"
+	},
+	"keywords": [
+		"cloudtiles",
+		"geo",
+		"gis",
+		"map",
+		"maps",
+		"mapserver",
+		"maptiles",
+		"mvt",
+		"opencloudtiles",
+		"osm",
+		"pbf",
+		"tile",
+		"tiles",
+		"tileserver",
+		"vectortiles",
+		"versatiles"
+	],
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/node": "^26.6.6",
+		"@typescript-eslint/eslint-plugin": "^8.72.1",
+		"@typescript-eslint/parser": "^8.72.1",
+		"@versatiles/release-tool": "^2.21.0",
+		"@vitest/coverage-v8": "^5.1.0",
+		"eslint": "^10.14.0",
+		"eslint-config-prettier": "^10.1.8",
+		"prettier": "^3.9.10",
+		"tsx": "^4.23.15",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.72.1",
+		"vitest": "^5.1.0"
+	},
+	"allowScripts": {
+		"esbuild": true,
+		"fsevents": true
+	}
 }
