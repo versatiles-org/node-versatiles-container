@@ -366,3 +366,118 @@ describe('getHTTPReader malformed range responses', () => {
 		await stop();
 	});
 });
+
+describe('getHTTPReader redirects', () => {
+	let server: http.Server;
+	let base: string;
+	const requests: string[] = [];
+
+	beforeAll(async () => {
+		const data = 'abcdefghijklmnopqrstuvwxyz';
+		server = http.createServer((req, res) => {
+			const path = req.url ?? '';
+			requests.push(path);
+
+			function redirect(status: number, location?: string): void {
+				res.writeHead(status, location == null ? {} : { Location: location });
+				res.end('moved');
+			}
+
+			const hop = /^\/hop\/(\d+)$/.exec(path);
+			if (path === '/short') return redirect(301, `${base}/file`);
+			if (path === '/relative') return redirect(302, 'file');
+			if (hop) {
+				const n = Number(hop[1]);
+				return redirect(307, n > 0 ? `/hop/${n - 1}` : '/file');
+			}
+			if (path === '/loop') return redirect(308, '/loop');
+			if (path === '/ftp') return redirect(301, 'ftp://example.org/file');
+			if (path === '/no-location') return redirect(301);
+			if (path === '/missing') return redirect(301, '/404');
+			if (path !== '/file') {
+				res.writeHead(404);
+				return res.end('not found');
+			}
+
+			const range = (req.headers.range ?? '').replace('bytes=', '').split('-');
+			const start = Number(range[0]);
+			const end = Number(range[1]);
+			const chunk = data.substring(start, end + 1);
+			res.writeHead(206, {
+				'Content-Range': `bytes ${start}-${end}/${data.length}`,
+				'Content-Length': chunk.length,
+			});
+			res.end(chunk);
+		});
+
+		await new Promise((r) => server.listen(r));
+		const address = server.address();
+		if (address == null || typeof address === 'string') throw Error();
+		base = `http://localhost:${address.port}`;
+	});
+
+	afterAll(async () => {
+		await new Promise((r) => server.close(r));
+	});
+
+	it('follows a redirect to an absolute URL', async () => {
+		const read = getHTTPReader(`${base}/short`);
+		expect((await read(5, 7)).toString()).toEqual('fghijkl');
+		await read.close?.();
+	});
+
+	it('follows a redirect to a relative URL', async () => {
+		const read = getHTTPReader(`${base}/relative`);
+		expect((await read(0, 3)).toString()).toEqual('abc');
+		await read.close?.();
+	});
+
+	it('sends later reads to the final URL', async () => {
+		const read = getHTTPReader(`${base}/short`);
+		requests.length = 0;
+		await read(0, 3);
+		await read(3, 3);
+		await read(6, 3);
+		expect(requests).toEqual(['/short', '/file', '/file', '/file']);
+		await read.close?.();
+	});
+
+	it('follows a chain of redirects up to the limit', async () => {
+		const read = getHTTPReader(`${base}/hop/4`);
+		expect((await read(0, 3)).toString()).toEqual('abc');
+		await read.close?.();
+	});
+
+	it('rejects a chain of redirects longer than the limit', async () => {
+		const read = getHTTPReader(`${base}/hop/5`);
+		await expect(read(0, 3)).rejects.toThrow('Too many redirects: gave up after 5');
+		await read.close?.();
+	});
+
+	it('rejects a redirect loop', async () => {
+		const read = getHTTPReader(`${base}/loop`);
+		await expect(read(0, 3)).rejects.toThrow('Too many redirects: gave up after 5');
+		await read.close?.();
+	});
+
+	it('rejects a redirect to an unsupported protocol', async () => {
+		const read = getHTTPReader(`${base}/ftp`);
+		await expect(read(0, 3)).rejects.toThrow('Unsupported protocol: ftp');
+		await read.close?.();
+	});
+
+	it('rejects a redirect without a location', async () => {
+		const read = getHTTPReader(`${base}/no-location`);
+		await expect(read(0, 3)).rejects.toThrow('Server responded with status code: 301');
+		await read.close?.();
+	});
+
+	it('does not remember a redirect that ends in an error', async () => {
+		const read = getHTTPReader(`${base}/missing`);
+		requests.length = 0;
+		await expect(read(0, 3)).rejects.toThrow('Server responded with status code: 404');
+		await expect(read(0, 3)).rejects.toThrow('Server responded with status code: 404');
+		expect(requests).toEqual(['/missing', '/404', '/missing', '/404']);
+		await read.close?.();
+	});
+});

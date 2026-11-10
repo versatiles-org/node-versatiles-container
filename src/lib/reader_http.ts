@@ -5,6 +5,12 @@ import type { Reader } from './interfaces.js';
 
 const DEFAULT_TIMEOUT = 10000;
 
+/** Maximum number of redirects a single read follows before it gives up. */
+const MAX_REDIRECTS = 5;
+
+/** Status codes whose `location` header points to where the resource is. */
+const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
+
 /**
  * Defines the structure for client and agent information specific to HTTP and HTTPS protocols.
  */
@@ -37,20 +43,73 @@ const clients: Record<string, ClientInfo> = {
  * reading a container issues many small range requests. Call its `close` method when done
  * to release those pooled sockets.
  *
+ * Redirects are followed, up to {@link MAX_REDIRECTS} per read. The reader remembers the
+ * URL it was redirected to, so the range requests that follow go there directly.
+ *
  * @param url - The URL from which data will be read.
  * @param timeout - Idle timeout in milliseconds applied both while waiting for the
  *   response headers and between body chunks. Defaults to {@link DEFAULT_TIMEOUT}.
  * @returns A `Reader` function that asynchronously reads a specified chunk of data from the URL.
  */
 export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIMEOUT): Reader {
-	const protocol = new URL(url).protocol.slice(0, -1);
-	const clientInfo = clients[protocol];
-	if (clientInfo == null) {
-		throw new Error(`Unsupported protocol: ${protocol}`);
+	/** The URL that range requests go to. Redirects replace it with their target. */
+	let currentUrl = url;
+
+	/**
+	 * Keep-alive agents by protocol, so a redirect from https to http (or back) gets an
+	 * agent of the right kind. `close` destroys all of them.
+	 */
+	const agents = new Map<string, Agent>();
+
+	/** Returns the client and this reader's agent for the URL's protocol. */
+	function getClient(target: string): { client: ClientInfo['client']; agent: Agent } {
+		const protocol = new URL(target).protocol.slice(0, -1);
+		const clientInfo = clients[protocol];
+		if (clientInfo == null) {
+			throw new Error(`Unsupported protocol: ${protocol}`);
+		}
+		let agent = agents.get(protocol);
+		if (agent == null) {
+			agent = clientInfo.createAgent();
+			agents.set(protocol, agent);
+		}
+		return { client: clientInfo.client, agent };
 	}
 
-	const { client, createAgent } = clientInfo;
-	const agent = createAgent();
+	// fail early on an unsupported protocol
+	getClient(url);
+
+	/**
+	 * Sends a GET request and resolves with the response once its headers arrive.
+	 * A watchdog rejects it if the headers take longer than `timeout`.
+	 */
+	function request(target: string, headers: http.OutgoingHttpHeaders): Promise<IncomingMessage> {
+		const { client, agent } = getClient(target);
+		return new Promise((resolve, reject) => {
+			const watchdog = setTimeout(() => {
+				req.destroy();
+				reject(new Error('Request timed out'));
+			}, timeout);
+
+			const req = client
+				.request(target, {
+					method: 'GET',
+					agent,
+					headers,
+					timeout,
+				})
+				.on('response', (response) => {
+					clearTimeout(watchdog);
+					resolve(response);
+				})
+				.on('error', (err) => {
+					clearTimeout(watchdog);
+					req.destroy();
+					reject(err);
+				})
+				.end();
+		});
+	}
 
 	/**
 	 * Asynchronously reads a data chunk from the provided URL based on the specified range.
@@ -80,33 +139,24 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 		};
 
 		/**
-		 * Performs the HTTP request and retrieves the response.
+		 * Performs the HTTP request, following redirects, and retrieves the response.
 		 * @type {IncomingMessage}
 		 */
-		const message: IncomingMessage = await new Promise((resolve, reject) => {
-			const watchdog = setTimeout(() => {
-				req.destroy();
-				reject(new Error('Request timed out'));
-			}, timeout);
+		let target = currentUrl;
+		let message: IncomingMessage = await request(target, headers);
+		for (let redirects = 0; ; redirects++) {
+			const { location } = message.headers;
+			if (!REDIRECT_STATUS_CODES.has(message.statusCode ?? 0) || location == null) break;
 
-			const req = client
-				.request(url, {
-					method: 'GET',
-					agent,
-					headers,
-					timeout,
-				})
-				.on('response', (response) => {
-					clearTimeout(watchdog);
-					resolve(response);
-				})
-				.on('error', (err) => {
-					clearTimeout(watchdog);
-					req.destroy();
-					reject(err);
-				})
-				.end();
-		});
+			// read and discard the redirect body, so the socket returns to the keep-alive pool
+			message.resume();
+
+			if (redirects >= MAX_REDIRECTS) {
+				throw new Error(`Too many redirects: gave up after ${MAX_REDIRECTS}`);
+			}
+			target = new URL(location, target).href;
+			message = await request(target, headers);
+		}
 
 		/**
 		 * Destroys the response (draining the socket / freeing the keep-alive
@@ -122,6 +172,9 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 		if (message.statusCode == null || Math.floor(message.statusCode / 100) !== 2) {
 			fail(new Error(`Server responded with status code: ${message.statusCode} `));
 		}
+
+		// remember where the redirects led, so later reads skip them
+		currentUrl = target;
 
 		const contentRange = message.headers['content-range'];
 		if (contentRange == null)
@@ -194,11 +247,11 @@ export default function getHTTPReader(url: string, timeout: number = DEFAULT_TIM
 	};
 
 	/**
-	 * Destroys this reader's connection agent, closing any sockets it is holding
+	 * Destroys this reader's connection agents, closing any sockets they are holding
 	 * open for keep-alive. After this resolves, the reader must not be called again.
 	 */
 	read.close = function close(): Promise<void> {
-		agent.destroy();
+		for (const agent of agents.values()) agent.destroy();
 		return Promise.resolve();
 	};
 
