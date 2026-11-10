@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-11-10
+
+### Bug Fixes
+
+- **reader_http:** follow redirects and keep the final URL for later reads, closes #55 ([e020ec8](https://github.com/versatiles-org/node-versatiles-container/commit/e020ec8c9d4c5afbb1b02d58769747e9b6074ca1))
+
+### Documentation
+
+- add funding information to package.json ([91c5383](https://github.com/versatiles-org/node-versatiles-container/commit/91c5383d83165e30de7d384f64af42862a830c9a))
+
+### CI/CD
+
+- publish to npm from a release workflow with trusted publishing, closes #56 ([8245c1a](https://github.com/versatiles-org/node-versatiles-container/commit/8245c1a5ad06ecee9acad8cf41757e82c7d4e761))
+
+### Chores
+
+- update devDependencies to latest versions ([bf66d07](https://github.com/versatiles-org/node-versatiles-container/commit/bf66d07a47b95a0ba8a9d9ea9e568daa6fc56310))
+
 ## [2.1.1] - 2026-11-03
 
 ### Chores
