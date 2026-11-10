@@ -12,7 +12,7 @@
 		"format:check": "prettier --check 'src/**/*.ts'",
 		"lint": "eslint . --color",
 		"prepack": "npm run build",
-		"release": "vrt release-npm",
+		"release": "vrt release",
 		"test-coverage": "vitest --run --coverage",
 		"test": "vitest --run",
 		"upgrade": "vrt deps-upgrade"

@@ -1,8 +1,7 @@
 name: Publish Documentation
 
 on:
-  release:
-    types: [published]
+  workflow_call: # from release.yml, after the version is on npm
   workflow_dispatch:
 
 env:
